@@ -1,0 +1,687 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="yhy的个人博客">
+  <meta name="author" content="yhy">
+  <meta name="keywords" content="">
+  
+  <title>组策略提权实验 - yhy&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="组策略提权实验">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      yhy
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-01-16 15:01" pubdate>
+        2021年1月16日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.7k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      18
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">组策略提权实验</h1>
+            
+              <p class="note note-info">
+                
+                  本文最后更新于：2021年3月5日 上午
+                
+              </p>
+            
+            <div class="markdown-body">
+              <blockquote>
+<p>管理员在域中新建一个组策略后,操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
+</blockquote>
+<h2 id="1-组策略基本介绍"><a href="#1-组策略基本介绍" class="headerlink" title="1. 组策略基本介绍"></a>1. 组策略基本介绍</h2><p>组策略可以控制用户帐户和计算机帐户的工作环境。它提供了操作系统、应用程序和活动目录中用户设置的集中化管理和配置。有本机组策略和域的组策略。本机组策略用于计算机管理员统一管理本机以及所有用户，域内的组策略用于域管统一管理域内的所有计算机以及域用户。 在本文中侧重点讲的是域内的组策略，借机学一下域环境搭建</p>
+<h2 id="2-SYSVOL-漏洞-MS14-025"><a href="#2-SYSVOL-漏洞-MS14-025" class="headerlink" title="2. SYSVOL 漏洞(MS14-025)"></a>2. SYSVOL 漏洞(MS14-025)</h2><p>SYSVOL是活动目录里面的一个用于存储域公共文件服务器副本的共享文件夹，在域中的所有域控制器之间进行复制。SYSVOL 文件夹是在安装活动目录时自动创建的，主要用来存放登录脚本、组策略数据及其他域控制器需要的域信息等。SYSVOL 在所有经过身份验证的域用户或者域信任用户具有读权限的活动目录的域范围内共享。整个SYSvOL 目录在所有的域控制器中是自动同步和共享的，所有的域策略均存放在C:\Windows\SYSVOL\DOMAIN\Policies 目录中。</p>
+<p>在一般的域环境中,所有机器都是脚本化批量部署的,数据量通常很大。为了方便地对所有的机器进行操作,网络管理员往往会使用域策略进行统一的配置和管理。大多数组织在创建域环境后，会要求加人域的计算机使用域用户密码进行登录验证。为了保证本地管理员密码的安全性，这些组织的网络管理员往往会修改本地管理员密码。但是当通过组策略统一修改密码，虽然密码强度会有所提高，这就造成了所有机器的本地管理员密码是相同的。攻击者获得了一台机器的本地管理员密码,就相当于获得了整个域中所有机器的本地管理员密码。</p>
+<p>在域中，存在一个默认的共享路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">\\&lt;DOMAIN&gt;\SYSVOL\&lt;DOMAIN&gt;\<br></code></pre></td></tr></table></figure>
+
+<p>所有域内主机都能访问，里面保存组策略相关数据，包含登录脚本配置文件等。</p>
+<p>例如，测试主机所在域为test.yhy，可访问共享文件夹<code>\\test.yhy\SYSVOL\test.yhy</code>，如下图：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084350.png" srcset="/img/loading.gif" lazyload alt="image-20210116111851931"></p>
+<p>在早期的版本，某些组策略首选项可以存储加密过的密码，加密方式为AES 256，虽然目前AES 256很难被攻破，但是微软选择公开了私钥，地址： <a target="_blank" rel="noopener" href="https://msdn.microsoft.com/en-us/library/cc422924.aspx%E3%80%82">https://msdn.microsoft.com/en-us/library/cc422924.aspx。</a></p>
+<p>![image-20210116111342068](/Users/yhy/Library/Application Support/typora-user-images/image-20210116111342068.png)</p>
+<p>如下几个组策略首选项文件中会存在可选的密码cpassword 属性:</p>
+<ul>
+<li><p>  Groups\Groupsx.xml</p>
+</li>
+<li><p>  Services\Services.xml</p>
+</li>
+<li><p>  ScheduledTasks\ScheduledTasks.xml</p>
+</li>
+<li><p>  Printers\Printers.xml</p>
+</li>
+<li><p>  Drives\Drives.xml</p>
+</li>
+<li><p>  DataSources\DataSources.xml</p>
+</li>
+</ul>
+<h2 id="3-漏洞复现"><a href="#3-漏洞复现" class="headerlink" title="3. 漏洞复现"></a>3. 漏洞复现</h2><h3 id="3-1-域环境搭建"><a href="#3-1-域环境搭建" class="headerlink" title="3.1 域环境搭建"></a>3.1 域环境搭建</h3><h4 id="3-1-1-环境要求"><a href="#3-1-1-环境要求" class="headerlink" title="3.1.1 环境要求"></a>3.1.1 环境要求</h4><p>环境：Windows Server 2008R2 </p>
+<p>网络：NAT模式</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084407.png" srcset="/img/loading.gif" lazyload alt="image-20210116112955314"></p>
+<p>更改管理员Administrator 密码为强密码，例如：test.yhy@123</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084412.png" srcset="/img/loading.gif" lazyload alt="image-20210116114025566"></p>
+<h4 id="3-1-2-添加域"><a href="#3-1-2-添加域" class="headerlink" title="3.1.2 添加域"></a>3.1.2 添加域</h4><p>点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084418.png" srcset="/img/loading.gif" lazyload alt="image-20210116112445745"></p>
+<p>选中 Active Directory 域服务</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084422.png" srcset="/img/loading.gif" lazyload alt="image-20210116113323735"></p>
+<p>一直下一步，安装即可</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084429.png" srcset="/img/loading.gif" lazyload alt="image-20210116113443897"></p>
+<p>关闭后，打开“服务器管理器”，找到Active Directory安装向导</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084433.png" srcset="/img/loading.gif" lazyload alt="image-20210116113523528"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084437.png" srcset="/img/loading.gif" lazyload alt="image-20210116113639168"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084446.png" srcset="/img/loading.gif" lazyload alt="image-20210116114315069"></p>
+<p>因为前面没配置静态IP（前面应该配置为静态IP的，不过这个环境无所谓了），这里选择是：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084451.png" srcset="/img/loading.gif" lazyload alt="image-20210116114528206"> </p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084518.png" srcset="/img/loading.gif" lazyload alt="image-20210116114630800"></p>
+<p>点击是，下一步，设置密码：test.yhy@123</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084525.png" srcset="/img/loading.gif" lazyload alt="image-20210116114714649"></p>
+<p>一直下一步，等待安装</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084531.png" srcset="/img/loading.gif" lazyload alt="image-20210116114816453"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084537.png" srcset="/img/loading.gif" lazyload alt="image-20210116114855068"></p>
+<p>完成，重启。</p>
+<p>测试一下：<code>net user /domain</code>, ok</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084547.png" srcset="/img/loading.gif" lazyload alt="image-20210116115925975"></p>
+<h4 id="3-1-3安装FTP服务"><a href="#3-1-3安装FTP服务" class="headerlink" title="3.1.3安装FTP服务"></a>3.1.3安装FTP服务</h4><p>虚拟机不知道为啥装不上VMware Tools，没办法拖文件，这里打开FTP服务，使用FTP上传文件。</p>
+<p>还是点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084554.png" srcset="/img/loading.gif" lazyload alt="image-20210116120244713"></p>
+<p>选择Web服务（IIS），下一步，最下边选择FTP服务器</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084558.png" srcset="/img/loading.gif" lazyload alt="image-20210116120911584"></p>
+<p>一直下一步，安装</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084604.png" srcset="/img/loading.gif" lazyload alt="image-20210116120952490"></p>
+<p>完成后，点击开始按钮，所有程序 —&gt; 管理工具 —&gt; Internet 信息服务(IIS)管理器</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084609.png" srcset="/img/loading.gif" lazyload alt="image-20210116120424350"></p>
+<p>右键添加FTP站点</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084618.png" srcset="/img/loading.gif" lazyload alt="image-20210116122419671"></p>
+<p>站点名称随意，物理路径，这里选择了C盘下新建文件夹，</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084624.png" srcset="/img/loading.gif" lazyload alt="image-20210116123005662"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084629.png" srcset="/img/loading.gif" lazyload alt="image-20210116123140690"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084634.png" srcset="/img/loading.gif" lazyload alt="image-20210116123215490"></p>
+<p>然后完成即可， 这时候使用FTP连接工具即可，连不上通过控制面板，关闭防火墙即可</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084638.png" srcset="/img/loading.gif" lazyload alt="image-20210116123531384"></p>
+<h3 id="3-2-创建组策略，批量修改域中机器的本地管理员密码"><a href="#3-2-创建组策略，批量修改域中机器的本地管理员密码" class="headerlink" title="3.2 创建组策略，批量修改域中机器的本地管理员密码"></a>3.2 创建组策略，批量修改域中机器的本地管理员密码</h3><h4 id="3-2-1创建组策略"><a href="#3-2-1创建组策略" class="headerlink" title="3.2.1创建组策略"></a>3.2.1创建组策略</h4><p>Win + R 打开运行 ，输入gpmc.msc ，进入组策略管理。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084644.png" srcset="/img/loading.gif" lazyload alt="image-20210116124142601">         右击<code>组策略</code> —&gt; <code>新建</code>:</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084649.png" srcset="/img/loading.gif" lazyload alt="image-20210116124834370"></p>
+<p>右击<code>test</code>(刚刚创建好的组策略对象)–&gt;<code>编辑</code>,来到如下位置：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084653.png" srcset="/img/loading.gif" lazyload alt="image-20210116124949983"></p>
+<p>右击<code>本地用户和组</code>–&gt;<code>新建</code>–&gt;<code>本地用户</code>：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084658.png" srcset="/img/loading.gif" lazyload alt="image-20210116125418016"></p>
+<p>其中设置的密码为<code>hackyhy.123</code></p>
+<p>回到组策略管理，设置组策略的对象，添加<code>Domain Computers</code>到组策略组中：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084712.png" srcset="/img/loading.gif" lazyload alt="image-20210116125705664"></p>
+<p>查看组策略对象<code>test</code>的详细信息：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084718.png" srcset="/img/loading.gif" lazyload alt="image-20210116125821832"></p>
+<p>至此，组策略配置完成，域内主机重新登录。</p>
+<blockquote>
+<p>  管理员在域中新建一个组策略后，操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
+</blockquote>
+<p>根据test的ID 去访问 <code>\\test.yhy\SYSVOL\test.yhy\Policies</code> 或者本地的<code>C:\Windows\SYSVOL\domain\Policies</code>相对应的策略。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084723.png" srcset="/img/loading.gif" lazyload alt="image-20210116130016932"></p>
+<p>打开，访问<code>\Machine\Preferences\Groups</code>，找到文件<code>Groups.xml</code>，</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084729.png" srcset="/img/loading.gif" lazyload alt="image-20210116130711551"></p>
+<p>其中的关注点为<code>cpassword</code>: fjomcrwPmyEFuKDFM1WGGDUe8Ap1iGL/RsEuyDABYBI</p>
+<h4 id="3-2-2-漏洞利用"><a href="#3-2-2-漏洞利用" class="headerlink" title="3.2.2 漏洞利用"></a>3.2.2 漏洞利用</h4><p>介绍两种简单的利用方式</p>
+<ul>
+<li>  Kali 下，将cpassword 字段复制到kali中，使用gpp-decrypt 进行破解</li>
+</ul>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084757.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ul>
+<li><p>msf 模块</p>
+<p>  使用msf后渗透模块</p>
+<p>  <code>run post/windows/gather/credentials/gpp</code></p>
+<p>  当拿到目标的session后（这里直接将msf生成的马，通过ftp上传，并执行）</p>
+</li>
+</ul>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084804.png" srcset="/img/loading.gif" lazyload alt="image-20210116134115737"></p>
+<h2 id="4-组策略首选项提权的防御措施"><a href="#4-组策略首选项提权的防御措施" class="headerlink" title="4. 组策略首选项提权的防御措施"></a>4. 组策略首选项提权的防御措施</h2><p>在用于管理组策略的计算机上安装 KB2962486补丁，防止新的凭据被放置在组策略首选项中。微软在2014年修复了组策略首选项提权漏洞，使用的方法就是不再将密码保存在组策略首选项中。</p>
+<p>此外，针对Everyone访问权限进行设置，具体如下：</p>
+<ol>
+<li> 设置共享文件夹SYSVOL的访问权限</li>
+<li> 将包含组策略密码的 XML 文件从 SYSVOL 目录中删除s</li>
+<li> 不要把密码放在所有域用户都有权访问的文件中 </li>
+<li> 如果需要更改域中机器的本地管理员密码，建议使用LAPS</li>
+</ol>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Windows提权-BypassUAC之劫持注册表实验</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/">
+                        <span class="hidden-mobile">sqlmap关于os-shell小记</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.lazyComments('valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
+        new Valine({
+          el: "#valine",
+          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
+          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "robohash",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: true,
+          recordIP: false,
+          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
+        });
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
+  </noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

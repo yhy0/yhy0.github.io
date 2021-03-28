@@ -1,0 +1,6 @@
+# hexo robots.txt
+User-agent: *
+Allow: /
+
+Sitemap: https://fireline.fun/sitemap.xml
+Sitemap: https://fireline.fun/baidusitemap.xml
