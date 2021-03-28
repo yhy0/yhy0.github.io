@@ -18,7 +18,7 @@
   <meta name="author" content="yhy">
   <meta name="keywords" content="">
   
-  <title>Windows系统散列值获取 - yhy&#39;s blog</title>
+  <title>图形化漏洞利用Demo-JavaFX版 - yhy&#39;s blog</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
 
@@ -175,7 +175,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="Windows系统散列值获取">
+            <span class="h2" id="subtitle" title="图形化漏洞利用Demo-JavaFX版">
               
             </span>
 
@@ -190,8 +190,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-02-07 10:48" pubdate>
-        2021年2月7日 上午
+      <time datetime="2021-03-23 10:43" pubdate>
+        2021年3月23日 上午
       </time>
     </span>
   
@@ -202,7 +202,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.2k 字
+      933 字
     </span>
   
 
@@ -212,7 +212,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      14
+      11
        分钟
     </span>
   
@@ -250,83 +250,71 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Windows系统散列值获取</h1>
+            <h1 style="display: none">图形化漏洞利用Demo-JavaFX版</h1>
             
               <p class="note note-info">
                 
-                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年3月5日 上午
+                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年3月28日 下午
                 
               </p>
             
             <div class="markdown-body">
               <blockquote>
-<p>  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165</p>
+<p>  山高水长,天涯未远,江湖再见</p>
 </blockquote>
-<h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
-<p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">username:RID:LM-HASH:NT-HASH<br></code></pre></td></tr></table></figure>
+<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
+<p>虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便。</p>
+<p>使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款<strong>属于你自己</strong>的漏洞利用工具。</p>
+<h2 id="0x02-Demo"><a href="#0x02-Demo" class="headerlink" title="0x02 Demo"></a>0x02 Demo</h2><p>废话不多说，先上效果图，自带CVE-2020-14882 Weblogic远程代码执行漏洞</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210327184310.gif" srcset="/img/loading.gif" lazyload alt="JavaFX"></p>
+<h2 id="0x03-编写属于你的图像化漏洞利用工具"><a href="#0x03-编写属于你的图像化漏洞利用工具" class="headerlink" title="0x03 编写属于你的图像化漏洞利用工具"></a>0x03 编写属于你的图像化漏洞利用工具</h2><h4 id="3-1-项目结构"><a href="#3-1-项目结构" class="headerlink" title="3.1 项目结构"></a>3.1 项目结构</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs apl">.<br>├── ExpDemo-JavaFX.iml<br>├── pom.xml	maven工程的基本文件<br>└── src	<br>    └── main<br>        ├── deploy<br>        │   └── ExpDemo-JavaFX-1.0.icns<br>        ├── java<br>        │   └── com<br>        │       └── yhy<br>        │           ├── Controller.java	 控制JavaFX图形化界面的各种显示、事件等，核心代码<br>        │           ├── Main.java     JavaFX 应用程序的入口<br>        │           ├── core    核心代码文件夹<br>        │           │   ├── CVE_2020_14882.java	 exp编写示例<br>        │           │   ├── Constants.java		  一些常量信息<br>        │           │   ├── ExploitInterface.java	 exp 编写要实现的接口<br>        │           │   ├── Job.java	批量检查的线程池<br>        │           │   └── VulInfo.java    映射批量检查界面中的表格，信息基本类<br>        │           └── tools		工具文件夹<br>        │               ├── HttpTool.java     HTTP 请求封装<br>        │               ├── MyCERT.java    HTTPS 请求证书设置<br>        │               └── Tools.java	    一些处理函数<br>        └── resources	资源文件夹<br>            ├── sample.fxml	 avaFX图形化界面描述文件<br>            ├── sec.png<br>            └── weixin.jpg<br></code></pre></td></tr></table></figure>
 
-<blockquote>
-<p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
-<p>  NTLM Hash是微软为了在提高安全性的同时保证兼容性而设计的散列加密算法。NTLM Hash是基于MD4加密算法进行加密的。个人版从Windows Vista 以后，服务器版从Windows Server 2003以后，Windows操作系统的认证方式均为NTLM Hash。</p>
-</blockquote>
-<h2 id="0x02-散列值获取方法"><a href="#0x02-散列值获取方法" class="headerlink" title="0x02 散列值获取方法"></a>0x02 散列值获取方法</h2><p>要想在Windows操作系统中抓取散列值或明文密码，必须将权限升级至System。本地用户名，散列值和其它安全验证信息都保存在SAM文件中。lsass.exe进程(它用于本地安全和登陆策略)用于实现Windows的安全策略，可以使用工具将散列值和明文密码从内存中的lsass.exe进程或SAM文件中导出。</p>
-<p>利用前提：拿到了管理员权限的cmd，管理员用密码登录过机器，并运行了lsass.exe进程，把密码保存在内存文件lsass进程中。</p>
-<p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
-<p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 = 截取明文密码</p>
-<h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码<br></code></pre></td></tr></table></figure>
 
-<p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207221939.png" srcset="/img/loading.gif" lazyload alt="image-20210207221937863"></p>
-<p>管理员权限执行</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207221945.png" srcset="/img/loading.gif" lazyload alt="image-20210207221846491"></p>
-<h4 id="使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）"><a href="#使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）" class="headerlink" title="使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）"></a>使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）</h4><p>（1）导出<code>lsass.dmp</code>文件</p>
-<p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
-<p><code>procdump</code>下载地址：<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
-<p><strong>管理员权限运行</strong>该命令</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">procdump.exe -accepteula -ma lsass.exe lsass.dmp<br></code></pre></td></tr></table></figure>
 
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207215155.png" srcset="/img/loading.gif" lazyload alt="image-20210207214123607"></p>
-<p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
-<p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
-<p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">sekurlsa::minidump lsass.dmp<br></code></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207213854.png" srcset="/img/loading.gif" lazyload alt="image-20210207213852318"></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">sekurlsa::logonpasswords full<br></code></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207214737.png" srcset="/img/loading.gif" lazyload alt="image-20210207214733408"></p>
-<h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
-<p><strong>开启Wdigest Auth</strong></p>
+<h4 id="3-2-编写EXP"><a href="#3-2-编写EXP" class="headerlink" title="3.2 编写EXP"></a>3.2 编写EXP</h4><p>编写EXP时，要使用 <code>implements</code>实现<code>ExploitInterface</code>接口，实现接口中的几个方法</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194809.png" srcset="/img/loading.gif" lazyload alt="image-20210327190517731"></p>
 <ul>
-<li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></td></tr></table></figure></li>
-<li><p>powershell</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1<br></code></pre></td></tr></table></figure></li>
-<li><p>meterpreter</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1<br></code></pre></td></tr></table></figure></li>
+<li>  checkVUL        使用poc 检查是否漏洞</li>
+<li>  exeCMD          使用exp执行命令</li>
+<li>  uploadFile        使用命令执行 写webshell，上传文件</li>
+<li>  getWebPath     获取网站的web目录，供上传文件使用</li>
+<li>  isVul                是否存在漏洞，检查时会根据结构自动赋值，供后续调用</li>
 </ul>
-<p><strong>关闭Wdigest Auth</strong></p>
-<p>关闭命令如下：</p>
-<ul>
-<li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 0 &#x2F;f<br></code></pre></td></tr></table></figure></li>
-<li><p>powershell</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0<br></code></pre></td></tr></table></figure></li>
-<li><p>meterpreter</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0<br></code></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>强制锁屏</strong></p>
-<p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
-<p>强制锁屏，让管理员重新登录。</p>
-<ul>
-<li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">rundll32 user32.dll,LockWorkStation<br></code></pre></td></tr></table></figure>
-
-<p>  等待管理员重新登录，之后重新读取，可读到明文密码。</p>
+<p>EXP具体编写请参考 <code>src/main/java/com/yhy/core/CVE_2020_14882.java</code> 示例</p>
+<p>当编写完EXP后，转到 <code>src/main/java/com/yhy/core/Constants.java</code> 文件，修改<code>CVES</code> 变量，即图像化界面中可供选择的漏洞列表</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194816.png" srcset="/img/loading.gif" lazyload alt="image-20210327191129699"></p>
+<p>之后进入<code>src/main/java/com/yhy/Controller.java</code> 和 <code>com/yhy/tools/Tools.java</code> 文件编写逻辑</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327210741.png" srcset="/img/loading.gif" lazyload alt="Snipaste_2021-03-27_21-04-14"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327210756.png" srcset="/img/loading.gif" lazyload alt="111111111111111"></p>
+<p>编写完后，可以直接执行<code>Main</code>类, 查看是否正常运行。</p>
+<h4 id="3-3-部署，发布"><a href="#3-3-部署，发布" class="headerlink" title="3.3 部署，发布"></a>3.3 部署，发布</h4><p>当一切编写完成，bug修复完毕，在项目根目录下执行 <code>mvn jfx:jar</code> 即可生成 jar文件。</p>
+<p>对方没有Java环境，不想安装怎么办？</p>
+<p>使用<code>mvn jfx:native</code> 命令生产对应平台的文件，比如Mac 下，执行命令<code>mvn jfx:native</code> 命令就会在 <strong>target/jfx/native</strong> 目录下生成打包后应用，带可执行文件，带 JRE 运行环境。</p>
+<p> <code>mvn clean</code> 用于清除生成的文件。</p>
+<h2 id="0x04-界面修改"><a href="#0x04-界面修改" class="headerlink" title="0x04 界面修改"></a>0x04 界面修改</h2><p>对界面不满意，或者想添加其他功能</p>
+<p>安装 JavaFx Scene Builder</p>
+<p><a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/javafxscenebuilder-1x-archive-downloads.html">https://www.oracle.com/java/technologies/javafxscenebuilder-1x-archive-downloads.html</a></p>
+<p>安装完，在IDEA中右键打开(设置好JavaFx Scene Builder的路径)</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194824.png" srcset="/img/loading.gif" lazyload alt="image-20210327192030204"></p>
+<p>打开后</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194835.png" srcset="/img/loading.gif" lazyload alt="image-20210327192230881"></p>
+<p>想添加什么控件，直接从Scene Builder的左边控件栏中拖拽一个到界面设计区域，然后只需要关心右侧栏第三个<code>Code</code>的<code>fx:id</code> 和<code>On Action</code> </p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194840.png" srcset="/img/loading.gif" lazyload alt="image-20210327192402177"></p>
+<p>比如想添加一个 输入框，搜索框查询，然后拖一个 <code>TextField</code> 控件到设计区</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194844.png" srcset="/img/loading.gif" lazyload alt="image-20210327192547983"></p>
+<p>为这个 <code>TextField</code> 设置一个<code>fx:id</code> ，然后<code>Ctrl+s</code>保存,  <code>sample.fxml</code> 会做出相应的更改，不需要关心</p>
+<p>之后到<code>src/main/java/com/yhy/Controller.java</code> 文件编写逻辑</p>
+<ol>
+<li><p>使用<code>@FXML</code>注解，声明变量</p>
+<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194848.png" srcset="/img/loading.gif" lazyload alt="image-20210327192937964"></p>
 </li>
-</ul>
+<li><p>在函数中使用变量</p>
+<p> 使用<code>this.cmd.getText() </code>获取输入的值</p>
+<p> 使用<code>this.cmd.setText() </code>设置值</p>
+<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194852.png" srcset="/img/loading.gif" lazyload alt="image-20210327193148639"></p>
+<p> 其他控件使用，请参考<code>src/main/java/com/yhy/Controller.java</code> ，或者自行学习JavaFX。</p>
+</li>
+</ol>
 
             </div>
             <hr>
@@ -336,7 +324,7 @@
                   <div class="post-meta mr-3">
                     <i class="iconfont icon-category"></i>
                     
-                      <a class="hover-with-bg" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                      <a class="hover-with-bg" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
                     
                   </div>
                 
@@ -344,9 +332,7 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-                    
-                      <a class="hover-with-bg" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                      <a class="hover-with-bg" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
                     
                   </div>
                 
@@ -363,18 +349,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">哈希传递</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/">
-                        <span class="hidden-mobile">令牌窃取分析及防范</span>
+                      <a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/">
+                        <span class="hidden-mobile">漏洞复现-Apache Solr 任意文件读取漏洞</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

@@ -18,7 +18,7 @@
   <meta name="author" content="yhy">
   <meta name="keywords" content="">
   
-  <title>Windows系统散列值获取 - yhy&#39;s blog</title>
+  <title>SScan  一款src捡洞扫描器 - yhy&#39;s blog</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
 
@@ -175,7 +175,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="Windows系统散列值获取">
+            <span class="h2" id="subtitle" title="SScan  一款src捡洞扫描器">
               
             </span>
 
@@ -190,8 +190,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-02-07 10:48" pubdate>
-        2021年2月7日 上午
+      <time datetime="2021-01-11 11:06" pubdate>
+        2021年1月11日 上午
       </time>
     </span>
   
@@ -202,7 +202,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.2k 字
+      1.7k 字
     </span>
   
 
@@ -212,7 +212,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      14
+      20
        分钟
     </span>
   
@@ -250,83 +250,92 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Windows系统散列值获取</h1>
+            <h1 style="display: none">SScan  一款src捡洞扫描器</h1>
             
               <p class="note note-info">
                 
-                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年3月5日 上午
+                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年3月28日 下午
                 
               </p>
             
             <div class="markdown-body">
-              <blockquote>
-<p>  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165</p>
-</blockquote>
-<h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
-<p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">username:RID:LM-HASH:NT-HASH<br></code></pre></td></tr></table></figure>
+              <h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a target="_blank" rel="noopener" href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" srcset="/img/loading.gif" lazyload alt="python"></a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" srcset="/img/loading.gif" lazyload alt="python"></a></p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a target="_blank" rel="noopener" href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
+<p>目前 <a target="_blank" rel="noopener" href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a target="_blank" rel="noopener" href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
+<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif" srcset="/img/loading.gif" lazyload></p>
+<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
+<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs bash">python3 SScan.py version                                查看版本<br>python3 SScan.py --<span class="hljs-built_in">help</span>                                 获取帮助<br>python3 SScan.py --host example.com run                 单个目标<br>python3 SScan.py --file domains.txt run                 读取一个.txt文件<br>python3 SScan.py --dire /Users/yhy/Desktop/<span class="hljs-built_in">dirs</span>/ run    读取目录下的所有.txt<br>python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，<br>                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP<br>python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run<br>                    只使用指定脚本 <br><br>您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务<br><br>其它参数：<br>    --t             扫描线程数, 默认10。<br>    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True<br>    --crawl         爬取主页的&lt;a&gt;标签， 默认为True<br>    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True<br>    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True<br>    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下<br>    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下<br>    --script_only   只使用脚本进行扫描，不使用规则<br>    --noscripts     不使用脚本扫描<br>    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py <br></code></pre></td></tr></table></figure>
 
-<blockquote>
-<p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
-<p>  NTLM Hash是微软为了在提高安全性的同时保证兼容性而设计的散列加密算法。NTLM Hash是基于MD4加密算法进行加密的。个人版从Windows Vista 以后，服务器版从Windows Server 2003以后，Windows操作系统的认证方式均为NTLM Hash。</p>
-</blockquote>
-<h2 id="0x02-散列值获取方法"><a href="#0x02-散列值获取方法" class="headerlink" title="0x02 散列值获取方法"></a>0x02 散列值获取方法</h2><p>要想在Windows操作系统中抓取散列值或明文密码，必须将权限升级至System。本地用户名，散列值和其它安全验证信息都保存在SAM文件中。lsass.exe进程(它用于本地安全和登陆策略)用于实现Windows的安全策略，可以使用工具将散列值和明文密码从内存中的lsass.exe进程或SAM文件中导出。</p>
-<p>利用前提：拿到了管理员权限的cmd，管理员用密码登录过机器，并运行了lsass.exe进程，把密码保存在内存文件lsass进程中。</p>
-<p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
-<p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 = 截取明文密码</p>
-<h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码<br></code></pre></td></tr></table></figure>
-
-<p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207221939.png" srcset="/img/loading.gif" lazyload alt="image-20210207221937863"></p>
-<p>管理员权限执行</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207221945.png" srcset="/img/loading.gif" lazyload alt="image-20210207221846491"></p>
-<h4 id="使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）"><a href="#使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）" class="headerlink" title="使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）"></a>使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）</h4><p>（1）导出<code>lsass.dmp</code>文件</p>
-<p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
-<p><code>procdump</code>下载地址：<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
-<p><strong>管理员权限运行</strong>该命令</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">procdump.exe -accepteula -ma lsass.exe lsass.dmp<br></code></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207215155.png" srcset="/img/loading.gif" lazyload alt="image-20210207214123607"></p>
-<p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
-<p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
-<p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">sekurlsa::minidump lsass.dmp<br></code></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207213854.png" srcset="/img/loading.gif" lazyload alt="image-20210207213852318"></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">sekurlsa::logonpasswords full<br></code></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207214737.png" srcset="/img/loading.gif" lazyload alt="image-20210207214733408"></p>
-<h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
-<p><strong>开启Wdigest Auth</strong></p>
-<ul>
-<li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></td></tr></table></figure></li>
-<li><p>powershell</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1<br></code></pre></td></tr></table></figure></li>
-<li><p>meterpreter</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1<br></code></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>关闭Wdigest Auth</strong></p>
-<p>关闭命令如下：</p>
-<ul>
-<li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 0 &#x2F;f<br></code></pre></td></tr></table></figure></li>
-<li><p>powershell</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0<br></code></pre></td></tr></table></figure></li>
-<li><p>meterpreter</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0<br></code></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>强制锁屏</strong></p>
-<p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
-<p>强制锁屏，让管理员重新登录。</p>
-<ul>
-<li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">rundll32 user32.dll,LockWorkStation<br></code></pre></td></tr></table></figure>
-
-<p>  等待管理员重新登录，之后重新读取，可读到明文密码。</p>
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
+<li><p><input checked="" disabled="" type="checkbox">  常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  后台登录页面资产发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
+<p>  使用BurpSuite 实验室<a target="_blank" rel="noopener" href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
+<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" srcset="/img/loading.gif" lazyload alt="image-20210106105118466"></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  一些常见未授权和弱口令检测，目前支持：</p>
+<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
+<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a target="_blank" rel="noopener" href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
 </li>
 </ul>
+<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
+<li><input disabled="" type="checkbox"> <del>将<a target="_blank" rel="noopener" href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a target="_blank" rel="noopener" href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
+<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
+<li><input disabled="" type="checkbox"> 继续优化各模块</li>
+</ul>
+<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
+<li><p>black.list 规则黑名单，命中则跳过</p>
+</li>
+<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
+</li>
+<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
+  <figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs crmsh">/WEB<span class="hljs-literal">-INF</span>/applicationContext-<span class="hljs-literal">slave</span>.<span class="hljs-keyword">xml</span> <span class="hljs-title">&#123;tag</span>=<span class="hljs-string">&quot;&lt;?xml&quot;</span>&#125; &#123;<span class="hljs-attr">status=</span><span class="hljs-number">200</span>&#125; &#123;<span class="hljs-attr">type=</span><span class="hljs-string">&quot;xml&quot;</span>&#125; &#123;root_only&#125;<br></code></pre></td></tr></table></figure>
+
+<ol>
+<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
+</li>
+<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
+</li>
+<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
+</li>
+<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
+</li>
+<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a target="_blank" rel="noopener" href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a target="_blank" rel="noopener" href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
+<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
+<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib/common/scanner.py)，可使用Scanner对象的任意方法、属性。</p>
+<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
+<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
+<p><code>self.session</code> 是HTTP连接池</p>
+<p><code>self.http_request</code> 可发起HTTP GET请求</p>
+<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
+<li><a target="_blank" rel="noopener" href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
+<li><a target="_blank" rel="noopener" href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
+</ul>
+<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
+<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a target="_blank" rel="noopener" href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" srcset="/img/loading.gif" lazyload alt="Stargazers over time"></a>
+      </p>
 
             </div>
             <hr>
@@ -336,7 +345,7 @@
                   <div class="post-meta mr-3">
                     <i class="iconfont icon-category"></i>
                     
-                      <a class="hover-with-bg" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                      <a class="hover-with-bg" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
                     
                   </div>
                 
@@ -344,9 +353,7 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-                    
-                      <a class="hover-with-bg" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
+                      <a class="hover-with-bg" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
                     
                   </div>
                 
@@ -363,9 +370,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/">
+                      <a href="/2021/01/16/%E7%BB%84%E7%AD%96%E7%95%A5%E6%8F%90%E6%9D%83%E5%AE%9E%E9%AA%8C/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">哈希传递</span>
+                        <span class="hidden-mobile">组策略提权实验</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -373,8 +380,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/">
-                        <span class="hidden-mobile">令牌窃取分析及防范</span>
+                      <a href="/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/">
+                        <span class="hidden-mobile">sqlmap关于os-shell小记</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
