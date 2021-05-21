@@ -194,6 +194,164 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/">Java反序列化漏洞分析(一)-Shiro550</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/">
+          
+          
+            
+          
+          
+  本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。
+
+0x01 前言Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。
+在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是硬编码在代码中的
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-05-21 10:30" pubdate>
+              2021-05-21
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/">初探Java反序列化漏洞(二)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/">
+          
+          
+            
+          
+          
+  不能食言，再晚也要写
+
+0x01 Java反射反射之中包含了一个「反」字，有「反」就会有「正」，那么解释反射就必须先从「正」开始解释。
+一般情况下，当使用某个类时必定知道它是什么类（类名），是用来做什么的（类的属性和方法）。于是我们直接对这个类进行实例化，之后使用这个类对象进行操作。
+123User user = new User();user.setName(&quot;yhy&quot;
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-05-02 22:10" pubdate>
+              2021-05-02
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/">初探Java反序列化漏洞(一)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/">
+          
+          
+            
+          
+          
+  学无止境，参考着资料边学边记录吧。
+
+0x01 Java序列化与反序列化Java序列化是指把Java对象转换为字节序列的过程。这一过程将数据分解成字节流，以便存储在文件中或在网络上传输；
+Java反序列化是指把字节序列恢复为Java对象的过程。就是打开字节流并重构成对象，恢复数据。
+序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-04-16 22:10" pubdate>
+              2021-04-16
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/">漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</a>
       </h1>
 
@@ -542,167 +700,6 @@ DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器
             <i class="iconfont icon-date"></i>
             <time datetime="2021-02-14 10:30" pubdate>
               2021-02-14
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-            
-              <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/">Windows系统散列值获取</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/">
-          
-          
-            
-          
-          
-  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165
-
-Windows系统散列值获取0x01 LM Hash与NTLM HashWindows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在ntds.dit中，加密后为散列值。
-Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windo
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-02-07 10:48" pubdate>
-              2021-02-07
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-            
-              <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/">令牌窃取分析及防范</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/">
-          
-          
-            
-          
-          
-  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.
-
-令牌窃取分析及防范0x01 令牌概述令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。
-令牌的最大特点是随机性和不可预
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-01-29 13:00" pubdate>
-              2021-01-29
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-            
-              <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/">Windows提权-BypassUAC之劫持注册表实验</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/">
-          
-          
-            
-          
-          
-  准备PPT的过程中，还是学到不少东西的
-
-1. UAC 简介**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-01-19 09:18" pubdate>
-              2021-01-19
             </time>
           </div>
         
