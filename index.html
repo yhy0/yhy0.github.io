@@ -206,6 +206,163 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/">Java ysoserial学习之CommonsCollections1(二)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/">
+          
+          
+            
+          
+          
+  超长预警
+
+0x01 前言Apache Commons Collections是一个扩展了Java标准库里的Collection结构的第三方基础库，它提供了很多强有力的数据结构类型并且实现了各种集合工具类。作为Apache开源项目的重要组件，Commons Collections被广泛应用于各种Java应用的开发。
+Apache Commons Collections 中提供了一个Trans
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-06-11 20:30" pubdate>
+              2021-06-11
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/">Java ysoserial学习之URLDNS(一)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/">
+          
+          
+            
+          
+          
+  雄关漫道真如铁 而今迈步从头越
+
+0x01 前言URLDNS 是 ysoserial 中利用链的一个 payload，该 payload 的目的只有一个，就是确定目标系统上是否存在可控的 readObject() 方法，即是否存在Java 反序列化漏洞。该利用链具有如下特点:
+
+  不限制jdk版本，使用 Java 内置的 URL 类，不依赖于任何的第三方库
+  只对指定的 URL 发送 D
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-06-04 20:30" pubdate>
+              2021-06-04
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/">Java反序列化漏洞分析(二)-Shiro550</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/">
+          
+          
+            
+          
+          
+  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行
+
+0x00 纠错首先纠正一下上篇文章Java反序列化漏洞分析(一)-Shiro550的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是错的、错的、错的，其实是可以打的。我给搞错了，URLDNS 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-05-29 20:30" pubdate>
+              2021-05-29
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/">Java反序列化漏洞分析(一)-Shiro550</a>
       </h1>
 
@@ -565,171 +722,6 @@ F5 BIG
             <i class="iconfont icon-tags"></i>
             
               <a href="/tags/Web%E6%B8%97%E9%80%8F/">Web渗透</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/02/25/github_cve_monitor/">gitHub_cve_monitor</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/02/25/github_cve_monitor/">
-          
-          
-            
-          
-          
-没事少矫情，有空多赚钱。
-
-监控github上新增的cve编号项目漏洞，推送钉钉或者server酱使用项目地址：https://github.com/yhy0/github-cve-monitor.git
-12python3 -m pip install dingtalkchatbotpython3 github_cve_monitor.py
-
-每3分钟检测一次github是否有新的cve漏洞提
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-02-25 11:06" pubdate>
-              2021-02-25
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/">域渗透-DCSync和黄金票据</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/">
-          
-          
-            
-          
-          
-  新年开工快乐～～～
-
-域渗透-DCSync和黄金票据0x01 概述
-krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的服务账户，用来创建票据授予服务（TGS）  加密的密钥。
-黄金票据（Golden Ticket）：它能让黑客在拥有普通域用户权限和krbtgt hash的情况下，获取域管理员权限。
-DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-02-21 21:50" pubdate>
-              2021-02-21
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-            
-              <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/">哈希传递</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/">
-          
-          
-            
-          
-          
-  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。
-  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 
-
-0x01 哈希传递攻击概念在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。
-在Windows系统中，通
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-02-14 10:30" pubdate>
-              2021-02-14
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-            
-              <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
             
           </div>
         
