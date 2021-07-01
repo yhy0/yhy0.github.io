@@ -206,6 +206,110 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
+        <a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/">漏洞复现-Apache Solr 任意文件读取漏洞</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/">
+          
+          
+            
+          
+          
+  这周在hw，水一篇文章，记录一下漏洞利用，当一个合格的脚本小子
+
+0x01 漏洞描述由于Apache Solr默认安装时未开启身份验证，导致未经身份验证的攻击者可利用Config API打开requestDispatcher.requestParsers.enableRemoteStreaming开关，从而使攻击者可以在未授权的情况下获取目标服务器敏感文件。
+
+  听说报给官方后，官方拒绝修
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-03-18 20:59" pubdate>
+              2021-03-18
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/">初探JWT</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/">
+          
+          
+            
+          
+          
+  当你迷茫时，就去学习新东西
+
+初探JWT0x01 什么是JWTJWT 全称为 JSON Web Tokens ，是为了在网络应用环境间传递声明而执行的一种基于JSON 的开放标准 (RFC 7519)，该 token 被设计为紧凑且安全的，它的两大使用场景是：认证和数据交换，特别适用于分布式站点的单点登录（SSO）场景。JWT的声明一般被用来在身份提供者和服务提供者间传递被认证的用户身份信息
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-03-05 10:42" pubdate>
+              2021-03-05
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/Web%E6%B8%97%E9%80%8F/">Web渗透</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/Web%E6%B8%97%E9%80%8F/">Web渗透</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
         <a href="/2021/02/25/github_cve_monitor/">gitHub_cve_monitor</a>
       </h1>
 
@@ -632,124 +736,11 @@ Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，
     </article>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/">sqlmap关于os-shell小记</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/">
-          
-          
-            
-          
-          SqlMap –os-shell 利用MySQL前提条件
-拥有dba权限
-
-网站的绝对路径
-
-高版本的mysql需要 show variables like &#39;%secure_file_priv%&#39; 或者select 
- @@secure;或者show global variables like &#39;%secure%&#39;;的结果符合要求，secure-file-priv
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2020-11-06 10:48" pubdate>
-              2020-11-06
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/">安全工具</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/sqlmap%E4%BD%BF%E7%94%A8/">sqlmap使用</a>
-            
-              <a href="/tags/getshell/">getshell</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2020/08/04/%E7%AE%80%E5%8D%95docker%E9%80%83%E9%80%B8%E5%AD%A6%E4%B9%A0/">简单dockers逃逸学习</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2020/08/04/%E7%AE%80%E5%8D%95docker%E9%80%83%E9%80%B8%E5%AD%A6%E4%B9%A0/">
-          
-          
-            
-          
-          1. 目标界面
-搞半天，没进去。。。。
-经过提示，了解到了一句话执行的原理，
-1&lt;?php @eval($_POST[&quot;cmd&quot;]);?&gt;
-
-一句话在每次执行时，接收变量cmd传进去的参数 cmd=phpinfo();  使用eval函数执行 phpinfo(); 命令。
-了解后就是猜参数名的过程。
-2. 提权连上shell后， whoami 查看为www-data
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2020-08-04 22:13" pubdate>
-              2020-08-04
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/docker%E9%80%83%E9%80%B8/">docker逃逸</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/">内网渗透</a>
-            
-              <a href="/tags/docker%E9%80%83%E9%80%B8/">docker逃逸</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
 
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <a class="extend prev" rel="prev" href="/"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+      <a class="extend prev" rel="prev" href="/"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/#board">3</a><a class="extend next" rel="next" href="/page/3/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 
