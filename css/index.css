@@ -196,8 +196,8 @@ template {
 .limit-more-line,
 .error404 #error-wrap .error-content .error-info .error_subtitle,
 .article-sort-item-title,
-#recent-posts > .recent-post-item >.recent-post-info > .article-title,
-#recent-posts > .recent-post-item >.recent-post-info > .content,
+#recent-posts > .recent-post-item >.recent-post-info > .recent-post-info-top > .article-title,
+#recent-posts > .recent-post-item >.recent-post-info > .recent-post-info-top > .content,
 #aside-content .aside-list > .aside-list-item .content > .name,
 #aside-content .aside-list > .aside-list-item .content > .title,
 #aside-content .aside-list > .aside-list-item .content > .comment,
@@ -2509,11 +2509,15 @@ blockquote footer cite:before {
   background: var(--card-bg);
   -webkit-box-shadow: var(--card-box-shadow);
   box-shadow: var(--card-box-shadow);
-  -webkit-transition: all 0.3s;
-  -moz-transition: all 0.3s;
-  -o-transition: all 0.3s;
-  -ms-transition: all 0.3s;
-  transition: all 0.3s;
+  -webkit-transition: all 0.2s;
+  -moz-transition: all 0.2s;
+  -o-transition: all 0.2s;
+  -ms-transition: all 0.2s;
+  transition: all 0.2s;
+}
+#recent-posts > .recent-post-item > .recent-post-info > .recent-post-info-top > .article-title {
+  font-size: 2.5em;
+  font-weight: bold;
 }
 @media screen and (max-width: 768px) {
   #recent-posts > .recent-post-item {
@@ -2556,11 +2560,11 @@ blockquote footer cite:before {
 #recent-posts > .recent-post-item .post_cover img.post_bg {
   width: 100%;
   height: 100%;
-  -webkit-transition: all 0.6s;
-  -moz-transition: all 0.6s;
-  -o-transition: all 0.6s;
-  -ms-transition: all 0.6s;
-  transition: all 0.6s;
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+  -o-transition: all 0.3s;
+  -ms-transition: all 0.3s;
+  transition: all 0.3s;
   object-fit: cover;
 }
 #recent-posts > .recent-post-item .post_cover img.post_bg:hover {
@@ -2579,10 +2583,10 @@ blockquote footer cite:before {
 #recent-posts > .recent-post-item >.recent-post-info.no-cover {
   width: 100%;
 }
-#recent-posts > .recent-post-item >.recent-post-info > .article-title {
+#recent-posts > .recent-post-item >.recent-post-info > .recent-post-info-top > .article-title {
   margin-bottom: 0.3rem;
   color: var(--text-highlight-color);
-  font-size: 1.72em;
+  font-size: 1.43em;
   line-height: 1.4;
   -webkit-transition: all 0.2s ease-in-out;
   -moz-transition: all 0.2s ease-in-out;
@@ -2590,8 +2594,9 @@ blockquote footer cite:before {
   -ms-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
   -webkit-line-clamp: 2;
+  font-weight: bold;
 }
-#recent-posts > .recent-post-item >.recent-post-info > .article-title:hover {
+#recent-posts > .recent-post-item >.recent-post-info > .recent-post-info-top > .article-title:hover {
   color: #49b1f5;
 }
 #recent-posts > .recent-post-item >.recent-post-info > .article-meta-wrap {
@@ -2626,7 +2631,8 @@ blockquote footer cite:before {
   color: #49b1f5;
   text-decoration: underline;
 }
-#recent-posts > .recent-post-item >.recent-post-info > .content {
+#recent-posts > .recent-post-item >.recent-post-info > .recent-post-info-top > .content {
+  line-height: 1.4;
   margin-top: 0.3rem;
   -webkit-line-clamp: 3;
 }
@@ -2664,11 +2670,57 @@ blockquote footer cite:before {
   #recent-posts .recent-post-item .recent-post-info.no-cover {
     padding: 1.5rem 1rem;
   }
-  #recent-posts .recent-post-item .recent-post-info .article-title {
+  #recent-posts .recent-post-item .recent-post-info.recent-post-info-top > .article-title {
     font-size: 1.43em;
   }
-  #recent-posts .recent-post-item .recent-post-info .content {
+  #recent-posts .recent-post-item .recent-post-info.recent-post-info-top > .content {
     height: auto;
+  }
+}
+@media screen and (min-width: 768px) {
+  #recent-posts .recent-post-item {
+    height: 20em;
+  }
+  #recent-posts .recent-post-item > .recent-post-info > .recent-post-info-top > .content {
+    visibility: hidden;
+    -webkit-transition: 0.1s linear;
+    -moz-transition: 0.1s linear;
+    -o-transition: 0.1s linear;
+    -ms-transition: 0.1s linear;
+    transition: 0.1s linear;
+    line-height: 1.4;
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  #recent-posts .recent-post-item > .recent-post-info > .recent-post-info-top > .content::after {
+    content: "";
+  }
+  #recent-posts .recent-post-item:hover .recent-post-info > .recent-post-info-top > .content {
+    visibility: visible;
+    -webkit-transition: 0.2s linear;
+    -moz-transition: 0.2s linear;
+    -o-transition: 0.2s linear;
+    -ms-transition: 0.2s linear;
+    transition: 0.2s linear;
+    line-height: 1.4;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+  #recent-posts .recent-post-item:hover .recent-post-info > .recent-post-info-top > .content::after {
+    content: " 😄😄";
+  }
+  #recent-posts .recent-post-item:hover .recent-post-info > .article-meta-wrap {
+    -webkit-transition: 0.2s linear;
+    -moz-transition: 0.2s linear;
+    -o-transition: 0.2s linear;
+    -ms-transition: 0.2s linear;
+    transition: 0.2s linear;
+    margin-top: 5px;
+    color: rgba(133,133,133,0.7);
   }
 }
 .tag-cloud-list a {
@@ -4475,7 +4527,7 @@ blockquote footer cite:before {
   position: absolute;
   top: calc(50% - 0.35rem);
   color: #f47466;
-  content: '\f863';
+  content: '\f6ad';
   line-height: 1;
   -webkit-transition: all 0.2s ease-out;
   -moz-transition: all 0.2s ease-out;
@@ -5110,7 +5162,7 @@ blockquote footer cite:before {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 999;
+  z-index: 99;
   pointer-events: none;
 }
 .medium-zoom-image--opened {
