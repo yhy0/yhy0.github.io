@@ -2793,6 +2793,11 @@ blockquote footer cite:before {
   -webkit-box-shadow: var(--card-hover-box-shadow);
   box-shadow: var(--card-hover-box-shadow);
 }
+@media screen and (max-width: 768px) {
+  #aside-content .card-widget:not(#card-toc) {
+    display: none;
+  }
+}
 #aside-content .card-info .author-info__name {
   font-weight: 500;
   font-size: 1.57em;
