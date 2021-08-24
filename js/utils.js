@@ -1,171 +1,251 @@
-/* global Fluid, CONFIG, Debouncer */
-
-Fluid.utils = {
-
-  listenScroll: function(callback) {
-    if ('Debouncer' in window) {
-      var dbc = new Debouncer(callback);
-      window.addEventListener('scroll', dbc, false);
-      dbc.handleEvent();
-    } else {
-      window.addEventListener('scroll', callback, false);
+const btf = {
+  debounce: function (func, wait, immediate) {
+    let timeout
+    return function () {
+      const context = this
+      const args = arguments
+      const later = function () {
+        timeout = null
+        if (!immediate) func.apply(context, args)
+      }
+      const callNow = immediate && !timeout
+      clearTimeout(timeout)
+      timeout = setTimeout(later, wait)
+      if (callNow) func.apply(context, args)
     }
   },
 
-  scrollToElement: function(target, offset) {
-    var of = $(target).offset();
-    if (of) {
-      $('html,body').animate({
-        scrollTop: of.top + (offset || 0),
-        easing   : 'swing'
-      });
-    }
-  },
+  throttle: function (func, wait, options) {
+    let timeout, context, args
+    let previous = 0
+    if (!options) options = {}
 
-  waitElementVisible: function(target, callback, heightFactor) {
-    var runningOnBrowser = typeof window !== 'undefined';
-    var isBot = (runningOnBrowser && !('onscroll' in window)) || (typeof navigator !== 'undefined'
-        && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent));
-    var supportsIntersectionObserver = 'IntersectionObserver' in window;
-
-    if (!runningOnBrowser || isBot) {
-      callback && callback();
-      return;
+    const later = function () {
+      previous = options.leading === false ? 0 : new Date().getTime()
+      timeout = null
+      func.apply(context, args)
+      if (!timeout) context = args = null
     }
 
-    var _target;
-    if (typeof target === 'string') {
-      _target = document.getElementById(target);
-    } else {
-      _target = target;
-    }
-
-    var _heightFactor = heightFactor || 2;
-
-    var _elementInViewport = function(el) {
-      var rect = el.getBoundingClientRect();
-      var height = window.innerHeight || document.documentElement.clientHeight;
-      var top = rect.top;
-      return (top >= 0 && top <= height * (_heightFactor + 1))
-          || (top <= 0 && top >= -(height * _heightFactor) - rect.height);
-    };
-
-    if (_elementInViewport(_target)) {
-      callback && callback();
-      return;
-    }
-
-    var _listenScroll = function() {
-      var _callback = function() {
-        if (_elementInViewport(_target)) {
-          window.removeEventListener('scroll', _callback);
-          callback && callback();
+    const throttled = function () {
+      const now = new Date().getTime()
+      if (!previous && options.leading === false) previous = now
+      const remaining = wait - (now - previous)
+      context = this
+      args = arguments
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout)
+          timeout = null
         }
-      };
-      window.addEventListener('scroll', _callback);
-    };
-
-    if (supportsIntersectionObserver) {
-      var io = new IntersectionObserver(function(entries, ob) {
-        if (entries[0].intersectionRect.x <= 0) {
-          if ('Debouncer' in window) {
-            var dbc = new Debouncer(_listenScroll);
-            dbc.handleEvent();
-          } else {
-            _listenScroll();
-          }
-        } else if (entries[0].isIntersecting) {
-          callback && callback();
-        }
-        ob.disconnect();
-      }, {
-        threshold : [0],
-        rootMargin: (window.innerHeight || document.documentElement.clientHeight) + 'px'
-      });
-      io.observe(_target);
-    } else {
-      if ('Debouncer' in window) {
-        var dbc = new Debouncer(_listenScroll);
-        dbc.handleEvent();
-      } else {
-        _listenScroll();
+        previous = now
+        func.apply(context, args)
+        if (!timeout) context = args = null
+      } else if (!timeout && options.trailing !== false) {
+        timeout = setTimeout(later, remaining)
       }
     }
+
+    return throttled
   },
 
-  waitElementLoaded: function(targetId, callback) {
-    var runningOnBrowser = typeof window !== 'undefined';
-    var isBot = (runningOnBrowser && !('onscroll' in window)) || (typeof navigator !== 'undefined'
-    && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent));
-
-    if (!runningOnBrowser || isBot) {
-      callback && callback();
-      return;
-    }
-
-    if ('MutationObserver' in window) {
-      var mo = new MutationObserver(function(records, ob) {
-        var ele = document.getElementById(targetId);
-        if (ele) {
-          callback && callback();
-          ob.disconnect();
-        }
-      });
-      mo.observe(document, { childList: true, subtree: true });
-    } else {
-      document.addEventListener('DOMContentLoaded', function() {
-        callback && callback();
-      });
+  sidebarPaddingR: () => {
+    const innerWidth = window.innerWidth
+    const clientWidth = document.body.clientWidth
+    const paddingRight = innerWidth - clientWidth
+    if (innerWidth !== clientWidth) {
+      document.body.style.paddingRight = paddingRight + 'px'
     }
   },
 
-  createScript: function(url, onload) {
-    var s = document.createElement('script');
-    s.setAttribute('src', url);
-    s.setAttribute('type', 'text/javascript');
-    s.setAttribute('charset', 'UTF-8');
-    s.async = false;
-    if (typeof onload === 'function') {
-      if (window.attachEvent) {
-        s.onreadystatechange = function() {
-          var e = s.readyState;
-          if (e === 'loaded' || e === 'complete') {
-            s.onreadystatechange = null;
-            onload();
-          }
-        };
-      } else {
-        s.onload = onload;
+  snackbarShow: (text, showAction, duration) => {
+    const sa = (typeof showAction !== 'undefined') ? showAction : false
+    const dur = (typeof duration !== 'undefined') ? duration : 2000
+    const position = GLOBAL_CONFIG.Snackbar.position
+    const bg = document.documentElement.getAttribute('data-theme') === 'light' ? GLOBAL_CONFIG.Snackbar.bgLight : GLOBAL_CONFIG.Snackbar.bgDark
+    Snackbar.show({
+      text: text,
+      backgroundColor: bg,
+      showAction: sa,
+      duration: dur,
+      pos: position
+    })
+  },
+
+  initJustifiedGallery: function (selector) {
+    if (!(selector instanceof jQuery)) {
+      selector = $(selector)
+    }
+    selector.each(function (i, o) {
+      if ($(this).is(':visible')) {
+        $(this).justifiedGallery({
+          rowHeight: 220,
+          margins: 4
+        })
       }
-    }
-    var e = document.getElementsByTagName('script')[0]
-    || document.getElementsByTagName('head')[0]
-    || document.head || document.documentElement;
-    e.parentNode.insertBefore(s, e);
+    })
   },
 
-  createCssLink: function(url) {
-    var l = document.createElement('link');
-    l.setAttribute('rel', 'stylesheet');
-    l.setAttribute('type', 'text/css');
-    l.setAttribute('href', url);
-    var e = document.getElementsByTagName('link')[0]
-    || document.getElementsByTagName('head')[0]
-    || document.head || document.documentElement;
-    e.parentNode.insertBefore(l, e);
-  },
+  diffDate: (d, more = false) => {
+    const dateNow = new Date()
+    const datePost = new Date(d)
+    const dateDiff = dateNow.getTime() - datePost.getTime()
+    const minute = 1000 * 60
+    const hour = minute * 60
+    const day = hour * 24
+    const month = day * 30
 
-  lazyComments: function(eleId, loadFunc) {
-    var ele = document.querySelector('#comments[lazyload]');
-    if (ele) {
-      var callback = function() {
-        loadFunc && loadFunc();
-        ele.removeAttribute('lazyload');
-      };
-      this.waitElementVisible(eleId, callback, CONFIG.lazyload.offset_factor);
+    let result
+    if (more) {
+      const monthCount = dateDiff / month
+      const dayCount = dateDiff / day
+      const hourCount = dateDiff / hour
+      const minuteCount = dateDiff / minute
+
+      if (monthCount > 12) {
+        result = datePost.toLocaleDateString().replace(/\//g, '-')
+      } else if (monthCount >= 1) {
+        result = parseInt(monthCount) + ' ' + GLOBAL_CONFIG.date_suffix.month
+      } else if (dayCount >= 1) {
+        result = parseInt(dayCount) + ' ' + GLOBAL_CONFIG.date_suffix.day
+      } else if (hourCount >= 1) {
+        result = parseInt(hourCount) + ' ' + GLOBAL_CONFIG.date_suffix.hour
+      } else if (minuteCount >= 1) {
+        result = parseInt(minuteCount) + ' ' + GLOBAL_CONFIG.date_suffix.min
+      } else {
+        result = GLOBAL_CONFIG.date_suffix.just
+      }
     } else {
-      loadFunc && loadFunc();
+      result = parseInt(dateDiff / day)
     }
+    return result
+  },
+
+  loadComment: (dom, callback) => {
+    if ('IntersectionObserver' in window) {
+      const observerItem = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          callback()
+          observerItem.disconnect()
+        }
+      }, { threshold: [0] })
+      observerItem.observe(dom)
+    } else {
+      callback()
+    }
+  },
+
+  scrollToDest: (pos, time) => {
+    if (pos < 0 || time < 0) {
+      return
+    }
+
+    const currentPos = window.scrollY || window.screenTop
+    if (currentPos > pos) pos = pos - 70
+
+    if ('CSS' in window && CSS.supports('scroll-behavior', 'smooth')) {
+      window.scrollTo({
+        top: pos,
+        behavior: 'smooth'
+      })
+      return
+    }
+
+    let start = null
+    time = time || 500
+    window.requestAnimationFrame(function step (currentTime) {
+      start = !start ? currentTime : start
+      if (currentPos < pos) {
+        const progress = currentTime - start
+        window.scrollTo(0, ((pos - currentPos) * progress / time) + currentPos)
+        if (progress < time) {
+          window.requestAnimationFrame(step)
+        } else {
+          window.scrollTo(0, pos)
+        }
+      } else {
+        const progress = currentTime - start
+        window.scrollTo(0, currentPos - ((currentPos - pos) * progress / time))
+        if (progress < time) {
+          window.requestAnimationFrame(step)
+        } else {
+          window.scrollTo(0, pos)
+        }
+      }
+    })
+  },
+
+  fadeIn: (ele, time) => {
+    ele.style.cssText = `display:block;animation: to_show ${time}s`
+  },
+
+  fadeOut: (ele, time) => {
+    ele.addEventListener('animationend', function f () {
+      ele.style.cssText = "display: none; animation: '' "
+      ele.removeEventListener('animationend', f)
+    })
+    ele.style.animation = `to_hide ${time}s`
+  },
+
+  getParents: (elem, selector) => {
+    for (; elem && elem !== document; elem = elem.parentNode) {
+      if (elem.matches(selector)) return elem
+    }
+    return null
+  },
+
+  siblings: (ele, selector) => {
+    return [...ele.parentNode.children].filter((child) => {
+      if (selector) {
+        return child !== ele && child.matches(selector)
+      }
+      return child !== ele
+    })
+  },
+
+  /**
+   *
+   * @param {*} selector
+   * @param {*} eleType the type of create element
+   * @param {*} options object key: value
+   */
+  wrap: (selector, eleType, options) => {
+    const creatEle = document.createElement(eleType)
+    for (const [key, value] of Object.entries(options)) {
+      creatEle.setAttribute(key, value)
+    }
+    selector.parentNode.insertBefore(creatEle, selector)
+    creatEle.appendChild(selector)
+  },
+
+  unwrap: el => {
+    const elParentNode = el.parentNode
+    if (elParentNode !== document.body) {
+      elParentNode.parentNode.insertBefore(el, elParentNode)
+      elParentNode.parentNode.removeChild(elParentNode)
+    }
+  },
+
+  isJqueryLoad: fn => {
+    if (typeof jQuery === 'undefined') {
+      getScript(GLOBAL_CONFIG.source.jQuery).then(fn)
+    } else {
+      fn()
+    }
+  },
+
+  isHidden: ele => ele.offsetHeight === 0 && ele.offsetWidth === 0,
+
+  getEleTop: ele => {
+    let actualTop = ele.offsetTop
+    let current = ele.offsetParent
+
+    while (current !== null) {
+      actualTop += current.offsetTop
+      current = current.offsetParent
+    }
+
+    return actualTop
   }
 
-};
+}

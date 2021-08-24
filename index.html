@@ -1,277 +1,170 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>yhy's blog</title><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="修道之初, 谁不想当剑仙?">
+<meta property="og:type" content="website">
+<meta property="og:title" content="yhy&#39;s blog">
+<meta property="og:url" content="https://fireline.fun/index.html">
+<meta property="og:site_name" content="yhy&#39;s blog">
+<meta property="og:description" content="修道之初, 谁不想当剑仙?">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://fireline.fun/img/favicon.png">
+<meta property="article:author" content="yhy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fireline.fun/img/favicon.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'yhy\'s blog',
+  isPost: false,
+  isHome: true,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2021-08-24 14:44:07'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
 
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
 
-<!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
 
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
 
-
-<head>
-  <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
-  <link rel="icon" href="/img/favicon.png">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
   
-  <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="yhy的个人博客">
-  <meta name="author" content="yhy">
-  <meta name="keywords" content="">
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
   
-  <title>yhy&#39;s blog</title>
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-<!-- 自定义样式保持在最底部 -->
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-<meta name="generator" content="Hexo 5.4.0"></head>
-
-
-<body>
-  <header style="height: 100vh;">
-    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand"
-       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
-
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
-
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/">
-                <i class="iconfont icon-home-fill"></i>
-                首页
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/">
-                <i class="iconfont icon-archive-fill"></i>
-                归档
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/">
-                <i class="iconfont icon-category-fill"></i>
-                分类
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                标签
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/">
-                <i class="iconfont icon-user-fill"></i>
-                关于
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/links/">
-                <i class="iconfont icon-link-fill"></i>
-                友链
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tools/">
-                <i class="iconfont icon-exp-fill"></i>
-                辅助工具
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
-                class="iconfont icon-search"></i>&nbsp;</a>
-          </li>
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" href="javascript:">&nbsp;<i
-                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
-
-    <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
-           background-size: cover;">
-      <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-          <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="修道之初, 谁不想当剑仙? ">
-              
-            </span>
-
-            
-          </div>
-
-          
-            <div class="scroll-down-bar">
-              <i class="iconfont icon-arrowdown"></i>
-            </div>
-          
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main>
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
     
-      <div class="container nopadding-x-md">
-        <div class="py-5" id="board"
-          style=margin-top:0>
-          
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-10 m-auto">
-                
-
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
         
-        <a href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/">git 蜜罐复现</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/">
-          
-          
-            
-          
-          
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const fontSizeVal = saveToLocal.get('global-font-size')
+    if (fontSizeVal !== undefined) {
+      document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
+    }
+    
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.0.css"><link rel="stylesheet" href="/css/color@1.0.0.css"><meta name="generator" content="Hexo 5.4.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url('/img/default.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">yhy's blog</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="site-info"><h1 id="site-title">yhy's blog</h1><div id="site-subtitle"><span id="subtitle"></span></div><div id="site_social_icons"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts" id="recent-posts"><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a><i class="fas fa-angle-right"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/">蜜罐</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a><span class="article-meta__link">•</span><a class="article-meta__tags" href="/tags/%E8%9C%9C%E7%BD%90/">蜜罐</a></span></div><div class="content">
   好久不见
 
 0x01 git 蜜罐复现具体原理请看 https://drivertom.blogspot.com/2021/08/git.html?m=1
-1234567import gitrepo = git.Repo.init(path=&quot;.&quot;)repo.index.add(items=[&#x27;../../git_poc.txt&#x27;])repo.inde
-        </a>
-      </p>
+1234567import gitrepo = git.Repo.init(path=&quot;.&quot;)repo.index.add(items=[&#x27;../../git_poc.txt&#x27;])repo.index.commit(&#x27;commit&#x27;)
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-08-09 20:30" pubdate>
-              2021-08-09
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/">蜜罐</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
-            
-              <a href="/tags/%E8%9C%9C%E7%BD%90/">蜜罐</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
+python3 -m pip install GitPython
+python3 运行, 生成Poc 
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/">Java ysoserial学习之CommonsCollections5(四)</a>
-      </h1>
+  在当前目录的../../的目录下必须有git_poc.txt
 
-      <p class="index-excerpt">
-        <a href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/">
-          
-          
-            
-          
-          
+比如当前脚本目录为 /Users/yhy/Desktop/gitpoc,那么在/Users/yhy要存在git_poc.txt
+然后将 .git 文件夹整体拖入网站根目录下
+效果：防止干扰我直接在虚拟机中运行 dumpall 工具
+
+没有在 dumpall/192.168.100.250_8080 目录下生成文件，而是进行了目录穿越,在原计划（dumpall/19 ...</div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   庆祝我伟大的党百年华诞🎉
   向伟大的祖国敬礼(‘-‘*ゞ
 
@@ -279,422 +172,85 @@
 
   toString    CC5   本文重点
 
-  hashCode  
-        </a>
-      </p>
+  hashCode    CC6
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-07-01 21:18" pubdate>
-              2021-07-01
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
+  equals      CC7
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/">Java ysoserial学习之CommonsCollections6(三)</a>
-      </h1>
 
-      <p class="index-excerpt">
-        <a href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/">
-          
-          
-            
-          
-          
+本文CommonsCollections6利用链的限制条件：
+​    JDK版本：暂无限制、 CommonsCollections 3.1 - 3.2.1
+实验环境:
+​    JDK 1.8.0_261 、Commons-Collections 3.2.1 
+0x01 利用链123456789101112131415161718192021/*	Gadget chain:        ObjectInputStream.readObject()            BadAttributeValueExpException.read ...</div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   争取明年有一个上千star的项目
 
 0x00 前言在上一篇通过 P牛和 ysoserial 项目分析了CommonsCollections1这条利用链和其中的TransformedMap、LazyMap原理。
-但是在 Java 8u71以后，这个利用链不能再利用了，主要原因是 sun.reflect.annotation.AnnotationInvocationHandler#readObj
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-06-27 22:09" pubdate>
-              2021-06-27
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/">Java ysoserial学习之CommonsCollections1(二)</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/">
-          
-          
-            
-          
-          
+但是在 Java 8u71以后，这个利用链不能再利用了，主要原因是 sun.reflect.annotation.AnnotationInvocationHandler#readObject 的逻辑变化了。
+CommonsCollections6 解决了高版本Java的利用问题，一起来学习下吧。
+本文CommonsCollections6利用链的限制条件：
+​    JDK版本：暂无限制、 CommonsCollections 3.1 - 3.2.1
+实验环境:
+​    JDK 1.8.0_261 、Commons-Collections 3.2.1 
+0x01 AnnotationInvocationHandler#readObject学习 CommonsCollections6 之前，先来看看 AnnotationInvocationHandler#readObjec ...</div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   超长预警
 
 0x01 前言Apache Commons Collections是一个扩展了Java标准库里的Collection结构的第三方基础库，它提供了很多强有力的数据结构类型并且实现了各种集合工具类。作为Apache开源项目的重要组件，Commons Collections被广泛应用于各种Java应用的开发。
-Apache Commons Collections 中提供了一个Trans
-        </a>
-      </p>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-06-11 20:30" pubdate>
-              2021-06-11
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/">Java ysoserial学习之URLDNS(一)</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/">
-          
-          
-            
-          
-          
+Apache Commons Collections 中提供了一个Transformer的类，这个接口的功能就是将一个对象转换为另外一个对象，CC链都依赖于此。
+本文CommonsCollections1利用链的限制条件：
+​    JDK版本：jdk1.8以前（8u71之后已修复不可利用）、Commons-Collections 3.1-3.2.1
+实验环境：
+​    JDK 1.7.0_80、Commons-Collections 3.2.1 
+0x02 P牛简化的利用链Demo分析123456789101112131415161718192021package org.vulhub.Ser;import org.apache.commons.collectio ...</div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之URLDNS(一)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)">Java ysoserial学习之URLDNS(一)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-06-04T12:30:00.000Z" title="发表于 2021-06-04 20:30:00">2021-06-04</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   雄关漫道真如铁 而今迈步从头越
 
 0x01 前言URLDNS 是 ysoserial 中利用链的一个 payload，该 payload 的目的只有一个，就是确定目标系统上是否存在可控的 readObject() 方法，即是否存在Java 反序列化漏洞。该利用链具有如下特点:
 
   不限制jdk版本，使用 Java 内置的 URL 类，不依赖于任何的第三方库
-  只对指定的 URL 发送 D
-        </a>
-      </p>
+  只对指定的 URL 发送 DNS 查询，不做其他操作
+  在⽬目标没有回显的时候，能够通过DNS请求得知是否存在反序列列化漏洞
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-06-04 20:30" pubdate>
-              2021-06-04
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/">Java反序列化漏洞分析(二)-Shiro550</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/">
-          
-          
-            
-          
-          
+0x02 原理java.util.HashMap 实现了Serializable 接口，重写了 readObject, 在反序列化时会调用 hash 函数计算 key 的 hashCode.而 java.net.URL 的 hashCode 在计算时会调用 getHostAddress 来解析域名, 从而发出 DNS 请求。
+我们从 ysoserial 项目src/main/java/ysoserial/payloads/URLDNS.java 的注释中可以看到 URLDNS的调用链（Gadg ...</div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/" title="Java反序列化漏洞分析(二)-Shiro550">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java反序列化漏洞分析(二)-Shiro550"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/" title="Java反序列化漏洞分析(二)-Shiro550">Java反序列化漏洞分析(二)-Shiro550</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-05-29T12:30:00.000Z" title="发表于 2021-05-29 20:30:00">2021-05-29</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行
 
-0x00 纠错首先纠正一下上篇文章Java反序列化漏洞分析(一)-Shiro550的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是错的、错的、错的，其实是可以打的。我给搞错了，URLDNS 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标
-        </a>
-      </p>
+0x00 纠错首先纠正一下上篇文章Java反序列化漏洞分析(一)-Shiro550的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是错的、错的、错的，其实是可以打的。我给搞错了，URLDNS 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了同一条dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-05-29 20:30" pubdate>
-              2021-05-29
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
+  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/">Java反序列化漏洞分析(一)-Shiro550</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/">
-          
-          
-            
-          
-          
+0x01 原生Shiro550执行命令当使用URLDNS链打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。
+但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。
+经过测试ysoserial拥有的CommonsCollectio ...</div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/" title="Java反序列化漏洞分析(一)-Shiro550">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java反序列化漏洞分析(一)-Shiro550"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/" title="Java反序列化漏洞分析(一)-Shiro550">Java反序列化漏洞分析(一)-Shiro550</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-05-21T02:30:00.000Z" title="发表于 2021-05-21 10:30:00">2021-05-21</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。
 
 0x01 前言Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。
-在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是硬编码在代码中的
-        </a>
-      </p>
+在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是硬编码在代码中的，这就为伪造cookie提供了机会。只要rememberMe的AES加密密钥泄露，无论shiro是什么版本都会导致反序列化漏洞。
+Shiro的“记住我”功能是设置cookie中的rememberMe值来实现。当后端接收到来自未经身份验证的用户的请求时，它将通过执行以下操作来寻找他们记住的身份：
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-05-21 10:30" pubdate>
-              2021-05-21
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
+ 检索cookie中RememberMe的值
+ Base64解码
+ 使用AES解密
+ 反序列化
 
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/">初探Java反序列化漏洞(二)</a>
-      </h1>
+漏洞原因在于第三步，在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是硬编码在代码中的，于是我们就可以构造RememberMe的值，然后让其反序列化执行。
 
-      <p class="index-excerpt">
-        <a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/">
-          
-          
-            
-          
-          
+  只要remem ...</div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/" title="初探Java反序列化漏洞(二)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="初探Java反序列化漏洞(二)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/" title="初探Java反序列化漏洞(二)">初探Java反序列化漏洞(二)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-05-02T14:10:00.000Z" title="发表于 2021-05-02 22:10:00">2021-05-02</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   不能食言，再晚也要写
 
 0x01 Java反射反射之中包含了一个「反」字，有「反」就会有「正」，那么解释反射就必须先从「正」开始解释。
 一般情况下，当使用某个类时必定知道它是什么类（类名），是用来做什么的（类的属性和方法）。于是我们直接对这个类进行实例化，之后使用这个类对象进行操作。
-123User user = new User();user.setName(&quot;yhy&quot;
-        </a>
-      </p>
+123User user = new User();user.setName(&quot;yhy&quot;);System.out.println(user.getName());
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-05-02 22:10" pubdate>
-              2021-05-02
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/">初探Java反序列化漏洞(一)</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/">
-          
-          
-            
-          
-          
+“正射”就是通过new创建了一个User实例，然后通过实例(user)去调用其所属方法。
+但是当你new的时候不知道类名怎么办？受private保护的方法怎么调用？这时候反射的作用就体现出来了。
+123456789101112// newClass clz = Class.forName(&quot;yhy.reflect.User&quot;);Object object = clz.newInstance();// setName(&quot;yhy&quot;)Method method = clz.getMe ...</div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/" title="初探Java反序列化漏洞(一)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="初探Java反序列化漏洞(一)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/" title="初探Java反序列化漏洞(一)">初探Java反序列化漏洞(一)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-04-16T14:10:00.000Z" title="发表于 2021-04-16 22:10:00">2021-04-16</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="content">
   学无止境，参考着资料边学边记录吧。
 
 0x01 Java序列化与反序列化Java序列化是指把Java对象转换为字节序列的过程。这一过程将数据分解成字节流，以便存储在文件中或在网络上传输；
 Java反序列化是指把字节序列恢复为Java对象的过程。就是打开字节流并重构成对象，恢复数据。
-序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”
-        </a>
-      </p>
+序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”操作。
+12345// 写入对象内容private void writeObject(java.io.ObjectOutputStream out)// 读取对象内容private void readObject(java.io.ObjectInputStream in)
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-04-16 22:10" pubdate>
-              2021-04-16
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/">漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</a>
-      </h1>
-
-      <p class="index-excerpt">
-        <a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/">
-          
-          
-            
-          
-          
+0x02 为什么需要序列化与反序列化当两个进程进行远程通信时，可以相互发送各种类型的数据，包括文本、图片、音频、视频等， 而这些数据都会以二进制序列的形式在网络上传送。而当两个Java进程进行通信时，可以通过Java的序列化与反序列化在进程之间直接传送对象，换句话说，发送方需要把这个Java对象转换为字节序列，然后在网络上 ...</div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/" title="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)">     <img class="post_bg" src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/" title="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)">漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-04-04T08:00:00.000Z" title="发表于 2021-04-04 16:00:00">2021-04-04</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span></div><div class="content">
   燕子来时新社，梨花落后清明。
 
 0x01 漏洞描述F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。
@@ -702,240 +258,198 @@ CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理�
 0x02 漏洞影响
 
 
-F5 BIG
-        </a>
-      </p>
+F5 BIG-IP 16.0.0-16.0.1
+F5 BIG-IP 12.1.0-12.1.5.2
 
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2021-04-04 16:00" pubdate>
-              2021-04-04
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
+
+
+F5 BIG-IP 15.1.0-15.1.2
+F5 BIG-IQ 7.1.0-7.1.0.2
+
+
+F5 BIG-IP 14.1.0-14.1.3.1
+F5 BIG-IQ 7.0.0-7.0.0.1
+
+
+F5 BIG-IP 13.1.0-13.1.3.5
+F5 BIG-IQ 6.0.0-6.1.0
+
+
+0x03 漏洞复现https://login.f5.com/resource/registerEmail.do 注册好后，下载
+https://downloads.f5.com/esd/eula.sv? ...</div></div></div><nav id="pagination"><div class="pagination"><span class="page-number current">1</span><a class="page-number" href="/page/2/#content-inner">2</a><a class="page-number" href="/page/3/#content-inner">3</a><a class="extend next" rel="next" href="/page/2/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">切换主题了</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"/></a><div class="content"><a class="title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"/></a><div class="content"><a class="title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之URLDNS(一)"/></a><div class="content"><a class="title" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)">Java ysoserial学习之URLDNS(一)</a><time datetime="2021-06-04T12:30:00.000Z" title="发表于 2021-06-04 20:30:00">2021-06-04</time></div></div></div></div><div class="card-widget" id="card-newest-comments"><div class="item-headline"><i class="fas fa-comment-dots"></i><span>最新评论</span></div><div class="aside-list"><span>正在加载中...</span></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
             
-              <a href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-
-
-  <nav aria-label="navigation">
-    <span class="pagination" id="pagination">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
-    </span>
-  </nav>
-
-
-
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    
+            <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/GitHub%E5%B7%A5%E5%85%B7/"><span class="card-category-list-name">GitHub工具</span><span class="card-category-list-count">3</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/Web%E6%B8%97%E9%80%8F/"><span class="card-category-list-name">Web渗透</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/docker%E9%80%83%E9%80%B8/"><span class="card-category-list-name">docker逃逸</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/"><span class="card-category-list-name">域渗透</span><span class="card-category-list-count">6</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/"><span class="card-category-list-name">安全工具</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/"><span class="card-category-list-name">漏洞原理</span><span class="card-category-list-count">8</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"><span class="card-category-list-name">漏洞复现</span><span class="card-category-list-count">3</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/"><span class="card-category-list-name">蜜罐</span><span class="card-category-list-count">1</span></a></li></ul></li>
+            </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/GitHub%E5%B7%A5%E5%85%B7/" style="font-size: 1.23em; color: #999ea6">GitHub工具</a> <a href="/tags/Web%E6%B8%97%E9%80%8F/" style="font-size: 1.1em; color: #999">Web渗透</a> <a href="/tags/Windows%E6%8F%90%E6%9D%83/" style="font-size: 1.37em; color: #99a4b2">Windows提权</a> <a href="/tags/docker%E9%80%83%E9%80%B8/" style="font-size: 1.1em; color: #999">docker逃逸</a> <a href="/tags/getshell/" style="font-size: 1.1em; color: #999">getshell</a> <a href="/tags/sqlmap%E4%BD%BF%E7%94%A8/" style="font-size: 1.1em; color: #999">sqlmap使用</a> <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/" style="font-size: 1.1em; color: #999">内网渗透</a> <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/" style="font-size: 1.37em; color: #99a4b2">域渗透</a> <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/" style="font-size: 1.5em; color: #99a9bf">漏洞原理</a> <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/" style="font-size: 1.23em; color: #999ea6">漏洞复现</a> <a href="/tags/%E8%9C%9C%E7%BD%90/" style="font-size: 1.1em; color: #999">蜜罐</a></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span><a class="card-more-btn" href="/archives/" title="查看更多">
+    <i class="fas fa-angle-right"></i></a></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/08/"><span class="card-archive-list-date">八月 2021</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/07/"><span class="card-archive-list-date">七月 2021</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/06/"><span class="card-archive-list-date">六月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/05/"><span class="card-archive-list-date">五月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/04/"><span class="card-archive-list-date">四月 2021</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/03/"><span class="card-archive-list-date">三月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/02/"><span class="card-archive-list-date">二月 2021</span><span class="card-archive-list-count">4</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/01/"><span class="card-archive-list-date">一月 2021</span><span class="card-archive-list-count">4</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">23</div></div><div class="webinfo-item"><div class="item-name">已运行时间 :</div><div class="item-count" id="runtimeshow" data-publishDate="2020-08-03T16:00:00.000Z"></div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">36.9k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2021-08-24T06:44:07.686Z"></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/default.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div></div><hr/><div id="local-search-results"></div><span class="search-close-button"><i class="fas fa-times"></i></span></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
 
-    
-      <a id="scroll-top-button" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
 
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v"
-                 for="local-search-input">关键词</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
-    
+document.addEventListener('DOMContentLoaded', panguInit)</script><script src="/js/search/local-search.js"></script><script>var preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
 
-    
-  </main>
-
-  <footer class="text-center mt-5 py-3">
-  <div class="footer-content">
-     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
-  </div>
-  
-  <div class="statistics">
-    
-    
-
-    
-      
-        <!-- 不蒜子统计PV -->
-        <span id="busuanzi_container_site_pv" style="display: none">
-            总访问量 
-            <span id="busuanzi_value_site_pv"></span>
-             次
-          </span>
-      
-      
-        <!-- 不蒜子统计UV -->
-        <span id="busuanzi_container_site_uv" style="display: none">
-            总访客数 
-            <span id="busuanzi_value_site_uv"></span>
-             人
-          </span>
-      
-    
-  </div>
-
-
-  
-
-  
-</footer>
-
-
-  <!-- SCRIPTS -->
-  
-  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
-
-  <script>
-    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
+  }
+}
+window.addEventListener('load',preloader.endLoading())</script><div class="js-pjax"><script>function subtitleType () {
+  fetch('https://v1.hitokoto.cn')
+    .then(response => response.json())
+    .then(data => {
+      if (true) {
+        const from = '出自 ' + data.from
+        const sub = []
+        sub.unshift(data.hitokoto, from)
+        window.typed = new Typed('#subtitle', {
+          strings: sub,
+          startDelay: 300,
+          typeSpeed: 150,
+          loop: true,
+          backSpeed: 50,
+        })
+      } else {
+        document.getElementById('subtitle').innerHTML = data.hitokoto
+      }
     })
-  </script>
+}
 
+if (true) {
+  if (typeof Typed === 'function') {
+    subtitleType()
+  } else {
+    getScript('https://cdn.jsdelivr.net/npm/typed.js/lib/typed.min.js').then(subtitleType)
+  }
+} else {
+  subtitleType()
+}
+</script><script>if (document.getElementsByClassName('mermaid').length) {
+  if (window.mermaidJsLoad) mermaid.init()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(() => {
+      window.mermaidJsLoad = true
+      mermaid.initialize({
+        theme: 'default',
+      })
+      false && mermaid.init()
+    })
+  }
+}</script></div><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.17.0/js/md5.min.js"></script><script>window.addEventListener('load', () => {
+  const changeContent = (content) => {
+    if (content === '') return content
 
-<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
-<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
-<script  src="/js/debouncer.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g,"") // remove html tag
 
-<!-- Plugins -->
+    if (content.length > 150) {
+      content = content.substring(0,150) + '...'
+    }
+    return content
+  }
 
+  const getIcon = (icon, mail) => {
+    if (icon) return icon
+    let defaultIcon = '?d=robohash'
+    let iconUrl = `https://gravatar.loli.net/avatar/${md5(mail.toLowerCase()) + defaultIcon}`
+    return iconUrl
+  }
 
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
+  const generateHtml = array => {
+    let result = ''
 
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class=\'aside-list-item\'>'
 
+        if (true) {
+          const name = 'src'
+          result += `<a href='${array[i].url}' class='thumbnail'><img ${name}='${array[i].avatar}' alt='${array[i].nick}'></a>`
+        }
 
-  
+        result += `<div class='content'>
+        <a class='comment' href='${array[i].url}'>${array[i].content}</a>
+        <div class='name'><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '没有评论'
+    }
 
+    let $dom = document.querySelector('#card-newest-comments .aside-list')
+    $dom.innerHTML= result
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh($dom)
+  }
 
+  const getComment = () => {
+    const serverURL = 'https://vID2hnAA.api.lncldglobal.com'
 
+    var settings = {
+      "method": "GET",
+      "headers": {
+        "X-LC-Id": 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+        "X-LC-Key": 'GB9a9tvf5zPbYaxUShE01qk1',
+        "Content-Type": "application/json"
+      },
+    }
 
+    fetch(`${serverURL}/1.1/classes/Comment?limit=6&order=-createdAt`,settings)
+      .then(response => response.json())
+      .then(data => {
+        const valineArray = data.results.map(function (e) {
+          return {
+            'avatar': getIcon(e.QQAvatar, e.mail),
+            'content': changeContent(e.comment),
+            'nick': e.nick,
+            'url': e.url + '#' + e.objectId,
+            'date': e.updatedAt,
+          }
+        })
+        saveToLocal.set('valine-newest-comments', JSON.stringify(valineArray), 10/(60*24))
+        generateHtml(valineArray)
+      }).catch(e => {
+        const $dom = document.querySelector('#card-newest-comments .aside-list')
+        $dom.innerHTML= "无法获取评论，请确认相关配置是否正确"
+      }) 
+  }
 
+  const newestCommentInit = () => {
+    if (document.querySelector('#card-newest-comments .aside-list')) {
+      const data = saveToLocal.get('valine-newest-comments')
+      if (data) {
+        generateHtml(JSON.parse(data))
+      } else {
+        getComment()
+      }
+    }
+  }
 
-
-
-
-  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
-
-
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
-  <script>
-    (function (window, document) {
-      var typing = Fluid.plugins.typing;
-      var title = document.getElementById('subtitle').title;
-      
-      typing(title)
-      
-    })(window, document);
-  </script>
-
-
-
-  <script  src="/js/local-search.js" ></script>
-  <script>
-    (function () {
-      var path = "/local-search.xml";
-      $('#local-search-input').on('click', function() {
-        searchFunc(path, 'local-search-input', 'local-search-result');
-      });
-      $('#modalSearch').on('shown.bs.modal', function() {
-        $('#local-search-input').focus();
-      });
-    })()
-  </script>
-
-
-
-
-
-
-
-
-
-
-
-
-  
-    <!-- Baidu Analytics -->
-    <script defer>
-      var _hmt = _hmt || [];
-      (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-      })();
-    </script>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-
-
-
-<!-- 主题的启动项 保持在最底部 -->
-<script  src="/js/boot.js" ></script>
-
-
-</body>
-</html>
+  newestCommentInit()
+  document.addEventListener('pjax:complete', newestCommentInit)
+})</script><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

