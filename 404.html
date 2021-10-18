@@ -55,7 +55,7 @@
   isHome: false,
   isHighlightShrink: false,
   isToc: false,
-  postUpdate: '2021-08-25 17:16:54'
+  postUpdate: '2021-10-18 16:57:47'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -189,7 +189,7 @@ window.addEventListener('load',preloader.endLoading())</script><div class="js-pj
       false && mermaid.init()
     })
   }
-}</script></div><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.17.0/js/md5.min.js"></script><script>window.addEventListener('load', () => {
+}</script></div><script>window.addEventListener('load', () => {
   const changeContent = (content) => {
     if (content === '') return content
 
@@ -204,11 +204,52 @@ window.addEventListener('load',preloader.endLoading())</script><div class="js-pj
     return content
   }
 
-  const getIcon = (icon, mail) => {
-    if (icon) return icon
-    let defaultIcon = '?d=robohash'
-    let iconUrl = `https://gravatar.loli.net/avatar/${md5(mail.toLowerCase()) + defaultIcon}`
-    return iconUrl
+  const findTrueUrl = (array) => {
+    Promise.all(array.map(item =>
+      fetch(item.url).then(resp => resp.json()).then(data => {
+        const urlArray = data.body.match(/(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?/ig)
+        if (data.user.login === 'utterances-bot') {
+          return urlArray.pop()
+        } else {
+          return urlArray.shift()
+        }
+      })
+    )).then(res => {
+        array = array.map((i,index)=> {
+          return {
+            ...i,
+            url: res[index]
+          }
+        })
+
+        saveToLocal.set('github-newest-comments', JSON.stringify(array), 10/(60*24))
+        generateHtml(array)
+    });
+  }
+
+  const getComment = () => {
+    fetch('https://api.github.com/repos/yhy0/blog_comments/issues/comments?sort=updated&direction=desc&per_page=6&page=1',{
+      "headers": {
+        Accept: 'application/vnd.github.v3.html+json'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        const githubArray = data.map(item => {
+          return {
+            'avatar': item.user.avatar_url,
+            'content': changeContent(item.body_html),
+            'nick': item.user.login,
+            'url': item.issue_url,
+            'date': item.updated_at,
+            'githubUrl': item.html_url
+          }
+        })
+        findTrueUrl(githubArray)
+      }).catch(e => {
+        const $dom = document.querySelector('#card-newest-comments .aside-list')
+        $dom.innerHTML= "无法获取评论，请确认相关配置是否正确"
+      })
   }
 
   const generateHtml = array => {
@@ -238,41 +279,9 @@ window.addEventListener('load',preloader.endLoading())</script><div class="js-pj
     window.pjax && window.pjax.refresh($dom)
   }
 
-  const getComment = () => {
-    const serverURL = 'https://vID2hnAA.api.lncldglobal.com'
-
-    var settings = {
-      "method": "GET",
-      "headers": {
-        "X-LC-Id": 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
-        "X-LC-Key": 'GB9a9tvf5zPbYaxUShE01qk1',
-        "Content-Type": "application/json"
-      },
-    }
-
-    fetch(`${serverURL}/1.1/classes/Comment?limit=6&order=-createdAt`,settings)
-      .then(response => response.json())
-      .then(data => {
-        const valineArray = data.results.map(function (e) {
-          return {
-            'avatar': getIcon(e.QQAvatar, e.mail),
-            'content': changeContent(e.comment),
-            'nick': e.nick,
-            'url': e.url + '#' + e.objectId,
-            'date': e.updatedAt,
-          }
-        })
-        saveToLocal.set('valine-newest-comments', JSON.stringify(valineArray), 10/(60*24))
-        generateHtml(valineArray)
-      }).catch(e => {
-        const $dom = document.querySelector('#card-newest-comments .aside-list')
-        $dom.innerHTML= "无法获取评论，请确认相关配置是否正确"
-      }) 
-  }
-
   const newestCommentInit = () => {
     if (document.querySelector('#card-newest-comments .aside-list')) {
-      const data = saveToLocal.get('valine-newest-comments')
+      const data = saveToLocal.get('github-newest-comments')
       if (data) {
         generateHtml(JSON.parse(data))
       } else {

