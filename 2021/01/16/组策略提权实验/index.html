@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://w.wallhaven.cc/full/e7/wallhaven-e7wzg8.jpg">
 <meta property="article:published_time" content="2021-01-16T07:01:51.000Z">
-<meta property="article:modified_time" content="2021-08-24T14:33:47.902Z">
+<meta property="article:modified_time" content="2023-02-17T16:20:03.485Z">
 <meta property="article:author" content="yhy">
 <meta property="article:tag" content="Windows提权">
 <meta property="article:tag" content="域渗透">
@@ -58,7 +58,7 @@
   isHome: false,
   isHighlightShrink: false,
   isToc: true,
-  postUpdate: '2021-08-24 22:33:47'
+  postUpdate: '2023-02-18 00:20:03'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -163,7 +163,7 @@
     }
     detectApple()
     })(window)</script><link rel="stylesheet" href="/css/custom@1.0.2.css"><link rel="stylesheet" href="/css/color@1.0.1.css"><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="yhy's blog" type="application/atom+xml">
-</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://w.wallhaven.cc/full/e7/wallhaven-e7wzg8.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="yhy's blog"><span class="site-name">yhy's blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">组策略提权实验</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-01-16T07:01:51.000Z" title="发表于 2021-01-16 15:01:51">2021-01-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2021-08-24T14:33:47.902Z" title="更新于 2021-08-24 22:33:47">2021-08-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>5分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="组策略提权实验"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://w.wallhaven.cc/full/e7/wallhaven-e7wzg8.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="yhy's blog"><span class="site-name">yhy's blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">组策略提权实验</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2021-01-16T07:01:51.000Z" title="发表于 2021-01-16 15:01:51">2021-01-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-02-17T16:20:03.485Z" title="更新于 2023-02-18 00:20:03">2023-02-18</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>5分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="组策略提权实验"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
 <p>管理员在域中新建一个组策略后,操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
 </blockquote>
 <h2 id="1-组策略基本介绍"><a href="#1-组策略基本介绍" class="headerlink" title="1. 组策略基本介绍"></a>1. 组策略基本介绍</h2><p>组策略可以控制用户帐户和计算机帐户的工作环境。它提供了操作系统、应用程序和活动目录中用户设置的集中化管理和配置。有本机组策略和域的组策略。本机组策略用于计算机管理员统一管理本机以及所有用户，域内的组策略用于域管统一管理域内的所有计算机以及域用户。 在本文中侧重点讲的是域内的组策略，借机学一下域环境搭建</p>
@@ -174,7 +174,7 @@
 
 <p>所有域内主机都能访问，里面保存组策略相关数据，包含登录脚本配置文件等。</p>
 <p>例如，测试主机所在域为test.yhy，可访问共享文件夹<code>\\test.yhy\SYSVOL\test.yhy</code>，如下图：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084350.png" alt="image-20210116111851931"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084350.png" alt="image-20210116111851931"></p>
 <p>在早期的版本，某些组策略首选项可以存储加密过的密码，加密方式为AES 256，虽然目前AES 256很难被攻破，但是微软选择公开了私钥，地址： <a target="_blank" rel="noopener" href="https://msdn.microsoft.com/en-us/library/cc422924.aspx%E3%80%82">https://msdn.microsoft.com/en-us/library/cc422924.aspx。</a></p>
 <p>![image-20210116111342068](&#x2F;Users&#x2F;yhy&#x2F;Library&#x2F;Application Support&#x2F;typora-user-images&#x2F;image-20210116111342068.png)</p>
 <p>如下几个组策略首选项文件中会存在可选的密码cpassword 属性:</p>
@@ -194,73 +194,73 @@
 </ul>
 <h2 id="3-漏洞复现"><a href="#3-漏洞复现" class="headerlink" title="3. 漏洞复现"></a>3. 漏洞复现</h2><h3 id="3-1-域环境搭建"><a href="#3-1-域环境搭建" class="headerlink" title="3.1 域环境搭建"></a>3.1 域环境搭建</h3><h4 id="3-1-1-环境要求"><a href="#3-1-1-环境要求" class="headerlink" title="3.1.1 环境要求"></a>3.1.1 环境要求</h4><p>环境：Windows Server 2008R2 </p>
 <p>网络：NAT模式</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084407.png" alt="image-20210116112955314"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084407.png" alt="image-20210116112955314"></p>
 <p>更改管理员Administrator 密码为强密码，例如：test.yhy@123</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084412.png" alt="image-20210116114025566"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084412.png" alt="image-20210116114025566"></p>
 <h4 id="3-1-2-添加域"><a href="#3-1-2-添加域" class="headerlink" title="3.1.2 添加域"></a>3.1.2 添加域</h4><p>点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084418.png" alt="image-20210116112445745"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084418.png" alt="image-20210116112445745"></p>
 <p>选中 Active Directory 域服务</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084422.png" alt="image-20210116113323735"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084422.png" alt="image-20210116113323735"></p>
 <p>一直下一步，安装即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084429.png" alt="image-20210116113443897"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084429.png" alt="image-20210116113443897"></p>
 <p>关闭后，打开“服务器管理器”，找到Active Directory安装向导</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084433.png" alt="image-20210116113523528"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084437.png" alt="image-20210116113639168"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084446.png" alt="image-20210116114315069"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084433.png" alt="image-20210116113523528"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084437.png" alt="image-20210116113639168"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084446.png" alt="image-20210116114315069"></p>
 <p>因为前面没配置静态IP（前面应该配置为静态IP的，不过这个环境无所谓了），这里选择是：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084451.png" alt="image-20210116114528206"> </p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084518.png" alt="image-20210116114630800"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084451.png" alt="image-20210116114528206"> </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084518.png" alt="image-20210116114630800"></p>
 <p>点击是，下一步，设置密码：test.yhy@123</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084525.png" alt="image-20210116114714649"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084525.png" alt="image-20210116114714649"></p>
 <p>一直下一步，等待安装</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084531.png" alt="image-20210116114816453"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084537.png" alt="image-20210116114855068"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084531.png" alt="image-20210116114816453"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084537.png" alt="image-20210116114855068"></p>
 <p>完成，重启。</p>
 <p>测试一下：<code>net user /domain</code>, ok</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084547.png" alt="image-20210116115925975"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084547.png" alt="image-20210116115925975"></p>
 <h4 id="3-1-3安装FTP服务"><a href="#3-1-3安装FTP服务" class="headerlink" title="3.1.3安装FTP服务"></a>3.1.3安装FTP服务</h4><p>虚拟机不知道为啥装不上VMware Tools，没办法拖文件，这里打开FTP服务，使用FTP上传文件。</p>
 <p>还是点击左下角开始按钮旁边的服务器管理器，角色 —&gt; 添加角色</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084554.png" alt="image-20210116120244713"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084554.png" alt="image-20210116120244713"></p>
 <p>选择Web服务（IIS），下一步，最下边选择FTP服务器</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084558.png" alt="image-20210116120911584"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084558.png" alt="image-20210116120911584"></p>
 <p>一直下一步，安装</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084604.png" alt="image-20210116120952490"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084604.png" alt="image-20210116120952490"></p>
 <p>完成后，点击开始按钮，所有程序 —&gt; 管理工具 —&gt; Internet 信息服务(IIS)管理器</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084609.png" alt="image-20210116120424350"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084609.png" alt="image-20210116120424350"></p>
 <p>右键添加FTP站点</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084618.png" alt="image-20210116122419671"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084618.png" alt="image-20210116122419671"></p>
 <p>站点名称随意，物理路径，这里选择了C盘下新建文件夹，</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084624.png" alt="image-20210116123005662"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084629.png" alt="image-20210116123140690"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084634.png" alt="image-20210116123215490"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084624.png" alt="image-20210116123005662"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084629.png" alt="image-20210116123140690"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084634.png" alt="image-20210116123215490"></p>
 <p>然后完成即可， 这时候使用FTP连接工具即可，连不上通过控制面板，关闭防火墙即可</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084638.png" alt="image-20210116123531384"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084638.png" alt="image-20210116123531384"></p>
 <h3 id="3-2-创建组策略，批量修改域中机器的本地管理员密码"><a href="#3-2-创建组策略，批量修改域中机器的本地管理员密码" class="headerlink" title="3.2 创建组策略，批量修改域中机器的本地管理员密码"></a>3.2 创建组策略，批量修改域中机器的本地管理员密码</h3><h4 id="3-2-1创建组策略"><a href="#3-2-1创建组策略" class="headerlink" title="3.2.1创建组策略"></a>3.2.1创建组策略</h4><p>Win + R 打开运行 ，输入gpmc.msc ，进入组策略管理。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084644.png" alt="image-20210116124142601"> 		右击<code>组策略</code> —&gt; <code>新建</code>:</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084649.png" alt="image-20210116124834370"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084644.png" alt="image-20210116124142601"> 		右击<code>组策略</code> —&gt; <code>新建</code>:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084649.png" alt="image-20210116124834370"></p>
 <p>右击<code>test</code>(刚刚创建好的组策略对象)–&gt;<code>编辑</code>,来到如下位置：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084653.png" alt="image-20210116124949983"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084653.png" alt="image-20210116124949983"></p>
 <p>右击<code>本地用户和组</code>–&gt;<code>新建</code>–&gt;<code>本地用户</code>：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084658.png" alt="image-20210116125418016"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084658.png" alt="image-20210116125418016"></p>
 <p>其中设置的密码为<code>hackyhy.123</code></p>
 <p>回到组策略管理，设置组策略的对象，添加<code>Domain Computers</code>到组策略组中：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084712.png" alt="image-20210116125705664"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084712.png" alt="image-20210116125705664"></p>
 <p>查看组策略对象<code>test</code>的详细信息：</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084718.png" alt="image-20210116125821832"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084718.png" alt="image-20210116125821832"></p>
 <p>至此，组策略配置完成，域内主机重新登录。</p>
 <blockquote>
 <p>  管理员在域中新建一个组策略后，操作系统会自动在SYSVO共享目录中生成一个XML文件，即<code>Groups.xml</code>,该文件中保存了该组策略更新后的密码。</p>
 </blockquote>
 <p>根据test的ID 去访问 <code>\\test.yhy\SYSVOL\test.yhy\Policies</code> 或者本地的<code>C:\Windows\SYSVOL\domain\Policies</code>相对应的策略。</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084723.png" alt="image-20210116130016932"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084723.png" alt="image-20210116130016932"></p>
 <p>打开，访问<code>\Machine\Preferences\Groups</code>，找到文件<code>Groups.xml</code>，</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084729.png" alt="image-20210116130711551"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084729.png" alt="image-20210116130711551"></p>
 <p>其中的关注点为<code>cpassword</code>: fjomcrwPmyEFuKDFM1WGGDUe8Ap1iGL&#x2F;RsEuyDABYBI</p>
 <h4 id="3-2-2-漏洞利用"><a href="#3-2-2-漏洞利用" class="headerlink" title="3.2.2 漏洞利用"></a>3.2.2 漏洞利用</h4><p>介绍两种简单的利用方式</p>
 <ul>
 <li>Kali 下，将cpassword 字段复制到kali中，使用gpp-decrypt 进行破解</li>
 </ul>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084757.png" alt="img"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084757.png" alt="img"></p>
 <ul>
 <li><p>msf 模块</p>
 <p>使用msf后渗透模块</p>
@@ -268,7 +268,7 @@
 <p>当拿到目标的session后（这里直接将msf生成的马，通过ftp上传，并执行）</p>
 </li>
 </ul>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210220084804.png" alt="image-20210116134115737"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084804.png" alt="image-20210116134115737"></p>
 <h2 id="4-组策略首选项提权的防御措施"><a href="#4-组策略首选项提权的防御措施" class="headerlink" title="4. 组策略首选项提权的防御措施"></a>4. 组策略首选项提权的防御措施</h2><p>在用于管理组策略的计算机上安装 KB2962486补丁，防止新的凭据被放置在组策略首选项中。微软在2014年修复了组策略首选项提权漏洞，使用的方法就是不再将密码保存在组策略首选项中。</p>
 <p>此外，针对Everyone访问权限进行设置，具体如下：</p>
 <ol>
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-
       el: '#vcomment',
       appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
       appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
-      avatar: 'robohash',
+      avatar: 'mn',
       serverURLs: '',
       emojiMaps: "",
       path: window.location.pathname,
