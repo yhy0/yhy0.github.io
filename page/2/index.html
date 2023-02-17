@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>yhy's blog</title><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="修道之初, 谁不想当剑仙?">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>yhy's blog</title><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="修道之初, 谁不想当剑仙?">
 <meta property="og:type" content="website">
 <meta property="og:title" content="yhy&#39;s blog">
 <meta property="og:url" content="https://fireline.fun/page/2/index.html">
@@ -8,10 +8,10 @@
 <meta property="og:image" content="https://fireline.fun/img/favicon.png">
 <meta property="article:author" content="yhy">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://fireline.fun/img/favicon.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/page/2/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+<meta name="twitter:image" content="https://fireline.fun/img/favicon.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/page/2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
   root: '/',
   algolia: undefined,
-  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
   translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
   noticeOutdate: undefined,
   highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
@@ -36,26 +36,25 @@
   lightbox: 'fancybox',
   Snackbar: undefined,
   source: {
-    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
     justifiedGallery: {
-      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
-      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
-    },
-    fancybox: {
-      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js',
-      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css'
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
     }
   },
   isPhotoFigcaption: false,
   islazyload: false,
-  isanchor: true
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  }
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
   title: 'yhy\'s blog',
   isPost: false,
   isHome: true,
   isHighlightShrink: false,
   isToc: false,
-  postUpdate: '2021-10-18 16:57:47'
+  postUpdate: '2023-02-17 21:46:16'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -112,6 +111,21 @@
       document.head.appendChild(script)
     })
   
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
       win.activateDarkMode = function () {
         document.documentElement.setAttribute('data-theme', 'dark')
         if (document.querySelector('meta[name="theme-color"]') !== null) {
@@ -138,55 +152,131 @@
         }
       }
     
-    const fontSizeVal = saveToLocal.get('global-font-size')
-    if (fontSizeVal !== undefined) {
-      document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
-    }
-    
     const detectApple = () => {
-      if (GLOBAL_CONFIG_SITE.isHome && /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
         document.documentElement.classList.add('apple')
       }
     }
     detectApple()
-    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.2.css"><link rel="stylesheet" href="/css/color@1.0.1.css"><meta name="generator" content="Hexo 5.4.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url('/img/default.png')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">yhy's blog</a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="site-info"><h1 id="site-title">yhy's blog</h1><div id="site-subtitle"><span id="subtitle"></span></div><div id="site_social_icons"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts" id="recent-posts"><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/" title="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)">     <img class="post_bg" src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824222159.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/" title="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)">漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</a><div class="content">
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.2.css"><link rel="stylesheet" href="/css/color@1.0.1.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header" style="background-image: url('/img/default.png')"><nav id="nav"><span id="blog-info"><a href="/" title="yhy's blog"><span class="site-name">yhy's blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="site-info"><h1 id="site-title">yhy's blog</h1><div id="site-subtitle"><span id="subtitle"></span></div><div id="site_social_icons"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts" id="recent-posts"><div class="recent-post-item"><div class="post_cover left"><a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/" title="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)"><img class="post-bg" src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824222159.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/" title="漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)">漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-04-04T08:00:00.000Z" title="发表于 2021-04-04 16:00:00">2021-04-04</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/#post-comment"><span class="valine-comment-count" data-xid="/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   燕子来时新社，梨花落后清明。
 
-0x01 漏洞描述F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功 ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-04-04T08:00:00.000Z" title="发表于 2021-04-04 16:00:00">2021-04-04</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span></div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/" title="图形化漏洞利用Demo-JavaFX版">     <img class="post_bg" src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221721.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="图形化漏洞利用Demo-JavaFX版"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/" title="图形化漏洞利用Demo-JavaFX版">图形化漏洞利用Demo-JavaFX版</a><div class="content">0x01 这是个嘛？这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工 ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-23T02:43:40.611Z" title="发表于 2021-03-23 10:43:40">2021-03-23</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span></div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/" title="漏洞复现-Apache Solr 任意文件读取漏洞">     <img class="post_bg" src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824222242.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="漏洞复现-Apache Solr 任意文件读取漏洞"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/" title="漏洞复现-Apache Solr 任意文件读取漏洞">漏洞复现-Apache Solr 任意文件读取漏洞</a><div class="content">
+0x01 漏洞描述F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。
+CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。
+0x02 漏洞影响
+
+
+F5 BIG-IP 16.0.0-16.0.1
+F5 BIG-IP 12.1.0-12.1.5.2
+
+
+
+F5 BIG-IP 15.1.0-15.1.2
+F5 BIG-IQ 7.1.0-7.1.0.2
+
+
+F5 BIG-IP 14.1.0-14.1.3.1
+F5 BIG-IQ 7.0.0-7.0.0.1
+
+
+F5 BIG-IP 13.1.0-13.1.3.5
+F5 BIG-IQ 6.0.0-6.1.0
+
+
+0x03 漏洞复现https://login.f5.com/resource/registerEmail.do 注册好后，下载
+https://downloads.f5.com/esd/eula.sv? ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/" title="图形化漏洞利用Demo-JavaFX版"><img class="post-bg" src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221721.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="图形化漏洞利用Demo-JavaFX版"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/" title="图形化漏洞利用Demo-JavaFX版">图形化漏洞利用Demo-JavaFX版</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-23T02:43:40.611Z" title="发表于 2021-03-23 10:43:40">2021-03-23</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/#post-comment"><span class="valine-comment-count" data-xid="/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">0x01 这是个嘛？这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。
+虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便、直观。
+使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款属于你自己的漏洞利用工具，建立自己的漏洞利用库。
+ExpDemo-JavaFX工具新增漏洞编写教程
+0x02 Demo经过多次改版，这是最终(?)的效果。详细见更新记录.md
+https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4
+ 
+    
+
+
+0x03 编写属于你的图像化漏洞利用工具3.1 项目结构1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606 ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/" title="漏洞复现-Apache Solr 任意文件读取漏洞"><img class="post-bg" src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824222242.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="漏洞复现-Apache Solr 任意文件读取漏洞"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/" title="漏洞复现-Apache Solr 任意文件读取漏洞">漏洞复现-Apache Solr 任意文件读取漏洞</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-18T12:59:48.000Z" title="发表于 2021-03-18 20:59:48">2021-03-18</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/#post-comment"><span class="valine-comment-count" data-xid="/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   这周在hw，水一篇文章，记录一下漏洞利用，当一个合格的脚本小子
 
-0x01 漏洞描述由于Apache Solr默认安装时未开启身份验证，导致未经 ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-18T12:59:48.000Z" title="发表于 2021-03-18 20:59:48">2021-03-18</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/">漏洞复现</a></span></div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/" title="初探JWT">     <img class="post_bg" src="https://w.wallhaven.cc/full/y8/wallhaven-y8v7p7.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="初探JWT"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/" title="初探JWT">初探JWT</a><div class="content">
+0x01 漏洞描述由于Apache Solr默认安装时未开启身份验证，导致未经身份验证的攻击者可利用Config API打开requestDispatcher.requestParsers.enableRemoteStreaming开关，从而使攻击者可以在未授权的情况下获取目标服务器敏感文件。
+
+  听说报给官方后，官方拒绝修复，认为这不是一个漏洞，比一些src还离谱，人家起码会给个内部已知:eyes:
+
+0x02 漏洞影响Apache Solr </div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/" title="初探JWT"><img class="post-bg" src="https://w.wallhaven.cc/full/y8/wallhaven-y8v7p7.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="初探JWT"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/" title="初探JWT">初探JWT</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-05T02:42:12.000Z" title="发表于 2021-03-05 10:42:12">2021-03-05</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/Web%E6%B8%97%E9%80%8F/">Web渗透</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Web%E6%B8%97%E9%80%8F/">Web渗透</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/#post-comment"><span class="valine-comment-count" data-xid="/2021/03/05/%E5%88%9D%E6%8E%A2JWT/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   当你迷茫时，就去学习新东西
 
-初探JWT0x01 什么是JWTJWT 全称为 JSON Web Tokens ，是为了在网络应用环境间传递声明而 ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-03-05T02:42:12.000Z" title="发表于 2021-03-05 10:42:12">2021-03-05</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/Web%E6%B8%97%E9%80%8F/">Web渗透</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Web%E6%B8%97%E9%80%8F/">Web渗透</a></span></div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/02/25/github_cve_monitor/" title="gitHub_cve_monitor">     <img class="post_bg" src="https://w.wallhaven.cc/full/kw/wallhaven-kw2mpq.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="gitHub_cve_monitor"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/02/25/github_cve_monitor/" title="gitHub_cve_monitor">gitHub_cve_monitor</a><div class="content">
+初探JWT0x01 什么是JWTJWT 全称为 JSON Web Tokens ，是为了在网络应用环境间传递声明而执行的一种基于JSON 的开放标准 (RFC 7519)，该 token 被设计为紧凑且安全的，它的两大使用场景是：认证和数据交换，特别适用于分布式站点的单点登录（SSO）场景。JWT的声明一般被用来在身份提供者和服务提供者间传递被认证的用户身份信息，以便于从资源服务器获取资源，也可以增加一些额外的其它业务逻辑所必须的声明信息，该token也可直接被用于认证，也可被加密。
+0x02 JWT组成一个JWT实际上就是一个字符串，它由三部分组成，头部、载荷与签名，中间用 . 分隔，例如：xxxxx.yyyyy.zzzzz
+2.1 头部(header)头部通常由两部分组成：令牌的类型（即 JWT）和正在使用的签名算法（如 HMAC SHA256 或 RSA.）。
+1234&#123;  &quot;alg&quot;: &quot;HS256&quot;,  &quot;typ&quot;: &quot;JWT&quot;&#125;
+
+然后用  ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2021/02/25/github_cve_monitor/" title="gitHub_cve_monitor"><img class="post-bg" src="https://w.wallhaven.cc/full/kw/wallhaven-kw2mpq.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="gitHub_cve_monitor"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/02/25/github_cve_monitor/" title="gitHub_cve_monitor">gitHub_cve_monitor</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-25T03:06:07.000Z" title="发表于 2021-02-25 11:06:07">2021-02-25</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/02/25/github_cve_monitor/#post-comment"><span class="valine-comment-count" data-xid="/2021/02/25/github_cve_monitor/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
 没事少矫情，有空多赚钱。
 
-监控github上新增的cve编号项目漏洞，推送钉钉或者server酱使用项目地址：https://github.com ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-25T03:06:07.000Z" title="发表于 2021-02-25 11:06:07">2021-02-25</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/GitHub%E5%B7%A5%E5%85%B7/">GitHub工具</a></span></div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/" title="域渗透-DCSync和黄金票据">     <img class="post_bg" src="https://w.wallhaven.cc/full/6k/wallhaven-6kzp3q.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="域渗透-DCSync和黄金票据"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/" title="域渗透-DCSync和黄金票据">域渗透-DCSync和黄金票据</a><div class="content">
+监控github上新增的cve编号项目漏洞，推送钉钉或者server酱使用项目地址：https://github.com/yhy0/github-cve-monitor.git
+12python3 -m pip install dingtalkchatbotpython3 github_cve_monitor.py
+
+每3分钟检测一次github是否有新的cve漏洞提交记录，若有则通过server酱和钉钉机器人推送（二者配置一个即可）
+时间间隔修改在 58 行
+建议使用screen命令运行在自己的linux vps后台上，就可以愉快的接收各种cve了
+12345screen -S github_cve	#创建一个screen，名字为github_cve，在新窗口运行本项目, 成功后直接叉掉该窗口, 项目就会在后台一直运行了screen -ls 		#查看创建的screenscreen -r github_cve	#连接github_cve后台screen，如果存在的话
+
+
+
+钉钉机器人配置在 33行的 dingding函数中，需要钉钉建群，添加钉钉机器人， ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/" title="域渗透-DCSync和黄金票据"><img class="post-bg" src="https://w.wallhaven.cc/full/6k/wallhaven-6kzp3q.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="域渗透-DCSync和黄金票据"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/" title="域渗透-DCSync和黄金票据">域渗透-DCSync和黄金票据</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-21T13:50:11.000Z" title="发表于 2021-02-21 21:50:11">2021-02-21</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/#post-comment"><span class="valine-comment-count" data-xid="/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   新年开工快乐～～～
 
 域渗透-DCSync和黄金票据0x01 概述
-krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的 ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-21T13:50:11.000Z" title="发表于 2021-02-21 21:50:11">2021-02-21</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta__link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/" title="哈希传递">     <img class="post_bg" src="https://w.wallhaven.cc/full/p2/wallhaven-p2gmjm.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="哈希传递"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/" title="哈希传递">哈希传递</a><div class="content">
+krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的服务账户，用来创建票据授予服务（TGS）  加密的密钥。
+黄金票据（Golden Ticket）：它能让黑客在拥有普通域用户权限和krbtgt hash的情况下，获取域管理员权限。
+DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器导出帐户密码hash。
+
+在域内，不同DC之间，每15分钟都会有一次域数据的同步。实现不登录到域控制器上，而获取域控制器数据库中的数据。
+在DCSync功能出现之前，要想获得域用户的哈希，需要登录域控制器，在域控制器上执行代码才能获得域用户的哈希。2015年8月，新版的mimikatz增加了DCSync的功能，该功能可以模仿一个域控DC，从真实的域控中请求数据，如用户的哈希。该功能最大的特点就是在于不用登陆域服务器，即可远程通过域数据同步复制的方式获得想要的用户口令信息。
+需要注意的是，DCSync攻击的对象如果是只读域控制器(RODC)，则会失效，因为RODC是不能参与复制同步数据到其他DC ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/" title="哈希传递"><img class="post-bg" src="https://w.wallhaven.cc/full/p2/wallhaven-p2gmjm.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="哈希传递"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/" title="哈希传递">哈希传递</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-14T02:30:51.000Z" title="发表于 2021-02-14 10:30:51">2021-02-14</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/#post-comment"><span class="valine-comment-count" data-xid="/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。
   幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 
 
-0x01  ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-14T02:30:51.000Z" title="发表于 2021-02-14 10:30:51">2021-02-14</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta__link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/" title="Windows系统散列值获取">     <img class="post_bg" src="https://w.wallhaven.cc/full/p2/wallhaven-p288q9.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Windows系统散列值获取"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/" title="Windows系统散列值获取">Windows系统散列值获取</a><div class="content">
+0x01 哈希传递攻击概念在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。
+在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行暴力破解散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次会话之间的密码散列保持静态，直到下次更改密码为止。
+从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统 ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/" title="Windows系统散列值获取"><img class="post-bg" src="https://w.wallhaven.cc/full/p2/wallhaven-p288q9.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Windows系统散列值获取"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/" title="Windows系统散列值获取">Windows系统散列值获取</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-07T02:48:51.000Z" title="发表于 2021-02-07 10:48:51">2021-02-07</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/#post-comment"><span class="valine-comment-count" data-xid="/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165
 
-Windows系统散列值获取0x01 LM Hash与NTLM Ha ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-02-07T02:48:51.000Z" title="发表于 2021-02-07 10:48:51">2021-02-07</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta__link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div></div></div><div class="recent-post-item"><div class="post_cover left_radius"><a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/" title="令牌窃取分析及防范">     <img class="post_bg" src="https://w.wallhaven.cc/full/nm/wallhaven-nm9epk.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="令牌窃取分析及防范"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/" title="令牌窃取分析及防范">令牌窃取分析及防范</a><div class="content">
+Windows系统散列值获取0x01 LM Hash与NTLM HashWindows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在ntds.dit中，加密后为散列值。
+Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下
+1username:RID:LM-HASH:NT-HASH
+
+
+  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或 ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/" title="令牌窃取分析及防范"><img class="post-bg" src="https://w.wallhaven.cc/full/nm/wallhaven-nm9epk.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="令牌窃取分析及防范"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/" title="令牌窃取分析及防范">令牌窃取分析及防范</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-01-29T05:00:31.000Z" title="发表于 2021-01-29 13:00:31">2021-01-29</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/#post-comment"><span class="valine-comment-count" data-xid="/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.
 
-令牌窃取分析及防范0x01 令牌概述令牌( Toke ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-01-29T05:00:31.000Z" title="发表于 2021-01-29 13:00:31">2021-01-29</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta__link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div></div></div><div class="recent-post-item"><div class="post_cover right_radius"><a href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/" title="Windows提权-BypassUAC之劫持注册表实验">     <img class="post_bg" src="https://w.wallhaven.cc/full/yj/wallhaven-yjyg1g.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Windows提权-BypassUAC之劫持注册表实验"></a></div><div class="recent-post-info"><div class="recent-post-info-top"><a class="article-title" href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/" title="Windows提权-BypassUAC之劫持注册表实验">Windows提权-BypassUAC之劫持注册表实验</a><div class="content">
+令牌窃取分析及防范0x01 令牌概述令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。
+令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：
+
+访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)
+密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。
+会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。
+
+Windows访问令牌Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户 ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/" title="Windows提权-BypassUAC之劫持注册表实验"><img class="post-bg" src="https://w.wallhaven.cc/full/yj/wallhaven-yjyg1g.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Windows提权-BypassUAC之劫持注册表实验"></a></div><div class="recent-post-info"><a class="article-title" href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/" title="Windows提权-BypassUAC之劫持注册表实验">Windows提权-BypassUAC之劫持注册表实验</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-01-19T01:18:21.000Z" title="发表于 2021-01-19 09:18:21">2021-01-19</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/#post-comment"><span class="valine-comment-count" data-xid="/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">
   准备PPT的过程中，还是学到不少东西的
 
-1. UAC 简介**UAC(User Account Control，用户账号控制)**是微软为了提 ...</div></div><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2021-01-19T01:18:21.000Z" title="发表于 2021-01-19 09:18:21">2021-01-19</time></span><span class="article-meta"><span class="article-meta__separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span><span class="article-meta tags"><span class="article-meta__separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Windows%E6%8F%90%E6%9D%83/">Windows提权</a><span class="article-meta__link">•</span><a class="article-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a></span></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/#content-inner">3</a><a class="extend next" rel="next" href="/page/3/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">切换主题了</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程"><img src="https://w.wallhaven.cc/full/g7/wallhaven-g72zml.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ExpDemo-JavaFX工具新增漏洞编写教程"/></a><div class="content"><a class="title" href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程">ExpDemo-JavaFX工具新增漏洞编写教程</a><time datetime="2021-08-19T01:00:00.000Z" title="发表于 2021-08-19 09:00:00">2021-08-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221559.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221642.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221752.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"/></a><div class="content"><a class="title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824222034.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"/></a><div class="content"><a class="title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></div></div></div></div><div class="card-widget" id="card-newest-comments"><div class="item-headline"><i class="fas fa-comment-dots"></i><span>最新评论</span></div><div class="aside-list"><span>正在加载中...</span></div></div><div class="card-widget card-categories"><div class="item-headline">
+1. UAC 简介**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算机上进行安装操作或者对计算机设置进行更改。
+在Windows Vista及以后的版本中，微软设置了安全控制策略，分为高、中、低三个等级。高等级的进程有管理员权限；中等级的进程有普通用户权限；低等级的进程，权限是有限的，以保证系统在受到安全威胁时造成的损害最小。在权限不够的情况下，访问系统磁盘的根目录( 例如 C:\)、Windows目录，以及读写系统登录数据库等操作，都需要经常UAC(User Account Control，用户账号控制)的认证，如图所示：
+
+需要UAC的授权才能进行的操作列表如下：
+
+配置Windows Update
+增加、删除账户
+更改账户类型
+更改UAC的设置
+安装Ac ...</div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/#content-inner">3</a><a class="extend next" rel="next" href="/page/3/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">24</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">11</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">2023年多写文章</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程"><img src="https://w.wallhaven.cc/full/g7/wallhaven-g72zml.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ExpDemo-JavaFX工具新增漏洞编写教程"/></a><div class="content"><a class="title" href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程">ExpDemo-JavaFX工具新增漏洞编写教程</a><time datetime="2021-08-19T01:00:00.000Z" title="发表于 2021-08-19 09:00:00">2021-08-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221559.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221642.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824221752.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections6(三)"/></a><div class="content"><a class="title" href="/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/" title="Java ysoserial学习之CommonsCollections6(三)">Java ysoserial学习之CommonsCollections6(三)</a><time datetime="2021-06-27T14:09:00.000Z" title="发表于 2021-06-27 22:09:00">2021-06-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)"><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210824222034.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections1(二)"/></a><div class="content"><a class="title" href="/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/" title="Java ysoserial学习之CommonsCollections1(二)">Java ysoserial学习之CommonsCollections1(二)</a><time datetime="2021-06-11T12:30:00.000Z" title="发表于 2021-06-11 20:30:00">2021-06-11</time></div></div></div></div><div class="card-widget" id="card-newest-comments"><div class="item-headline"><i class="fas fa-comment-dots"></i><span>最新评论</span></div><div class="aside-list"><span>正在加载中...</span></div></div><div class="card-widget card-categories"><div class="item-headline">
             <i class="fas fa-folder-open"></i>
             <span>分类</span>
             
             </div>
             <ul class="card-category-list" id="aside-cat-list">
             <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/GitHub%E5%B7%A5%E5%85%B7/"><span class="card-category-list-name">GitHub工具</span><span class="card-category-list-count">4</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/Web%E6%B8%97%E9%80%8F/"><span class="card-category-list-name">Web渗透</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/docker%E9%80%83%E9%80%B8/"><span class="card-category-list-name">docker逃逸</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/"><span class="card-category-list-name">域渗透</span><span class="card-category-list-count">6</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7/"><span class="card-category-list-name">安全工具</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/"><span class="card-category-list-name">漏洞原理</span><span class="card-category-list-count">8</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"><span class="card-category-list-name">漏洞复现</span><span class="card-category-list-count">3</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/"><span class="card-category-list-name">蜜罐</span><span class="card-category-list-count">1</span></a></li></ul></li>
-            </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/GitHub%E5%B7%A5%E5%85%B7/" style="font-size: 1.3em; color: #99a1ac">GitHub工具</a> <a href="/tags/Web%E6%B8%97%E9%80%8F/" style="font-size: 1.1em; color: #999">Web渗透</a> <a href="/tags/Windows%E6%8F%90%E6%9D%83/" style="font-size: 1.4em; color: #99a5b6">Windows提权</a> <a href="/tags/docker%E9%80%83%E9%80%B8/" style="font-size: 1.1em; color: #999">docker逃逸</a> <a href="/tags/getshell/" style="font-size: 1.1em; color: #999">getshell</a> <a href="/tags/sqlmap%E4%BD%BF%E7%94%A8/" style="font-size: 1.1em; color: #999">sqlmap使用</a> <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/" style="font-size: 1.1em; color: #999">内网渗透</a> <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/" style="font-size: 1.4em; color: #99a5b6">域渗透</a> <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/" style="font-size: 1.5em; color: #99a9bf">漏洞原理</a> <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/" style="font-size: 1.2em; color: #999da3">漏洞复现</a> <a href="/tags/%E8%9C%9C%E7%BD%90/" style="font-size: 1.1em; color: #999">蜜罐</a></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span><a class="card-more-btn" href="/archives/" title="查看更多">
-    <i class="fas fa-angle-right"></i></a></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/08/"><span class="card-archive-list-date">八月 2021</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/07/"><span class="card-archive-list-date">七月 2021</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/06/"><span class="card-archive-list-date">六月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/05/"><span class="card-archive-list-date">五月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/04/"><span class="card-archive-list-date">四月 2021</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/03/"><span class="card-archive-list-date">三月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/02/"><span class="card-archive-list-date">二月 2021</span><span class="card-archive-list-count">4</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/01/"><span class="card-archive-list-date">一月 2021</span><span class="card-archive-list-count">4</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">24</div></div><div class="webinfo-item"><div class="item-name">已运行时间 :</div><div class="item-count" id="runtimeshow" data-publishDate="2020-08-03T16:00:00.000Z"></div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">38.9k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2021-10-18T08:57:47.715Z"></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div id="local-search"><div class="search-dialog"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div></div><hr/><div id="local-search-results"></div><span class="search-close-button"><i class="fas fa-times"></i></span></div><div id="search-mask"></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script>function panguFn () {
+            </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/Web%E6%B8%97%E9%80%8F/" style="font-size: 1.1em; color: #999">Web渗透</a> <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/" style="font-size: 1.2em; color: #999da3">漏洞复现</a> <a href="/tags/%E8%9C%9C%E7%BD%90/" style="font-size: 1.1em; color: #999">蜜罐</a> <a href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/" style="font-size: 1.4em; color: #99a5b6">域渗透</a> <a href="/tags/sqlmap%E4%BD%BF%E7%94%A8/" style="font-size: 1.1em; color: #999">sqlmap使用</a> <a href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/" style="font-size: 1.1em; color: #999">内网渗透</a> <a href="/tags/GitHub%E5%B7%A5%E5%85%B7/" style="font-size: 1.3em; color: #99a1ac">GitHub工具</a> <a href="/tags/getshell/" style="font-size: 1.1em; color: #999">getshell</a> <a href="/tags/Windows%E6%8F%90%E6%9D%83/" style="font-size: 1.4em; color: #99a5b6">Windows提权</a> <a href="/tags/docker%E9%80%83%E9%80%B8/" style="font-size: 1.1em; color: #999">docker逃逸</a> <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86/" style="font-size: 1.5em; color: #99a9bf">漏洞原理</a></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span><a class="card-more-btn" href="/archives/" title="查看更多">
+    <i class="fas fa-angle-right"></i></a></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/08/"><span class="card-archive-list-date">八月 2021</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/07/"><span class="card-archive-list-date">七月 2021</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/06/"><span class="card-archive-list-date">六月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/05/"><span class="card-archive-list-date">五月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/04/"><span class="card-archive-list-date">四月 2021</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/03/"><span class="card-archive-list-date">三月 2021</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/02/"><span class="card-archive-list-date">二月 2021</span><span class="card-archive-list-count">4</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2021/01/"><span class="card-archive-list-date">一月 2021</span><span class="card-archive-list-count">4</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">24</div></div><div class="webinfo-item"><div class="item-name">已运行时间 :</div><div class="item-count" id="runtimeshow" data-publishDate="2020-08-03T16:00:00.000Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">38.8k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-02-17T13:46:16.621Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script>function panguFn () {
   if (typeof pangu === 'object') pangu.autoSpacingPage()
   else {
     getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
@@ -204,59 +294,86 @@ function panguInit () {
   }
 }
 
-document.addEventListener('DOMContentLoaded', panguInit)</script><script src="/js/search/local-search.js"></script><script>var preloader = {
-  endLoading: () => {
-    document.body.style.overflow = 'auto';
-    document.getElementById('loading-box').classList.add("loaded")
-  },
-  initLoading: () => {
-    document.body.style.overflow = '';
-    document.getElementById('loading-box').classList.remove("loaded")
+document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-pjax"><script>(() => {
+  function loadValine () {
+    function initValine () {
+      let initData = {
+        el: '#vcomment',
+        appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+        appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
+        serverURLs: ''
+      }
+      
+      const valine = new Valine(initData)
+    }
 
+    if (typeof Valine === 'function') initValine() 
+    else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+  }
+
+  window.pjax ? loadValine() : window.addEventListener('load', loadValine)
+})()</script><script>window.typedJSFn = {
+  init: (str) => {
+    window.typed = new Typed('#subtitle', Object.assign({
+      strings: str,
+      startDelay: 300,
+      typeSpeed: 150,
+      loop: true,
+      backSpeed: 50,
+    }, null))
+  },
+  run: (subtitleType) => {
+    if (true) {
+      if (typeof Typed === 'function') {
+        subtitleType()
+      } else {
+        getScript('https://cdn.jsdelivr.net/npm/typed.js/lib/typed.min.js').then(subtitleType)
+      }
+    } else {
+      subtitleType()
+    }
   }
 }
-window.addEventListener('load',preloader.endLoading())</script><div class="js-pjax"><script>function subtitleType () {
+</script><script>function subtitleType () {
   getScript('https://sdk.jinrishici.com/v2/browser/jinrishici.js').then(() => {
     jinrishici.load(result =>{
       if (true) {
         const sub = []
         const content = result.data.content
         sub.unshift(content)
-        window.typed = new Typed('#subtitle', {
-          strings: sub,
-          startDelay: 300,
-          typeSpeed: 150,
-          loop: true,
-          backSpeed: 50,
-        })
+        typedJSFn.init(sub)
       } else {
         document.getElementById('subtitle').innerHTML = result.data.content
       }
     })
   })
 }
+typedJSFn.run(subtitleType)
+</script><script>(() => {
+  const $mermaidWrap = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaidWrap.length) {
+    window.runMermaid = () => {
+      window.loadMermaid = true
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
 
-if (true) {
-  if (typeof Typed === 'function') {
-    subtitleType()
-  } else {
-    getScript('https://cdn.jsdelivr.net/npm/typed.js/lib/typed.min.js').then(subtitleType)
-  }
-} else {
-  subtitleType()
-}
-</script><script>if (document.getElementsByClassName('mermaid').length) {
-  if (window.mermaidJsLoad) mermaid.init()
-  else {
-    getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(() => {
-      window.mermaidJsLoad = true
-      mermaid.initialize({
-        theme: 'default',
+      Array.from($mermaidWrap).forEach((item, index) => {
+        const mermaidSrc = item.firstElementChild
+        const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+        const mermaidID = 'mermaid-' + index
+        const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+        mermaid.mermaidAPI.render(mermaidID, mermaidDefinition, (svgCode) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svgCode)
+        })
       })
-      false && mermaid.init()
-    })
+    }
+
+    const loadMermaid = () => {
+      window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+    }
+
+    window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
   }
-}</script></div><script>window.addEventListener('load', () => {
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/blueimp-md5/js/md5.min.js"></script><script>window.addEventListener('load', () => {
   const changeContent = (content) => {
     if (content === '') return content
 
@@ -271,52 +388,11 @@ if (true) {
     return content
   }
 
-  const findTrueUrl = (array) => {
-    Promise.all(array.map(item =>
-      fetch(item.url).then(resp => resp.json()).then(data => {
-        const urlArray = data.body.match(/(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?/ig)
-        if (data.user.login === 'utterances-bot') {
-          return urlArray.pop()
-        } else {
-          return urlArray.shift()
-        }
-      })
-    )).then(res => {
-        array = array.map((i,index)=> {
-          return {
-            ...i,
-            url: res[index]
-          }
-        })
-
-        saveToLocal.set('github-newest-comments', JSON.stringify(array), 10/(60*24))
-        generateHtml(array)
-    });
-  }
-
-  const getComment = () => {
-    fetch('https://api.github.com/repos/yhy0/blog_comments/issues/comments?sort=updated&direction=desc&per_page=6&page=1',{
-      "headers": {
-        Accept: 'application/vnd.github.v3.html+json'
-      }
-    })
-      .then(response => response.json())
-      .then(data => {
-        const githubArray = data.map(item => {
-          return {
-            'avatar': item.user.avatar_url,
-            'content': changeContent(item.body_html),
-            'nick': item.user.login,
-            'url': item.issue_url,
-            'date': item.updated_at,
-            'githubUrl': item.html_url
-          }
-        })
-        findTrueUrl(githubArray)
-      }).catch(e => {
-        const $dom = document.querySelector('#card-newest-comments .aside-list')
-        $dom.innerHTML= "无法获取评论，请确认相关配置是否正确"
-      })
+  const getIcon = (icon, mail) => {
+    if (icon) return icon
+    let defaultIcon = '?d=robohash'
+    let iconUrl = `https://gravatar.loli.net/avatar/${md5(mail.toLowerCase()) + defaultIcon}`
+    return iconUrl
   }
 
   const generateHtml = array => {
@@ -332,7 +408,7 @@ if (true) {
         }
 
         result += `<div class='content'>
-        <a class='comment' href='${array[i].url}'>${array[i].content}</a>
+        <a class='comment' href='${array[i].url}' title='${array[i].content}'>${array[i].content}</a>
         <div class='name'><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
         </div></div>`
       }
@@ -346,9 +422,41 @@ if (true) {
     window.pjax && window.pjax.refresh($dom)
   }
 
+  const getComment = () => {
+    const serverURL = 'https://vID2hnAA.api.lncldglobal.com'
+
+    var settings = {
+      "method": "GET",
+      "headers": {
+        "X-LC-Id": 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+        "X-LC-Key": 'GB9a9tvf5zPbYaxUShE01qk1',
+        "Content-Type": "application/json"
+      },
+    }
+
+    fetch(`${serverURL}/1.1/classes/Comment?limit=6&order=-createdAt`,settings)
+      .then(response => response.json())
+      .then(data => {
+        const valineArray = data.results.map(function (e) {
+          return {
+            'avatar': getIcon(e.QQAvatar, e.mail),
+            'content': changeContent(e.comment),
+            'nick': e.nick,
+            'url': e.url + '#' + e.objectId,
+            'date': e.updatedAt,
+          }
+        })
+        saveToLocal.set('valine-newest-comments', JSON.stringify(valineArray), 10/(60*24))
+        generateHtml(valineArray)
+      }).catch(e => {
+        const $dom = document.querySelector('#card-newest-comments .aside-list')
+        $dom.innerHTML= "无法获取评论，请确认相关配置是否正确"
+      }) 
+  }
+
   const newestCommentInit = () => {
     if (document.querySelector('#card-newest-comments .aside-list')) {
-      const data = saveToLocal.get('github-newest-comments')
+      const data = saveToLocal.get('valine-newest-comments')
       if (data) {
         generateHtml(JSON.parse(data))
       } else {
@@ -359,8 +467,8 @@ if (true) {
 
   newestCommentInit()
   document.addEventListener('pjax:complete', newestCommentInit)
-})</script><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
-POWERMODE.shake = false;
+})</script><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
 POWERMODE.mobile = false;
 document.body.addEventListener('input', POWERMODE);
-</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></body></html>
