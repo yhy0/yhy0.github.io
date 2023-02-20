@@ -42,7 +42,7 @@
     <link href="https://fireline.fun/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/"/>
     <id>https://fireline.fun/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/</id>
     <published>2023-02-18T14:00:00.000Z</published>
-    <updated>2023-02-20T03:09:19.942Z</updated>
+    <updated>2023-02-20T07:18:45.306Z</updated>
     
     
     <summary type="html">盗火者Prometheus</summary>
@@ -55,6 +55,31 @@
     <category term="漏洞分析" scheme="https://fireline.fun/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/"/>
     
     <category term="CNCF" scheme="https://fireline.fun/tags/CNCF/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>弈 - Codeql 自动运行和项目监控工具</title>
+    <link href="https://fireline.fun/2022/10/13/%E5%BC%88%20-%20Codeql%20%E8%87%AA%E5%8A%A8%E8%BF%90%E8%A1%8C%E5%92%8C%E9%A1%B9%E7%9B%AE%E7%9B%91%E6%8E%A7%E5%B7%A5%E5%85%B7/"/>
+    <id>https://fireline.fun/2022/10/13/%E5%BC%88%20-%20Codeql%20%E8%87%AA%E5%8A%A8%E8%BF%90%E8%A1%8C%E5%92%8C%E9%A1%B9%E7%9B%AE%E7%9B%91%E6%8E%A7%E5%B7%A5%E5%85%B7/</id>
+    <published>2022-10-13T08:15:26.910Z</published>
+    <updated>2023-02-20T09:35:37.805Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;h1 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h1&gt;&lt;p&gt;代码审计总是离不开一些神器，笔者常用 &lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="GitHub工具" scheme="https://fireline.fun/categories/GitHub%E5%B7%A5%E5%85%B7/"/>
+    
+    
+    <category term="GitHub工具" scheme="https://fireline.fun/tags/GitHub%E5%B7%A5%E5%85%B7/"/>
     
   </entry>
   
@@ -508,36 +533,6 @@
 &lt;p&gt;  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 &lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;h2 id=&quot;0x01-哈希传递攻击概念&quot;&gt;&lt;a</summary>
-        
-      
-    
-    
-    
-    <category term="域渗透" scheme="https://fireline.fun/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/"/>
-    
-    
-    <category term="Windows提权" scheme="https://fireline.fun/tags/Windows%E6%8F%90%E6%9D%83/"/>
-    
-    <category term="域渗透" scheme="https://fireline.fun/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Windows系统散列值获取</title>
-    <link href="https://fireline.fun/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/"/>
-    <id>https://fireline.fun/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</id>
-    <published>2021-02-07T02:48:51.000Z</published>
-    <updated>2023-02-18T12:40:27.666Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;blockquote&gt;
-&lt;p&gt;  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h1 id=&quot;Windows系统散列值获取&quot;&gt;&lt;a href=&quot;#Windows系统散列值获取&quot;</summary>
         
       
     
