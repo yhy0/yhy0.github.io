@@ -1,0 +1,347 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>盗火者Prometheus | yhy's blog</title><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="盗火者Prometheus">
+<meta property="og:type" content="article">
+<meta property="og:title" content="盗火者Prometheus">
+<meta property="og:url" content="https://fireline.fun/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/index.html">
+<meta property="og:site_name" content="yhy&#39;s blog">
+<meta property="og:description" content="盗火者Prometheus">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201109293.jpeg">
+<meta property="article:published_time" content="2023-02-18T14:00:00.000Z">
+<meta property="article:modified_time" content="2023-02-20T03:09:19.942Z">
+<meta property="article:author" content="yhy">
+<meta property="article:tag" content="漏洞分析">
+<meta property="article:tag" content="CNCF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201109293.jpeg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  }
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '盗火者Prometheus',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-02-20 11:09:19'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.2.css"><link rel="stylesheet" href="/css/color@1.0.1.css"><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="yhy's blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">26</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201109293.jpeg')"><nav id="nav"><span id="blog-info"><a href="/" title="yhy's blog"><span class="site-name">yhy's blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">盗火者Prometheus</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-02-18T14:00:00.000Z" title="发表于 2023-02-18 22:00:00">2023-02-18</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-02-20T03:09:19.942Z" title="更新于 2023-02-20 11:09:19">2023-02-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90-CNCF/">漏洞分析 - CNCF</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="盗火者Prometheus"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p>  今年多写文章，先把去年的清理一下</p>
+</blockquote>
+<h2 id="1-Prometheus"><a href="#1-Prometheus" class="headerlink" title="1.Prometheus"></a>1.Prometheus</h2><p>云原生的开源监控告警解决方案的一款产品</p>
+<p>架构图</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201057474.png" alt="image-20220926171326026"></p>
+<table>
+<thead>
+<tr>
+<th align="center"><a target="_blank" rel="noopener" href="https://github.com/prometheus/prometheus">Prometheus server</a></th>
+<th align="center">服务端，用于抓取和存储时间序列数据</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center"><a target="_blank" rel="noopener" href="https://prometheus.io/docs/instrumenting/clientlibs/">client libraries</a></td>
+<td align="center">客户端库，用于检测应用程序代码</td>
+</tr>
+<tr>
+<td align="center"><a target="_blank" rel="noopener" href="https://github.com/prometheus/pushgateway">push gateway</a></td>
+<td align="center">在不支持pull 拉取监控数据的场景中，可通过部署Pushgateway的方式，由监控源主动上报到Promtehus</td>
+</tr>
+<tr>
+<td align="center"><a target="_blank" rel="noopener" href="https://prometheus.io/docs/instrumenting/exporters/">exporters</a></td>
+<td align="center">监控客户端，用于收集各类监控数据，不同的监控需求由不同的exporter处理，如node-exporter、mysql-exporter、blackbox-exporter等。</td>
+</tr>
+<tr>
+<td align="center"><a target="_blank" rel="noopener" href="https://github.com/prometheus/alertmanager">alertmanager</a></td>
+<td align="center">独立组件，用于处理告警信息</td>
+</tr>
+<tr>
+<td align="center">various support tools</td>
+<td align="center">其他各种支持工具</td>
+</tr>
+<tr>
+<td align="center"><a target="_blank" rel="noopener" href="https://prometheus.io/docs/prometheus/latest/querying/basics/">PromQL</a></td>
+<td align="center">官方提供的用于数据查询的功能性查询语言</td>
+</tr>
+</tbody></table>
+<h2 id="2-历史漏洞"><a href="#2-历史漏洞" class="headerlink" title="2.历史漏洞"></a>2.历史漏洞</h2><h3 id="1-CVE-2019-3826"><a href="#1-CVE-2019-3826" class="headerlink" title="1. CVE-2019-3826"></a>1. CVE-2019-3826</h3><p>这是一个存储型 <code>XSS</code> 漏洞, 影响版本为:<code> 2.7.1</code> 之前。</p>
+<p>这个利用有个前提条件: 需要开启<code>enable query history</code>,也就是记录查询历史需要开启</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201057065.png" alt="image-20220927165327558"></p>
+<p>这个前端就可以开启，而且默认启用。</p>
+<p>之后攻击者构造一条特殊的查询语句，<code>test&#123;test=&quot;&lt;script&gt;alert(/xss/)&lt;/script&gt;&quot;&#125;</code>,执行一下，</p>
+<p>之后在查询中输入一个可以让这条记录出现的单词才能触发,比如说<code>t</code></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201057517.png" alt="image-20220927180430311"></p>
+<p>各位看官看到这里，接下来可能会想怎么组合利用了。但是啊，凡是都有个但是，这个<code>XSS</code>漏洞触发原因是**因为开启<code>history</code>后，之后的查询输入会高亮提示 **，问题就出现在这里，存储和渲染时未做任何过滤 <code>web/ui/static/js/graph/index.js</code></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201057850.png" alt="image-20220927180843214"></p>
+<p>然后再说说为啥会是<code>存储型</code>，因为这个查询历史存储在了浏览器的 <code>Local Storage</code>，这你让我弹谁？？？因吹斯汀</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201058681.png" alt="image-20220927181006925"></p>
+<h3 id="2-CVE-2021-29622"><a href="#2-CVE-2021-29622" class="headerlink" title="2. CVE-2021-29622"></a>2. CVE-2021-29622</h3><p>这是一个重定向漏洞，官方描述</p>
+<blockquote>
+<p>  在 2.23.0 中，Prometheus 将其默认 UI 更改为 New ui。为确保无缝转换，URL 以 <code>/new</code> 为前缀重定向到 <code>/</code>。由于代码中的错误，攻击者有可能在 <code>/new</code> 端点中制作一个可以重定向到任何其他 URL 的 URL。如果用户使用特制地址访问 prometheus 服务器，他们可以被重定向到任意 URL。</p>
+<p>  该问题已在 2.26.1 和 2.27.1 版本中修复。在 2.28.0 中，<code>/new</code> 端点将被完全删除。修补方案是通过 Prometheus 前面的反向代理禁用对 <code>/new</code> 的访问。</p>
+</blockquote>
+<p><code>git checkout v2.24.0</code>，切换有漏洞的分支,看代码 <code>web/web.go</code></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201058832.png" alt="image-20220927162146823"></p>
+<p>emmmm，没啥好说的，当 url 为 <code>http://127.0.0.1:19090/new/newhttps://www.baidu.com</code> 这种时，<code>p</code>就等于 <code>/newhttps://www.baidu.com</code>,然后去除<code>/new</code>前缀,使用 path 包组合成 url 进行重定向。</p>
+<h4 id="CodeQL-分析"><a href="#CodeQL-分析" class="headerlink" title="CodeQL 分析"></a>CodeQL 分析</h4><p>官方 codeql 中关于go的规则中没有重定向测试用例，只有写好的库(<code>lib/semmle/go/security/OpenUrlRedirect.qll</code>这个调用运行跑不出该漏洞，只能跑出后两个)，其他语言存在相关的测试用例，模仿python 的重定向测试写一个。</p>
+<p><code>UrlRedirectQuery.qll</code> 内容如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">import go</span><br><span class="line"></span><br><span class="line">import semmle.go.security.UrlConcatenation</span><br><span class="line"></span><br><span class="line">import semmle.go.security.OpenUrlRedirectCustomizations::OpenUrlRedirect</span><br><span class="line">abstract <span class="class"><span class="keyword">class</span> <span class="title">Sanitizer</span> <span class="title">extends</span> <span class="title">DataFlow</span>:</span>:Node &#123; &#125;</span><br><span class="line">abstract deprecated <span class="class"><span class="keyword">class</span> <span class="title">SanitizerGuard</span> <span class="title">extends</span> <span class="title">DataFlow</span>:</span>:BarrierGuard &#123; &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A data-flow configuration for reasoning about unvalidated URL redirections.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Configuration</span> <span class="title">extends</span> <span class="title">TaintTracking</span>:</span>:Configuration &#123;</span><br><span class="line">    Configuration() &#123; this = <span class="string">&quot;UrlRedirect&quot;</span> &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSource(DataFlow::Node source) &#123; source instanceof Source &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSink(DataFlow::Node sink) &#123; sink instanceof Sink &#125;</span><br><span class="line"></span><br><span class="line">    override predicate isSanitizer(DataFlow::Node node) &#123; node instanceof Sanitizer &#125;</span><br><span class="line"></span><br><span class="line">    deprecated override predicate isSanitizerGuard(DataFlow::BarrierGuard guard) &#123;</span><br><span class="line">        guard instanceof SanitizerGuard</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>UrlRedirect.ql</code> 内容如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">import go <span class="comment">/* 每个查询都以一个或多个import语句开始。 */</span></span><br><span class="line">import UrlRedirectQuery  <span class="comment">/* 引用刚才的库文件/</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">/* DataFlow 模块 负责实现代码的数据流跟踪功能，即实现整个的调用栈分析。 */</span></span><br><span class="line"><span class="comment">/* 定义变量  */</span></span><br><span class="line">from Configuration config, DataFlow::PathNode source, DataFlow::PathNode sink </span><br><span class="line"></span><br><span class="line">where config.hasFlowPath(source, sink)</span><br><span class="line">select sink.getNode(), source, sink,<span class="string">&quot;Untrusted URL redirection due to $@.&quot;</span>, source.getNode(),</span><br><span class="line"><span class="string">&quot;user-provided value&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>结果如下：</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201058129.png" alt="image-20221013145923377"></p>
+<p>第一个就是我们刚才分析的漏洞,另外两个 <code>subpath</code> 虽然可控，但分析过后确认为误报</p>
+<h2 id="3-metrics"><a href="#3-metrics" class="headerlink" title="3.metrics"></a>3.metrics</h2><blockquote>
+<p>  Metrics是一款监控指标的度量类库，提供了许多工具帮助开发者来完成各项数据的监控。</p>
+</blockquote>
+<p>Prometheus Server 默认会从 <code>/metrics</code> api 中拉取数据，指标数据样本示例:</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201058264.png" alt="image-20220926171326026"></p>
+<blockquote>
+<p>  第一个# 是指标的说明介绍，</p>
+<p>  第二个# 代表指标的类型，此为必须项且格式固定，TYPE+指标名称+类型</p>
+<p>  go_gc_duration_seconds 为指标名称，{}里面为标签，它标明了当前指标样本的特征和维度，最后面的数值则是该样本的具体值</p>
+</blockquote>
+<h2 id="4-攻击利用"><a href="#4-攻击利用" class="headerlink" title="4.攻击利用"></a>4.攻击利用</h2><p>Prometheus 的各种服务在 2.24.0 版本之前都是允许任何人访问的，官方认为 Prometheus 抓取的各种指标数字不是敏感数据，比如描述 CPU 负载或发送到服务的请求数量等值，对于攻击者来说完全无用，因此Prometheus整体只专注于开发和监控相关的功能。</p>
+<p>2.24.0 才出现认证相关的功能，但公网上许多使用了Prometheus的组织还未启用这些功能,还是存在大量的未授权的Prometheus服务。</p>
+<h3 id="1-可利用接口"><a href="#1-可利用接口" class="headerlink" title="1.可利用接口"></a>1.可利用接口</h3><p>下面列举一些可能存在利用的点</p>
+<ul>
+<li><p><strong>&#x2F;api&#x2F;v1&#x2F;status&#x2F;config</strong></p>
+<p>这里会泄露告警&#x2F;数据获取服务的地址，访问用户名等。令人不爽的是，Prometheus 会使用 <secret> 占位符替换掉密码等一些敏感信息。<img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201058734.png" alt="image-20221010163836969"></p>
+<p>ps: 这里的 <secret> 只会替换一些官方定义好的字段，如果配置人员将密码信息等写在了 url 中</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201058666.png" alt="image-20221017112811908"></p>
+<p>Prometheus并不会对这些进行处理，虽然概率有点小，但找到就是赚。</p>
+<p>如果监控了 k8s 服务，config 中会显示 k8s 认证的相关信息</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201059749.png" alt="image-20221017111516349"></p>
+<p>这里直接告诉我们 k8s认证 token 和证书的位置，如果能打下这台机器，后续横向就很简单了。</p>
+</li>
+<li><p>**&#x2F;api&#x2F;v1&#x2F;targets **</p>
+<p>监控的各种服务，通过这个 api 我们可以获取目标的其他资产机器地址，标签等</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201059634.png" alt="image-20221010165510417"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201059778.png" alt="image-20221010165554239"></p>
+<p>​	比如这个，直接为我们提供了 178 个服务的信息，为后期的内网横向提供非常不错的帮助，而且还不用扫描，安全隐蔽。如果运气够好，也许还能找到 k8s 的用户名、密码信息、环境变量等。</p>
+<p>​	基于 GCE 服务发现时，可能会泄露机器的用户名、ssh公钥，这里可以尝试发送钓鱼邮件，进一步利用。<img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201059594.png" alt="image-20221018154630440"></p>
+<p>​	基于AWS EC2的服务发现，我们可以很轻松的拿到机器使用的系统镜像、运行实例的地区、aws 账户 id、实例的网络地址等等信息</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201059593.png" alt="image-20221018155931705"> </p>
+</li>
+<li><p><strong>管理员接口</strong></p>
+</li>
+</ul>
+<p>访问 <code>/api/v1/status/flags</code>，如果 <code>web.enable-lifecycle</code> 为 true，那么我们就可以关闭	Prometheus服务，<code>web.enable-admin-api</code>开启则可以删除监控的数据。</p>
+<h3 id="2-PromQL"><a href="#2-PromQL" class="headerlink" title="2.PromQL"></a>2.PromQL</h3><p>Prometheus 提供了一种称为 PromQL（Prometheus Query Language）的功能性查询语言，让用户可以实时选择和聚合时间序列数据。</p>
+<p>下面是从网络上收集的一些查询语句</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"># 提供有关每个Kubernetes 节点的信息: 云供应商的名称、产品名称</span><br><span class="line">node_dmi_info</span><br><span class="line"></span><br><span class="line"># 提供网络相关信息</span><br><span class="line">node_network_info&#123;device=~&#x27;eth.+&#x27;&#125;</span><br><span class="line"></span><br><span class="line"># k8s 每个组件的版本信息，git提交和构建日期</span><br><span class="line">kubernetes_build_info</span><br><span class="line"></span><br><span class="line"># k8s 集群的负载均衡器信息</span><br><span class="line">kube_service_info * on (service) group_left group by (service,type) (kube_service_spec_type&#123;type=&quot;LoadBalancer&quot;&#125;)</span><br><span class="line"></span><br><span class="line"># k8s 节点信息</span><br><span class="line">kube_node_info</span><br><span class="line"></span><br><span class="line"># k8s 中入口控制器的 URL 路径和相关服务的信息等</span><br><span class="line">kube_ingress_info</span><br><span class="line"></span><br><span class="line"># k8s pods 信息</span><br><span class="line">kube_pod_info</span><br><span class="line"># pods 信息与工作负载关联</span><br><span class="line">kube_pod_info * on(namespace,pod) group_left(owner_name) kube_pod_owner</span><br><span class="line"># pods 中的容器信息</span><br><span class="line">kube_pod_container_info</span><br><span class="line"></span><br><span class="line"># k8s 集群的命名空间、节点和Secret名称</span><br><span class="line">kube_secret_info</span><br><span class="line"># 获取SecreS中注解相关信息，可能存在一些敏感信息</span><br><span class="line">kube_secret_annotations&#123;kubectl_kubernetes_io_last_applied_configuration != &quot;&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h3><p>攻防中最重要的一步就是尽可能多地收集与目标有关的信息，虽然 Prometheus 本身没有可以利用的点，但我们却可以从它所监控的服务信息中获取一些可能有用数据。这些数据不仅仅可以作为后渗透横向使用，还可以用来伪造信息进行钓鱼。</p>
+<h2 id="5-参考"><a href="#5-参考" class="headerlink" title="5.参考"></a>5.参考</h2><p><a target="_blank" rel="noopener" href="https://jfrog.com/blog/dont-let-prometheus-steal-your-fire/">https://jfrog.com/blog/dont-let-prometheus-steal-your-fire/</a></p>
+<p><a target="_blank" rel="noopener" href="https://sysdig.com/blog/exposed-prometheus-exploit-kubernetes-kubeconeu/">https://sysdig.com/blog/exposed-prometheus-exploit-kubernetes-kubeconeu/</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://fireline.fun">yhy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fireline.fun/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/">https://fireline.fun/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fireline.fun" target="_blank">yhy's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a><a class="post-meta__tags" href="/tags/CNCF/">CNCF</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201109293.jpeg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/wechat.jpg" alt="WeChat"/></a><div class="post-qr-code-desc">WeChat</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" title="harbor历史漏洞分析"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182231599.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">harbor历史漏洞分析</div></div></a></div><div class="next-post pull-right"><a href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182154012.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">ExpDemo-JavaFX工具新增漏洞编写教程</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" title="harbor历史漏洞分析"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182231599.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-02-18</div><div class="title">harbor历史漏洞分析</div></div></a></div></div></div><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">26</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">13</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="/atom.xml" target="_blank" title="RSS"><i class="fa fa-rss"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">2023年多写文章</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Prometheus"><span class="toc-number">1.</span> <span class="toc-text">1.Prometheus</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E"><span class="toc-number">2.</span> <span class="toc-text">2.历史漏洞</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-CVE-2019-3826"><span class="toc-number">2.1.</span> <span class="toc-text">1. CVE-2019-3826</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-CVE-2021-29622"><span class="toc-number">2.2.</span> <span class="toc-text">2. CVE-2021-29622</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#CodeQL-%E5%88%86%E6%9E%90"><span class="toc-number">2.2.1.</span> <span class="toc-text">CodeQL 分析</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-metrics"><span class="toc-number">3.</span> <span class="toc-text">3.metrics</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%94%BB%E5%87%BB%E5%88%A9%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">4.攻击利用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%AF%E5%88%A9%E7%94%A8%E6%8E%A5%E5%8F%A3"><span class="toc-number">4.1.</span> <span class="toc-text">1.可利用接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-PromQL"><span class="toc-number">4.2.</span> <span class="toc-text">2.PromQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%80%BB%E7%BB%93"><span class="toc-number">4.3.</span> <span class="toc-text">3.总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E5%8F%82%E8%80%83"><span class="toc-number">5.</span> <span class="toc-text">5.参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" title="harbor历史漏洞分析"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182231599.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="harbor历史漏洞分析"/></a><div class="content"><a class="title" href="/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" title="harbor历史漏洞分析">harbor历史漏洞分析</a><time datetime="2023-02-18T14:30:00.000Z" title="发表于 2023-02-18 22:30:00">2023-02-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/" title="盗火者Prometheus"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302201109293.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="盗火者Prometheus"/></a><div class="content"><a class="title" href="/2023/02/18/%E7%9B%97%E7%81%AB%E8%80%85Prometheus/" title="盗火者Prometheus">盗火者Prometheus</a><time datetime="2023-02-18T14:00:00.000Z" title="发表于 2023-02-18 22:00:00">2023-02-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182154012.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ExpDemo-JavaFX工具新增漏洞编写教程"/></a><div class="content"><a class="title" href="/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/" title="ExpDemo-JavaFX工具新增漏洞编写教程">ExpDemo-JavaFX工具新增漏洞编写教程</a><time datetime="2021-08-19T01:00:00.000Z" title="发表于 2021-08-19 09:00:00">2021-08-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182153610.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="git 蜜罐复现"/></a><div class="content"><a class="title" href="/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/" title="git 蜜罐复现">git 蜜罐复现</a><time datetime="2021-08-09T12:30:00.000Z" title="发表于 2021-08-09 20:30:00">2021-08-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182147821.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java ysoserial学习之CommonsCollections5(四)"/></a><div class="content"><a class="title" href="/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/" title="Java ysoserial学习之CommonsCollections5(四)">Java ysoserial学习之CommonsCollections5(四)</a><time datetime="2021-07-01T13:18:00.000Z" title="发表于 2021-07-01 21:18:00">2021-07-01</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
+
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
+
+document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-pjax"><script>(() => {
+  const $mermaidWrap = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaidWrap.length) {
+    window.runMermaid = () => {
+      window.loadMermaid = true
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+      Array.from($mermaidWrap).forEach((item, index) => {
+        const mermaidSrc = item.firstElementChild
+        const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+        const mermaidID = 'mermaid-' + index
+        const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+        mermaid.mermaidAPI.render(mermaidID, mermaidDefinition, (svgCode) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svgCode)
+        })
+      })
+    }
+
+    const loadMermaid = () => {
+      window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+    }
+
+    window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+  }
+})()</script><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+      appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
+      avatar: 'mn',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
+
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
+
+if ('Valine' === 'Valine' || !true) {
+  if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script></div><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></body></html>
