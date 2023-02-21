@@ -622,6 +622,48 @@
       </tags>
   </entry>
   <entry>
+    <title>Java反序列化漏洞分析(二)-Shiro550</title>
+    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
+    <content><![CDATA[<blockquote>
+<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
+</blockquote>
+<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
+<blockquote>
+<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
+</blockquote>
+<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
+<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
+<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
+<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
+<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
+<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
+<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
+<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
+<blockquote>
+<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
+</blockquote>
+<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
+<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
+<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
+<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
+<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
+<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
+<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
+<p>不搞了，心累，等补充完知识，再重新来吧</p>
+<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
+<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
+<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>SScan  一款src捡洞扫描器</title>
     <url>/2021/01/11/SScan/</url>
     <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
@@ -715,48 +757,6 @@
       </categories>
       <tags>
         <tag>GitHub工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java反序列化漏洞分析(二)-Shiro550</title>
-    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
-    <content><![CDATA[<blockquote>
-<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
-</blockquote>
-<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
-<blockquote>
-<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
-</blockquote>
-<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
-<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
-<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
-<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
-<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
-<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
-<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
-<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
-<blockquote>
-<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
-</blockquote>
-<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
-<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
-<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
-<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
-<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
-<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
-<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
-<p>不搞了，心累，等补充完知识，再重新来吧</p>
-<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
-<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
-<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
       </tags>
   </entry>
   <entry>
