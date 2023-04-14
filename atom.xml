@@ -6,7 +6,7 @@
   <link href="https://fireline.fun/atom.xml" rel="self"/>
   
   <link href="https://fireline.fun/"/>
-  <updated>2023-03-06T15:26:44.966Z</updated>
+  <updated>2023-04-14T12:35:37.387Z</updated>
   <id>https://fireline.fun/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>扫描器 debug 调优记录</title>
+    <link href="https://fireline.fun/2023/04/14/%E6%89%AB%E6%8F%8F%E5%99%A8%20debug%20%E8%B0%83%E4%BC%98%E8%AE%B0%E5%BD%95/"/>
+    <id>https://fireline.fun/2023/04/14/%E6%89%AB%E6%8F%8F%E5%99%A8%20debug%20%E8%B0%83%E4%BC%98%E8%AE%B0%E5%BD%95/</id>
+    <published>2023-04-14T12:22:10.000Z</published>
+    <updated>2023-04-14T12:35:37.387Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;  啥时候我能写一个安全行业人手一个工具&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;go 有个恶心的地方，就是不能捕获子进程的 panic, 每个子进程都使用</summary>
+        
+      
+    
+    
+    
+    <category term="开发 - Go" scheme="https://fireline.fun/categories/%E5%BC%80%E5%8F%91-Go/"/>
+    
+    
+    <category term="开发 - Go" scheme="https://fireline.fun/tags/%E5%BC%80%E5%8F%91-Go/"/>
+    
+  </entry>
   
   <entry>
     <title>Jie 扫描器</title>
@@ -505,34 +533,6 @@
     
     
     <category term="Web渗透" scheme="https://fireline.fun/tags/Web%E6%B8%97%E9%80%8F/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>gitHub_cve_monitor</title>
-    <link href="https://fireline.fun/2021/02/25/github_cve_monitor/"/>
-    <id>https://fireline.fun/2021/02/25/github_cve_monitor/</id>
-    <published>2021-02-25T03:06:07.000Z</published>
-    <updated>2023-03-06T15:14:38.431Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;blockquote&gt;
-&lt;p&gt;没事少矫情，有空多赚钱。&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;监控github上新增的cve编号项目漏洞，推送钉钉或者server酱&quot;&gt;&lt;a href=&quot;#监控github上新增的cve编号项目漏洞，推送钉钉或者server酱&quot;</summary>
-        
-      
-    
-    
-    
-    <category term="开源工具" scheme="https://fireline.fun/categories/%E5%BC%80%E6%BA%90%E5%B7%A5%E5%85%B7/"/>
-    
-    
-    <category term="开源工具" scheme="https://fireline.fun/tags/%E5%BC%80%E6%BA%90%E5%B7%A5%E5%85%B7/"/>
     
   </entry>
   

