@@ -372,20 +372,6 @@
   </url>
   
   <url>
-    <loc>https://fireline.fun/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/</loc>
-    <lastmod>2023-11-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>https://fireline.fun/tags/%E8%9C%9C%E7%BD%90/</loc>
-    <lastmod>2023-11-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://fireline.fun/tags/Windows%E6%8F%90%E6%9D%83/</loc>
     <lastmod>2023-11-11</lastmod>
     <changefreq>weekly</changefreq>
@@ -394,6 +380,20 @@
   
   <url>
     <loc>https://fireline.fun/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/</loc>
+    <lastmod>2023-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://fireline.fun/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/</loc>
+    <lastmod>2023-11-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://fireline.fun/tags/%E8%9C%9C%E7%BD%90/</loc>
     <lastmod>2023-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -514,14 +514,14 @@
   </url>
   
   <url>
-    <loc>https://fireline.fun/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/</loc>
+    <loc>https://fireline.fun/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/</loc>
     <lastmod>2023-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://fireline.fun/categories/%E5%9F%9F%E6%B8%97%E9%80%8F/</loc>
+    <loc>https://fireline.fun/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/</loc>
     <lastmod>2023-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -549,14 +549,14 @@
   </url>
   
   <url>
-    <loc>https://fireline.fun/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/</loc>
+    <loc>https://fireline.fun/categories/%E5%BC%80%E5%8F%91/Go/</loc>
     <lastmod>2023-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://fireline.fun/categories/%E5%BC%80%E5%8F%91/Go/</loc>
+    <loc>https://fireline.fun/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/%E8%9C%9C%E7%BD%90/</loc>
     <lastmod>2023-11-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

