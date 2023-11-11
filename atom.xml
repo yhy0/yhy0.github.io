@@ -6,7 +6,7 @@
   <link href="https://fireline.fun/atom.xml" rel="self"/>
   
   <link href="https://fireline.fun/"/>
-  <updated>2023-05-20T15:42:45.223Z</updated>
+  <updated>2023-11-11T11:45:49.830Z</updated>
   <id>https://fireline.fun/</id>
   
   <author>
@@ -15,6 +15,36 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>更优雅的BurpSuite被动扫描流量转发插件实现</title>
+    <link href="https://fireline.fun/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/"/>
+    <id>https://fireline.fun/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/</id>
+    <published>2023-11-09T14:15:51.000Z</published>
+    <updated>2023-11-11T11:45:49.830Z</updated>
+    
+    
+      
+      
+        
+        
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;  小朋友真是活跃，走个不停，要时刻盯着&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;本文首发于先知社区:&lt;a</summary>
+        
+      
+    
+    
+    
+    <category term="工具" scheme="https://fireline.fun/categories/%E5%B7%A5%E5%85%B7/"/>
+    
+    
+    <category term="Github" scheme="https://fireline.fun/tags/Github/"/>
+    
+    <category term="工具" scheme="https://fireline.fun/tags/%E5%B7%A5%E5%85%B7/"/>
+    
+  </entry>
   
   <entry>
     <title>承影</title>
@@ -516,34 +546,6 @@
     
     
     <category term="开源工具" scheme="https://fireline.fun/tags/%E5%BC%80%E6%BA%90%E5%B7%A5%E5%85%B7/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>漏洞复现-Apache Solr 任意文件读取漏洞</title>
-    <link href="https://fireline.fun/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/"/>
-    <id>https://fireline.fun/2021/03/18/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0-Apache%20Solr%20%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E/</id>
-    <published>2021-03-18T12:59:48.000Z</published>
-    <updated>2023-02-18T14:05:59.992Z</updated>
-    
-    
-      
-      
-        
-        
-    <summary type="html">&lt;blockquote&gt;
-&lt;p&gt;  这周在hw，水一篇文章，记录一下漏洞利用，当一个合格的脚本小子&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;0x01-漏洞描述&quot;&gt;&lt;a href=&quot;#0x01-漏洞描述&quot; class=&quot;headerlink&quot; title=&quot;0x01</summary>
-        
-      
-    
-    
-    
-    <category term="漏洞复现" scheme="https://fireline.fun/categories/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"/>
-    
-    
-    <category term="漏洞复现" scheme="https://fireline.fun/tags/%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/"/>
     
   </entry>
   

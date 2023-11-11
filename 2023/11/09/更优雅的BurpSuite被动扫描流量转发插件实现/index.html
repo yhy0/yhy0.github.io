@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>更优雅的BurpSuite被动扫描流量转发插件实现 | yhy's blog</title><meta name="author" content="yhy"><meta name="copyright" content="yhy"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="小朋友真是活跃，走个不停，要时刻盯着  本文首发于先知社区:https:&#x2F;&#x2F;xz.aliyun.com&#x2F;t&#x2F;13005 背景最近在为扫描器添加被动扫描模式，发现在 BurpSuite 中设置上游代理，Intruder、Repeater 模块也会走上游代理，这对于设置上游搞内网很合适，但对于被动扫描器来说有点不适合了，一般这两个模块都是手动测试时才会用到，这时流量都被转发到被动扫描器就不是很好">
+<meta property="og:type" content="article">
+<meta property="og:title" content="更优雅的BurpSuite被动扫描流量转发插件实现">
+<meta property="og:url" content="https://fireline.fun/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="yhy&#39;s blog">
+<meta property="og:description" content="小朋友真是活跃，走个不停，要时刻盯着  本文首发于先知社区:https:&#x2F;&#x2F;xz.aliyun.com&#x2F;t&#x2F;13005 背景最近在为扫描器添加被动扫描模式，发现在 BurpSuite 中设置上游代理，Intruder、Repeater 模块也会走上游代理，这对于设置上游搞内网很合适，但对于被动扫描器来说有点不适合了，一般这两个模块都是手动测试时才会用到，这时流量都被转发到被动扫描器就不是很好">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311111943308.png">
+<meta property="article:published_time" content="2023-11-09T14:15:51.000Z">
+<meta property="article:modified_time" content="2023-11-11T11:45:49.830Z">
+<meta property="article:author" content="yhy">
+<meta property="article:tag" content="Github">
+<meta property="article:tag" content="工具">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311111943308.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://fireline.fun/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: false,
+  }
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '更优雅的BurpSuite被动扫描流量转发插件实现',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-11-11 19:45:49'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom@1.0.2.css"><link rel="stylesheet" href="/css/color@1.0.1.css"><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="yhy's blog" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/favicon.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">15</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);" rel="external nofollow noreferrer"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311111943308.png')"><nav id="nav"><span id="blog-info"><a href="/" title="yhy's blog"><span class="site-name">yhy's blog</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);" rel="external nofollow noreferrer"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 文章</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);" rel="external nofollow noreferrer"><i class="fa-fw fas fa-list"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tasklist/"><i class="fa-fw fab fa-battle-net"></i><span> 杀软辅助</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fab fa-d-and-d"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);" rel="external nofollow noreferrer"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">更优雅的BurpSuite被动扫描流量转发插件实现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-11-09T14:15:51.000Z" title="发表于 2023-11-09 22:15:51">2023-11-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-11-11T11:45:49.830Z" title="更新于 2023-11-11 19:45:49">2023-11-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>3分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="更优雅的BurpSuite被动扫描流量转发插件实现"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p>  小朋友真是活跃，走个不停，要时刻盯着</p>
+</blockquote>
+<p>本文首发于先知社区:<a target="_blank" rel="noopener external nofollow noreferrer" href="https://xz.aliyun.com/t/13005">https://xz.aliyun.com/t/13005</a></p>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>最近在为扫描器添加被动扫描模式，发现在 BurpSuite 中设置上游代理，<code>Intruder</code>、<code>Repeater</code> 模块也会走上游代理，这对于设置上游搞内网很合适，但对于被动扫描器来说有点不适合了，一般这两个模块都是手动测试时才会用到，这时流量都被转发到被动扫描器就不是很好了，会增加很多无用扫描（即使被动扫描器存在流量去重功能）。</p>
+<p>找了一圈没发现 Burp 中可以设置这一块，想到<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/c0ny1">@c0ny1</a>师傅写过一个插件 <a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/c0ny1/passive-scan-client">passive-scan-client</a> ，测试时发现，插件根本没有工作，<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/c0ny1/passive-scan-client/issues">issues</a>中也有这种情况反馈，修复之后测试发现和<code>Burp</code>中设置上游没什么两样，(⊙o⊙)…</p>
+<h2 id="排错"><a href="#排错" class="headerlink" title="排错"></a>排错</h2><h3 id="IDEA-调试"><a href="#IDEA-调试" class="headerlink" title="IDEA 调试"></a>IDEA 调试</h3><p>在IDEA 配置远程调试</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092210755.png" alt="image-20231106225618020"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092210573.png" alt="image-20231106225632918"></p>
+<p>简单起见，这里直接使用社区版作为调试, 命令行启动 Burp 社区版</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -agentlib:jdwp=transport=dt_socket,server=y,<span class="built_in">suspend</span>=n,address=5005 -jar burpsuite_community_v2023.10.2.4.jar</span><br></pre></td></tr></table></figure>
+
+<p>生成 jar 文件</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn package</span><br></pre></td></tr></table></figure>
+
+<p>Burp 中加载该插件，启动</p>
+<p>然后IDEA 点击 Debug 启动刚才的配置 ，找个代码位置下个断点</p>
+<p>访问测试网站，比如 <a target="_blank" rel="noopener external nofollow noreferrer" href="http://testphp.vulnweb.com/">http://testphp.vulnweb.com/</a> ，ok，IDEA 中已经可以看到拦截了</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092210126.png" alt="image-20231106231111350"></p>
+<p>debug 时发现程序在 </p>
+<p><code>String headerValue = &quot;Basic &quot; + Base64.encode(user_pass.getBytes());</code> 这一行就直接结束了。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092211094.png" alt="image-20231106233217811"></p>
+<p>嗯？什么鬼？明明是空，怎么就进来的？</p>
+<p>老方法输出一下看看</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092211059.png" alt="image-20231106233321850"></p>
+<p>所以不设置用户名、密码时这里会出错，这类应该使用<code>isEmpty()</code>函数进行判断。但是为什么debug 看到的也明明是空，<code>username</code>又不是 <code>null</code>，为什么会发生这种情况？</p>
+<p>所有的这个判断都修改一下，先结束排错。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092211468.png" alt="image-20231106234626399"></p>
+<p>接下来改造该插件，让它像我预想的那样工作</p>
+<h2 id="改造"><a href="#改造" class="headerlink" title="改造"></a>改造</h2><p>该插件通过继承实现了<code>IProxyListener</code>中的<code>processProxyMessage</code>方法来实现获取请求信息，这个方法翻了一下官方 api，没有找到可以控制相关模块的地方。</p>
+<p>官方 API 太难看了，不太友好，找了一会，各种搜索还是没发现，想到<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/smxiazi">@算命縖子</a>师傅有个<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/smxiazi/xia_sql">插件</a>，我用过类似功能</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092211226.png" alt="image-20231108214115297"></p>
+<p>通过继承<code>IHttpListener</code>实现<code>processHttpMessage</code> 方法，该方法有个<code>int</code>参数,就是用来判断各种模块的，接下来就很简单了，通过 <code>toolFlag</code> 的值来进行判断是<code>Proxy</code>、<code>Intruder</code> 还是<code>Repeater</code> 模块。逻辑改好了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">processHttpMessage</span><span class="params">(<span class="type">int</span> toolFlag, <span class="type">boolean</span> messageIsRequest, IHttpRequestResponse messageInfo)</span> &#123;</span><br><span class="line">        <span class="comment">// 插件开启</span></span><br><span class="line">        <span class="keyword">if</span> (Config.IS_RUNNING &amp;&amp; !messageIsRequest) &#123;</span><br><span class="line">            <span class="comment">// 开启监控 Proxy，并且该消息是 Proxy 模块的</span></span><br><span class="line">            <span class="keyword">if</span>(Config.PROXY &amp;&amp; toolFlag == IBurpExtenderCallbacks.TOOL_PROXY) &#123;</span><br><span class="line">            ......</span><br></pre></td></tr></table></figure>
+
+<p><code> BurpExtender.this.callbacks.registerProxyListener(BurpExtender.this);</code> </p>
+<p>修改为</p>
+<p><code>BurpExtender.this.callbacks.registerHttpListener(BurpExtender.this);</code></p>
+<p>剩下就是依葫芦画瓢增加 GUI 控制。具体的看代码这里就不贴了,地址: <a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/yhy0/passive-scan-client">https://github.com/yhy0/passive-scan-client</a></p>
+<p>效果图：</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311092211895.png" alt="image-20231108221005846"></p>
+<p>默认只会监控 <code>Proxy</code>模块，另外两个看情况开启，比如前端收集到一堆 api，这时通过<code>Intruder</code>模块进行 Fuzz，配合被动扫描器的比如 403 绕过，进行一起测试，非常巴适。</p>
+<p>这里还将被动扫描器的Basic认证请求头单独拎出来了，可以自主设置，不然不看代码都不清楚这一块内容，还有就是<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/c0ny1">@c0ny1</a>师傅不知道基于怎样的考虑，将转发流量这一操作，每个流量间隔 5 秒钟，时间太长了，之前我都不知道这个时间是用来干嘛的，这里修改了一下默认 100 毫秒 (注：经大佬提醒可能是<code>是为了留出容错空间，假设不小心点错了一个添加的功能，还可以有5 秒时间反悔 kill 被动扫描的进程，免得插一堆脏数据</code>)</p>
+<p>整体下来没什么难度，修改后的插件也算是解决一个小痛点了，师傅们使用被动扫描器时可以使用该工具选择需要转发的数据。</p>
+<p>相关代码已提交 pr，项目原地址：<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/c0ny1/passive-scan-client">https://github.com/c0ny1/passive-scan-client</a></p>
+<p>等不及的可以去这里拿：<a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/yhy0/passive-scan-client">https://github.com/yhy0/passive-scan-client</a></p>
+<p>本人才疏学浅，如有疏漏之处，不吝赐教。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/c0ny1/passive-scan-client">https://github.com/c0ny1/passive-scan-client</a></p>
+<p><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/smxiazi/xia_sql">https://github.com/smxiazi/xia_sql</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://fireline.fun">yhy</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://fireline.fun/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/">https://fireline.fun/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="external nofollow noreferrer" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://fireline.fun" target="_blank">yhy's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Github/">Github</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E5%85%B7/">工具</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311111943308.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/wechat.jpg" alt="WeChat"/></a><div class="post-qr-code-desc">WeChat</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/05/20/%E6%89%BF%E5%BD%B1/" title="承影"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202305202333136.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">承影</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">yhy</div><div class="author-info__description">修道之初, 谁不想当剑仙?</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">32</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">15</div></a></div><a id="card-info-btn" target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/yhy0"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/yhy0" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="/atom.xml" target="_blank" title="RSS"><i class="fa fa-rss"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">2023年多写文章</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%83%8C%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%92%E9%94%99"><span class="toc-number">2.</span> <span class="toc-text">排错</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IDEA-%E8%B0%83%E8%AF%95"><span class="toc-number">2.1.</span> <span class="toc-text">IDEA 调试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%94%B9%E9%80%A0"><span class="toc-number">3.</span> <span class="toc-text">改造</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">4.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/" title="更优雅的BurpSuite被动扫描流量转发插件实现"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202311111943308.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="更优雅的BurpSuite被动扫描流量转发插件实现"/></a><div class="content"><a class="title" href="/2023/11/09/%E6%9B%B4%E4%BC%98%E9%9B%85%E7%9A%84BurpSuite%E8%A2%AB%E5%8A%A8%E6%89%AB%E6%8F%8F%E6%B5%81%E9%87%8F%E8%BD%AC%E5%8F%91%E6%8F%92%E4%BB%B6%E5%AE%9E%E7%8E%B0/" title="更优雅的BurpSuite被动扫描流量转发插件实现">更优雅的BurpSuite被动扫描流量转发插件实现</a><time datetime="2023-11-09T14:15:51.000Z" title="发表于 2023-11-09 22:15:51">2023-11-09</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/05/20/%E6%89%BF%E5%BD%B1/" title="承影"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202305202333136.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="承影"/></a><div class="content"><a class="title" href="/2023/05/20/%E6%89%BF%E5%BD%B1/" title="承影">承影</a><time datetime="2023-05-20T09:20:00.000Z" title="发表于 2023-05-20 17:20:00">2023-05-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/04/14/%E6%89%AB%E6%8F%8F%E5%99%A8%20debug%20%E8%B0%83%E4%BC%98%E8%AE%B0%E5%BD%95/" title="扫描器 debug 调优记录"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202304142035119.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="扫描器 debug 调优记录"/></a><div class="content"><a class="title" href="/2023/04/14/%E6%89%AB%E6%8F%8F%E5%99%A8%20debug%20%E8%B0%83%E4%BC%98%E8%AE%B0%E5%BD%95/" title="扫描器 debug 调优记录">扫描器 debug 调优记录</a><time datetime="2023-04-14T12:22:10.000Z" title="发表于 2023-04-14 20:22:10">2023-04-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/03/06/Jie%20%E6%89%AB%E6%8F%8F%E5%99%A8/" title="Jie 扫描器"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202303062324319.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Jie 扫描器"/></a><div class="content"><a class="title" href="/2023/03/06/Jie%20%E6%89%AB%E6%8F%8F%E5%99%A8/" title="Jie 扫描器">Jie 扫描器</a><time datetime="2023-03-06T15:15:10.000Z" title="发表于 2023-03-06 23:15:10">2023-03-06</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" title="harbor历史漏洞分析"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/img/202302182231599.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="harbor历史漏洞分析"/></a><div class="content"><a class="title" href="/2023/02/18/harbor%E5%8E%86%E5%8F%B2%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" title="harbor历史漏洞分析">harbor历史漏洞分析</a><time datetime="2023-02-18T14:30:00.000Z" title="发表于 2023-02-18 22:30:00">2023-02-18</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By yhy</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://fireline.fun/">blog</a>!</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
+
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
+
+document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-pjax"><script>(() => {
+  const $mermaidWrap = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaidWrap.length) {
+    window.runMermaid = () => {
+      window.loadMermaid = true
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+      Array.from($mermaidWrap).forEach((item, index) => {
+        const mermaidSrc = item.firstElementChild
+        const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+        const mermaidID = 'mermaid-' + index
+        const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+        mermaid.mermaidAPI.render(mermaidID, mermaidDefinition, (svgCode) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svgCode)
+        })
+      })
+    }
+
+    const loadMermaid = () => {
+      window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+    }
+
+    window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+  }
+})()</script><script>function loadValine () {
+  function initValine () {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: 'vID2hnAAj71HlTtLcwO4InbY-gzGzoHsz',
+      appKey: 'GB9a9tvf5zPbYaxUShE01qk1',
+      avatar: 'mp',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
+
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
+
+if ('Valine' === 'Valine' || !true) {
+  if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script></div><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/fireworks.min.js"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></body></html>
